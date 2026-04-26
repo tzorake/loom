@@ -3,6 +3,7 @@
 #include <event-loop/TzKeyboardHandler>
 #include <event-loop/TzKeyEvent>
 #include <event-loop/TzTimer>
+#include <event-loop/TzScopedPointer>
 #include <print>
 
 int main()
@@ -10,29 +11,26 @@ int main()
     TzMacosEventDispatcher dispatcher;  
     TzEventLoop loop(&dispatcher);
 
-    TzKeyboardHandler keyboard(&dispatcher);
-    keyboard.setCallback([&](TzKeyEvent *event) {
-        if (event->key == Key::Enter) std::println("Enter");
-        else if (!event->utf8.empty()) std::println("Text: {}", event->utf8);
-        if (event->utf8 == "q") loop.quit();
-    });
-    keyboard.start();
+    TzScopedPointer<TzKeyboardHandler> keyboard = TzKeyboardHandler::create(
+        &dispatcher, [&](TzKeyEvent *event) {
+            if (event->key == Key::Enter) std::println("Enter");
+            else if (!event->utf8.empty()) std::println("Text: {}", event->utf8);
+            if (event->utf8 == "q") loop.quit();
+        });
 
-    TzTimer periodic(&dispatcher);
-    periodic.setInterval(std::chrono::seconds(2));
-    periodic.setSingleShot(false);
-    periodic.setCallback([]() { std::println("Tick"); });
-    periodic.start();
+    TzScopedPointer<TzTimer> periodic = TzTimer::repeat(
+        &dispatcher, std::chrono::seconds(2), []() {
+            std::println("Tick");
+        });
 
-    TzTimer quit(&dispatcher);
-    quit.setInterval(std::chrono::seconds(5));
-    quit.setSingleShot(true);
-    quit.setCallback([&]() { loop.quit(); });
-    quit.start();
+    TzScopedPointer<TzTimer> quit = TzTimer::singleShot(
+        &dispatcher, std::chrono::seconds(5), [&]() {
+            loop.quit();
+        });
 
     loop.exec();
 
-    std::println("Terminate");
+    std::println("Event loop finished. Goodbye.");
 
     return 0;
 }

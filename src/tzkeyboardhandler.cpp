@@ -225,3 +225,12 @@ void TzKeyboardHandler::stop()
     }
     d_ptr->active = false;
 }
+
+TzKeyboardHandler *TzKeyboardHandler::create(TzAbstractEventDispatcher *dispatcher, KeyCallback callback)
+{
+    TzKeyboardHandler *h = new TzKeyboardHandler(dispatcher);
+    h->setCallback(std::move(callback));
+    h->start();
+    return h;
+}
+

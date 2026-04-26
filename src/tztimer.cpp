@@ -86,3 +86,23 @@ void TzTimer::stop()
         d_ptr->handle = nullptr;
     }
 }
+
+TzTimer *TzTimer::singleShot(TzAbstractEventDispatcher *dispatcher, TimerInterval interval, TimerCallback callback)
+{
+    TzTimer* t = new TzTimer(dispatcher);
+    t->setSingleShot(true);
+    t->setInterval(interval);
+    t->setCallback(std::move(callback));
+    t->start();
+    return t;
+}
+
+TzTimer *TzTimer::repeat(TzAbstractEventDispatcher *dispatcher, TimerInterval interval, TimerCallback callback)
+{
+    TzTimer* t = new TzTimer(dispatcher);
+    t->setSingleShot(false);
+    t->setInterval(interval);
+    t->setCallback(std::move(callback));
+    t->start();
+    return t;
+}

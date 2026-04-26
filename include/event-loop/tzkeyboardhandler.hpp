@@ -24,6 +24,8 @@ public:
     void start();
     void stop();
 
+    static TzKeyboardHandler *create(TzAbstractEventDispatcher *dispatcher, KeyCallback callback);
+
 private:
     std::unique_ptr<TzKeyboardHandlerPrivate> d_ptr;
 };
