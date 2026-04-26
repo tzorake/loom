@@ -1,0 +1,96 @@
+#include <event-loop/tzmacoseventdispatcher.hpp>
+
+#include "tzmacoseventdispatcher_p.hpp"
+
+TzMacosEventDispatcherPrivate::TzMacosEventDispatcherPrivate()
+    : runLoop(CFRunLoopGetCurrent())
+{
+    CFRetain(runLoop);
+}
+
+TzMacosEventDispatcher::TzMacosEventDispatcher()
+    : d_ptr(new TzMacosEventDispatcherPrivate)
+{
+    d_ptr->q_ptr = this;
+}
+
+TzMacosEventDispatcher::~TzMacosEventDispatcher()
+{
+    while (!d_ptr->timerMap.empty())
+        unregisterTimer(d_ptr->timerMap.begin()->first);
+    CFRelease(d_ptr->runLoop);
+}
+
+void TzMacosEventDispatcher::processEvents()
+{
+    d_ptr->interrupted = false;
+    CFRunLoopRun();
+}
+
+void TzMacosEventDispatcher::interrupt()
+{
+    d_ptr->interrupted = true;
+    CFRunLoopStop(d_ptr->runLoop);
+}
+
+static void timerCallback(CFRunLoopTimerRef timer, void *info)
+{
+    auto *wrapper = static_cast<TzMacosEventDispatcherPrivate::TimerWrapper *>(info);
+    if (!wrapper || !wrapper->callback)
+        return;
+
+    wrapper->callback();
+
+    if (wrapper->singleShot)
+        wrapper->dispatcher->unregisterTimer(static_cast<TzAbstractEventDispatcher::TimerHandle>(wrapper));
+}
+
+TzMacosEventDispatcher::TimerHandle TzMacosEventDispatcher::registerTimer(TimerInterval interval, bool singleShot, TimerCallback callback)
+{
+    CFTimeInterval secs = interval.count() / 1000.0;
+    CFAbsoluteTime firstFire = CFAbsoluteTimeGetCurrent() + secs;
+
+    auto wrapper = std::make_unique<TzMacosEventDispatcherPrivate::TimerWrapper>();
+    wrapper->callback = std::move(callback);
+    wrapper->singleShot = singleShot;
+    wrapper->dispatcher = this;
+
+    CFRunLoopTimerContext context{
+        .version = 0, 
+        .info = wrapper.get(), 
+        .retain = nullptr, 
+        .release = nullptr, 
+        .copyDescription = nullptr
+    };
+    CFRunLoopTimerRef timer = CFRunLoopTimerCreate(
+        kCFAllocatorDefault,
+        firstFire,
+        singleShot ? 0.0 : secs,
+        0,
+        0,
+        timerCallback,
+        &context
+    );
+    if (!timer)
+        throw std::runtime_error("CFRunLoopTimerCreate");
+
+    CFRunLoopAddTimer(d_ptr->runLoop, timer, kCFRunLoopCommonModes);
+    wrapper->timer = timer;
+
+    TzMacosEventDispatcher::TimerHandle handle = static_cast<TzMacosEventDispatcher::TimerHandle>(wrapper.get());
+    d_ptr->timerMap[handle] = std::move(wrapper);
+    return handle;
+}
+
+void TzMacosEventDispatcher::unregisterTimer(TimerHandle handle)
+{
+    auto it = d_ptr->timerMap.find(handle);
+    if (it == d_ptr->timerMap.end())
+        return;
+    
+    if (it->second->timer) {
+        CFRunLoopRemoveTimer(d_ptr->runLoop, it->second->timer, kCFRunLoopCommonModes);
+        CFRelease(it->second->timer);
+    }
+    d_ptr->timerMap.erase(it);
+}
