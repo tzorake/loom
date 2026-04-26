@@ -1,16 +1,16 @@
 #include <event-loop/tzkeyboardhandler.hpp>
 #include <event-loop/tzabstracteventdispatcher.hpp>
+#include <event-loop/tzabstractconsoleinput.hpp>
 #include <event-loop/tzsocketnotifier.hpp>
 #include <event-loop/tzkeyevent.hpp>
 
 #include "tzkeyboardhandler_p.hpp"
-#include "platform/posix/tzposixkeyboardhandler_p.hpp"
 
-#include <unistd.h>
 #include <algorithm>
 
-TzKeyboardHandlerPrivate::TzKeyboardHandlerPrivate(TzAbstractEventDispatcher *dispatcher)
+TzKeyboardHandlerPrivate::TzKeyboardHandlerPrivate(TzAbstractEventDispatcher *dispatcher, TzAbstractConsoleInput *consoleInput)
     : dispatcher(dispatcher)
+    , consoleInput(consoleInput)
 {
 }
 
@@ -23,40 +23,13 @@ void TzKeyboardHandlerPrivate::processKeyEvent(TzKeyEvent *event)
     if (callback) callback(event);
 }
 
-TzPosixKeyboardHandlerPrivate::TzPosixKeyboardHandlerPrivate(TzAbstractEventDispatcher *dispatcher)
-    : TzKeyboardHandlerPrivate(dispatcher)
+void TzKeyboardHandlerPrivate::onInputAvailable()
 {
-}
-
-void TzPosixKeyboardHandlerPrivate::start()
-{
-    if (tcgetattr(STDIN_FILENO, &this->origTermios) == -1)
-        throw std::runtime_error("tcgetattr failed");
-
-    this->rawTermios = this->origTermios;
-    cfmakeraw(&this->rawTermios);
-    this->rawTermios.c_lflag &= ~(ECHO | ICANON);
-    this->rawTermios.c_oflag |= OPOST;
-
-    if (tcsetattr(STDIN_FILENO, TCSAFLUSH, &this->rawTermios) == -1)
-        throw std::runtime_error("tcsetattr failed");
-    
-    this->rawActive = true;
-}
-
-void TzPosixKeyboardHandlerPrivate::stop()
-{
-    tcsetattr(STDIN_FILENO, TCSAFLUSH, &this->origTermios);
-}
-
-void TzPosixKeyboardHandlerPrivate::onInputAvailable()
-{
-    char buf[16];
-    ssize_t n = read(STDIN_FILENO, buf, sizeof(buf));
-    if (n <= 0)
+    std::string chunk = consoleInput->read();
+    if (chunk.empty())
         return;
 
-    buffer.append(buf, n);
+    buffer.append(chunk);
 
     while (!buffer.empty()) {
         unsigned char c = buffer[0];
@@ -120,7 +93,7 @@ void TzPosixKeyboardHandlerPrivate::onInputAvailable()
             continue;
         }
 
-        // UTF‑8 length detection
+        // UTF-8 length detection
         int len = 1;
         if ((c & 0x80) == 0x00)      len = 1;
         else if ((c & 0xE0) == 0xC0) len = 2;
@@ -130,7 +103,7 @@ void TzPosixKeyboardHandlerPrivate::onInputAvailable()
             buffer.erase(0, 1); // invalid
             continue;
         }
-        if (buffer.size() < len) break;
+        if ((int)buffer.size() < len) break;
 
         std::string seq = buffer.substr(0, len);
         buffer.erase(0, len);
@@ -138,14 +111,8 @@ void TzPosixKeyboardHandlerPrivate::onInputAvailable()
         // Handle control characters (single byte only)
         if (len == 1) {
             switch (c) {
-                case 0x01: {
-                    TzKeyEvent event{ Key::Unknown, (int)KeyModifier::Ctrl, "" };
-                    processKeyEvent(&event);
-                } continue;
-                case 0x03: {
-                    TzKeyEvent event{ Key::Unknown, (int)KeyModifier::Ctrl, "" };
-                    processKeyEvent(&event);
-                } continue;
+                case 0x01:
+                case 0x03:
                 case 0x04: {
                     TzKeyEvent event{ Key::Unknown, (int)KeyModifier::Ctrl, "" };
                     processKeyEvent(&event);
@@ -167,18 +134,14 @@ void TzPosixKeyboardHandlerPrivate::onInputAvailable()
                 default: break;
             }
         }
-        // Printable text (ASCII or multi‑byte UTF‑8)
+        // Printable text (ASCII or multi-byte UTF-8)
         TzKeyEvent event{ Key::Unknown, 0, seq };
         processKeyEvent(&event);
     }
 }
 
-TzKeyboardHandler::TzKeyboardHandler(TzAbstractEventDispatcher *dispatcher)
-#ifdef _WIN32
-    : d_ptr(new TzWindowsKeyboardHandlerPrivate(dispatcher))
-#else
-    : d_ptr(new TzPosixKeyboardHandlerPrivate(dispatcher))
-#endif
+TzKeyboardHandler::TzKeyboardHandler(TzAbstractEventDispatcher *dispatcher, TzAbstractConsoleInput *consoleInput)
+    : d_ptr(new TzKeyboardHandlerPrivate(dispatcher, consoleInput))
 {
 }
 
@@ -189,7 +152,7 @@ TzKeyboardHandler::~TzKeyboardHandler()
 
 void TzKeyboardHandler::setCallback(KeyCallback callback)
 {
-    d_ptr->callback = callback;
+    d_ptr->callback = std::move(callback);
 }
 
 void TzKeyboardHandler::start()
@@ -199,13 +162,13 @@ void TzKeyboardHandler::start()
 
     if (!d_ptr->callback)
         throw std::runtime_error("KeyboardHandler::start() without callback");
-    
+
     if (d_ptr->active)
         return;
 
-    d_ptr->start();
+    d_ptr->consoleInput->start();
     d_ptr->notifier = std::make_unique<TzSocketNotifier>(d_ptr->dispatcher);
-    d_ptr->notifier->setFd(STDIN_FILENO);
+    d_ptr->notifier->setFd(d_ptr->consoleInput->fd());
     d_ptr->notifier->setCallback([this](int) { d_ptr->onInputAvailable(); });
     d_ptr->notifier->start();
 
@@ -218,19 +181,14 @@ void TzKeyboardHandler::stop()
         return;
 
     d_ptr->notifier.reset();
-
-    if (d_ptr->rawActive) {
-        d_ptr->stop();
-        d_ptr->rawActive = false;
-    }
+    d_ptr->consoleInput->stop();
     d_ptr->active = false;
 }
 
-TzKeyboardHandler *TzKeyboardHandler::create(TzAbstractEventDispatcher *dispatcher, KeyCallback callback)
+TzKeyboardHandler *TzKeyboardHandler::create(TzAbstractEventDispatcher *dispatcher, TzAbstractConsoleInput *consoleInput, KeyCallback callback)
 {
-    TzKeyboardHandler *h = new TzKeyboardHandler(dispatcher);
+    TzKeyboardHandler *h = new TzKeyboardHandler(dispatcher, consoleInput);
     h->setCallback(std::move(callback));
     h->start();
     return h;
 }
-

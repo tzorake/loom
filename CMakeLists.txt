@@ -8,6 +8,7 @@ option(EVENT_LOOP_BUILD_EXAMPLES "Build example applications" ON)
 
 add_library(event-loop
     src/tzabstracteventdispatcher.cpp
+    src/tzabstractconsoleinput.cpp
     src/tzeventloop.cpp
     src/tztimer.cpp
     src/tzsocketnotifier.cpp
@@ -16,7 +17,11 @@ add_library(event-loop
 target_include_directories(event-loop PUBLIC include)
 
 if(APPLE)
-    target_sources(event-loop PRIVATE src/platform/macos/tzmacoseventdispatcher.cpp)
+    target_sources(event-loop PRIVATE
+        src/platform/macos/tzmacoseventdispatcher.cpp
+        src/platform/macos/tzmacosconsoleinput.cpp
+        src/tzabstractplatformintegration.cpp
+    )
     target_link_libraries(event-loop PUBLIC "-framework CoreFoundation")
 endif()
 

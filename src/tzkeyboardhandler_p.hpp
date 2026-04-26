@@ -5,30 +5,27 @@
 #include <event-loop/tzkeyboardhandler.hpp>
 
 class TzAbstractEventDispatcher;
+class TzAbstractConsoleInput;
 class TzSocketNotifier;
 
 class TzKeyboardHandlerPrivate
 {
     TZ_DECLARE_PUBLIC(TzKeyboardHandler)
 public:
-    explicit TzKeyboardHandlerPrivate(TzAbstractEventDispatcher *dispatcher);
-    virtual ~TzKeyboardHandlerPrivate();
+    explicit TzKeyboardHandlerPrivate(TzAbstractEventDispatcher *dispatcher, TzAbstractConsoleInput *consoleInput);
+    ~TzKeyboardHandlerPrivate();
 
-    virtual void start() = 0;
-    virtual void stop() = 0;
-
-    virtual void onInputAvailable() = 0;
-    
+    void onInputAvailable();
     void processKeyEvent(TzKeyEvent *event);
 
     TzKeyboardHandler *q_ptr{ nullptr };
 
     TzAbstractEventDispatcher *dispatcher{ nullptr };
+    TzAbstractConsoleInput *consoleInput{ nullptr };
     TzKeyboardHandler::KeyCallback callback;
     std::unique_ptr<TzSocketNotifier> notifier;
     std::string buffer;
     bool active{ false };
-    bool rawActive{ false };
 };
 
 #endif // TZKEYBOARDHANDLER_P_HPP

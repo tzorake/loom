@@ -7,6 +7,7 @@
 #include <memory>
 
 class TzAbstractEventDispatcher;
+class TzAbstractConsoleInput;
 class TzKeyEvent;
 class TzKeyboardHandlerPrivate;
 
@@ -16,7 +17,7 @@ class TzKeyboardHandler
 public:
     using KeyCallback = std::function<void(TzKeyEvent *)>;
 
-    explicit TzKeyboardHandler(TzAbstractEventDispatcher *dispatcher);
+    explicit TzKeyboardHandler(TzAbstractEventDispatcher *dispatcher, TzAbstractConsoleInput *consoleInput);
     ~TzKeyboardHandler();
 
     void setCallback(KeyCallback callback);
@@ -24,7 +25,7 @@ public:
     void start();
     void stop();
 
-    static TzKeyboardHandler *create(TzAbstractEventDispatcher *dispatcher, KeyCallback callback);
+    static TzKeyboardHandler *create(TzAbstractEventDispatcher *dispatcher, TzAbstractConsoleInput *consoleInput, KeyCallback callback);
 
 private:
     std::unique_ptr<TzKeyboardHandlerPrivate> d_ptr;

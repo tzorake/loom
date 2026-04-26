@@ -1,32 +1,34 @@
-#include <event-loop/TzMacosEventDispatcher>
+#include <event-loop/TzAbstractPlatformIntegration>
+#include <event-loop/TzAbstractEventDispatcher>
+#include <event-loop/TzAbstractConsoleInput>
 #include <event-loop/TzEventLoop>
 #include <event-loop/TzKeyboardHandler>
 #include <event-loop/TzKeyEvent>
 #include <event-loop/TzTimer>
 #include <event-loop/TzScopedPointer>
 #include <print>
+#include <memory>
 
 int main()
 {
-    TzMacosEventDispatcher dispatcher;  
-    TzEventLoop loop(&dispatcher);
+    auto platform = tz::as_scoped_ptr(createPlatformIntegration());
+    auto dispatcher = tz::as_scoped_ptr(platform->createEventDispatcher());
+    auto consoleInput = tz::as_scoped_ptr(platform->createConsoleInput());
 
-    TzScopedPointer<TzKeyboardHandler> keyboard = TzKeyboardHandler::create(
-        &dispatcher, [&](TzKeyEvent *event) {
-            if (event->key == Key::Enter) std::println("Enter");
-            else if (!event->utf8.empty()) std::println("Text: {}", event->utf8);
-            if (event->utf8 == "q") loop.quit();
-        });
+    TzEventLoop loop(dispatcher.get());
 
-    TzScopedPointer<TzTimer> periodic = TzTimer::repeat(
-        &dispatcher, std::chrono::seconds(2), []() {
-            std::println("Tick");
-        });
+    auto onKeyboardEvent = [&](TzKeyEvent *event) {
+        if (event->key == Key::Enter) std::println("Enter");
+        else if (!event->utf8.empty()) std::println("Text: {}", event->utf8);
+        if (event->utf8 == "q") loop.quit();
+    };
+    auto keyboard = TzKeyboardHandler::create(dispatcher.get(), consoleInput.get(), onKeyboardEvent);
 
-    TzScopedPointer<TzTimer> quit = TzTimer::singleShot(
-        &dispatcher, std::chrono::seconds(5), [&]() {
-            loop.quit();
-        });
+    auto onRepeat = []() { std::println("Tick"); };
+    auto periodic = TzTimer::repeat(dispatcher.get(), std::chrono::seconds(2), onRepeat);
+    
+    auto onSingleShot = [&]() { loop.quit(); };
+    auto quit = TzTimer::singleShot(dispatcher.get(), std::chrono::seconds(5), onSingleShot);
 
     loop.exec();
 
