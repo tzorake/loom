@@ -26,8 +26,16 @@ public:
         TzMacosEventDispatcher *dispatcher{ nullptr };
     };
     using TimerWrapperPtr = std::unique_ptr<TimerWrapper>;
-
     std::unordered_map<TzAbstractEventDispatcher::TimerHandle, TimerWrapperPtr> timerMap;
+
+    struct NotifyWrapper {
+        CFSocketRef socket{ nullptr };
+        CFRunLoopSourceRef source{ nullptr };
+        TzAbstractEventDispatcher::NotifyCallback callback;
+        TzMacosEventDispatcher *dispatcher{ nullptr };
+    };
+    using NotifyWrapperPtr = std::unique_ptr<NotifyWrapper>;
+    std::unordered_map<TzAbstractEventDispatcher::NotifyHandle, NotifyWrapperPtr> notifyMap;
 };
 
 #endif // TZMACOSEVENTDISPATCHER_P_HPP

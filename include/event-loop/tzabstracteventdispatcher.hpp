@@ -11,13 +11,19 @@ public:
     using TimerInterval = std::chrono::milliseconds;
     using TimerCallback = std::function<void()>;
 
+    using NotifyHandle = void *;
+    using NotifyCallback = std::function<void(int)>;
+
     virtual ~TzAbstractEventDispatcher();
 
     virtual void processEvents() = 0;
     virtual void interrupt() = 0;
 
     virtual TimerHandle registerTimer(TimerInterval interval, bool singleShot, TimerCallback callback) = 0;
-    virtual void unregisterTimer(TimerHandle) = 0;
+    virtual void unregisterTimer(TimerHandle handle) = 0;
+
+    virtual NotifyHandle registerSocketNotifier(int fd, NotifyCallback callback) = 0;
+    virtual void unregisterSocketNotifier(NotifyHandle handle) = 0;
 };
 
 #endif // TZABSTRACTEVENTDISPATCHER_HPP

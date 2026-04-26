@@ -10,6 +10,8 @@ add_library(event-loop
     src/tzabstracteventdispatcher.cpp
     src/tzeventloop.cpp
     src/tztimer.cpp
+    src/tzsocketnotifier.cpp
+    src/tzkeyboardhandler.cpp
 )
 target_include_directories(event-loop PUBLIC include)
 

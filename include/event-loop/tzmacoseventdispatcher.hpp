@@ -21,6 +21,9 @@ public:
     virtual TimerHandle registerTimer(TimerInterval interval, bool singleShot, TimerCallback callback) override;
     virtual void unregisterTimer(TimerHandle) override;
 
+    virtual NotifyHandle registerSocketNotifier(int fd, NotifyCallback callback) override;
+    virtual void unregisterSocketNotifier(NotifyHandle handle) override;
+
 private:
     std::unique_ptr<TzMacosEventDispatcherPrivate> d_ptr;
 };

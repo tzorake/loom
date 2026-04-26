@@ -94,3 +94,71 @@ void TzMacosEventDispatcher::unregisterTimer(TimerHandle handle)
     }
     d_ptr->timerMap.erase(it);
 }
+
+static void notifyCallback(CFSocketRef s, CFSocketCallBackType type, CFDataRef address, const void* data, void* info)
+{
+    (void)address; (void)data;
+    auto* wrapper = static_cast<TzMacosEventDispatcherPrivate::NotifyWrapper *>(info);
+    if (!wrapper || !wrapper->callback)
+        return;
+
+    if (type == kCFSocketReadCallBack) {
+        CFSocketNativeHandle fd = CFSocketGetNative(s);
+        wrapper->callback(static_cast<int>(fd));
+    }
+}
+
+TzMacosEventDispatcher::NotifyHandle TzMacosEventDispatcher::registerSocketNotifier(int fd, NotifyCallback callback)
+{
+    auto wrapper = std::make_unique<TzMacosEventDispatcherPrivate::NotifyWrapper>();
+    wrapper->callback = std::move(callback);
+    wrapper->dispatcher = this;
+
+    CFSocketContext context{
+        .version = 0,
+        .info = wrapper.get(),
+        .retain = nullptr,
+        .release = nullptr,
+        .copyDescription = nullptr
+    };
+    CFSocketRef socket = CFSocketCreateWithNative(
+        kCFAllocatorDefault,
+        fd,
+        kCFSocketReadCallBack,
+        notifyCallback,
+        &context
+    );
+    if (!socket)
+        throw std::runtime_error("CFSocketCreateWithNative");
+
+    CFRunLoopSourceRef source = CFSocketCreateRunLoopSource(kCFAllocatorDefault, socket, 0);
+    if (!source) {
+        CFRelease(socket);
+        throw std::runtime_error("CFSocketCreateRunLoopSource");
+    }
+    CFRunLoopAddSource(d_ptr->runLoop, source, kCFRunLoopCommonModes);
+
+    wrapper->socket = socket;
+    wrapper->source = source;
+
+    NotifyHandle handle = static_cast<NotifyHandle>(wrapper.get());
+    d_ptr->notifyMap[handle] = std::move(wrapper);
+    return handle;
+}
+
+void TzMacosEventDispatcher::unregisterSocketNotifier(NotifyHandle handle)
+{
+    auto it = d_ptr->notifyMap.find(handle);
+    if (it == d_ptr->notifyMap.end())
+        return;
+    
+    if (it->second->source) {
+        CFRunLoopRemoveSource(d_ptr->runLoop, it->second->source, kCFRunLoopCommonModes);
+        CFRelease(it->second->source);
+    }
+    if (it->second->socket) {
+        CFSocketInvalidate(it->second->socket);
+        CFRelease(it->second->socket);
+    }
+    d_ptr->notifyMap.erase(it);
+}

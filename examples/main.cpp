@@ -1,5 +1,7 @@
 #include <event-loop/TzMacosEventDispatcher>
 #include <event-loop/TzEventLoop>
+#include <event-loop/TzKeyboardHandler>
+#include <event-loop/TzKeyEvent>
 #include <event-loop/TzTimer>
 #include <print>
 
@@ -7,6 +9,14 @@ int main()
 {
     TzMacosEventDispatcher dispatcher;  
     TzEventLoop loop(&dispatcher);
+
+    TzKeyboardHandler keyboard(&dispatcher);
+    keyboard.setCallback([&](TzKeyEvent *event) {
+        if (event->key == Key::Enter) std::println("Enter");
+        else if (!event->utf8.empty()) std::println("Text: {}", event->utf8);
+        if (event->utf8 == "q") loop.quit();
+    });
+    keyboard.start();
 
     TzTimer periodic(&dispatcher);
     periodic.setInterval(std::chrono::seconds(2));
@@ -20,9 +30,9 @@ int main()
     quit.setCallback([&]() { loop.quit(); });
     quit.start();
 
-    std::println("sum(2, 3) = {}", 2 + 3);
-
     loop.exec();
+
+    std::println("Terminate");
 
     return 0;
 }
