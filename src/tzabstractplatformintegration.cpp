@@ -3,6 +3,7 @@
 #ifdef __APPLE__
 #include <event-loop/tzmacoseventdispatcher.hpp>
 #include <event-loop/tzmacosconsoleinput.hpp>
+#include <event-loop/tzmacoswindow.hpp>
 #include "tzmacosplatformintegration.hpp"
 
 TzAbstractEventDispatcher *TzMacosPlatformIntegration::createEventDispatcher()
@@ -13,6 +14,11 @@ TzAbstractEventDispatcher *TzMacosPlatformIntegration::createEventDispatcher()
 TzAbstractConsoleInput *TzMacosPlatformIntegration::createConsoleInput()
 {
     return new TzMacosConsoleInput;
+}
+
+TzAbstractWindow *TzMacosPlatformIntegration::createWindow(int width, int height)
+{
+    return new TzMacosWindow(width, height);
 }
 
 std::string TzMacosPlatformIntegration::name() const

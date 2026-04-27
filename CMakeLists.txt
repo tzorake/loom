@@ -9,6 +9,7 @@ option(EVENT_LOOP_BUILD_EXAMPLES "Build example applications" ON)
 add_library(event-loop
     src/tzabstracteventdispatcher.cpp
     src/tzabstractconsoleinput.cpp
+    src/tzabstractwindow.cpp
     src/tzeventloop.cpp
     src/tztimer.cpp
     src/tzsocketnotifier.cpp
@@ -20,9 +21,13 @@ if(APPLE)
     target_sources(event-loop PRIVATE
         src/platform/macos/tzmacoseventdispatcher.cpp
         src/platform/macos/tzmacosconsoleinput.cpp
+        src/platform/macos/tzmacoswindow.cpp
         src/tzabstractplatformintegration.cpp
     )
-    target_link_libraries(event-loop PUBLIC "-framework CoreFoundation")
+    target_link_libraries(event-loop PUBLIC
+        "-framework CoreFoundation"
+        "-framework CoreGraphics"
+    )
 endif()
 
 if(EVENT_LOOP_BUILD_EXAMPLES)

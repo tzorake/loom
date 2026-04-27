@@ -1,6 +1,7 @@
 #include <event-loop/tzmacoseventdispatcher.hpp>
 
 #include "tzmacoseventdispatcher_p.hpp"
+#include "tzobjcutils.hpp"
 
 TzMacosEventDispatcherPrivate::TzMacosEventDispatcherPrivate()
     : runLoop(CFRunLoopGetCurrent())
@@ -24,13 +25,45 @@ TzMacosEventDispatcher::~TzMacosEventDispatcher()
 void TzMacosEventDispatcher::processEvents()
 {
     d_ptr->interrupted = false;
-    CFRunLoopRun();
+
+    // Use NSApplication when Cocoa is loaded (windowed apps), otherwise CFRunLoop.
+    ObjcClass appClass = getClass("NSApplication");
+    if (appClass) {
+        ObjcObject app = sendClassMessage<ObjcObject>(appClass, "sharedApplication");
+        sendMessage<void>(app, "run");
+    } else {
+        CFRunLoopRun();
+    }
 }
 
 void TzMacosEventDispatcher::interrupt()
 {
     d_ptr->interrupted = true;
-    CFRunLoopStop(d_ptr->runLoop);
+
+    ObjcClass appClass = getClass("NSApplication");
+    if (appClass) {
+        ObjcObject app = sendClassMessage<ObjcObject>(appClass, "sharedApplication");
+        sendMessage<void>(app, "stop:", nullptr);
+
+        // [NSApp stop:] only takes effect after the next event; post a dummy
+        // NSApplicationDefined event (type 15) so the run loop unblocks immediately.
+        using NSUInteger = unsigned long;
+        using NSInteger  = long;
+        CGPoint zero{};
+        ObjcObject event = reinterpret_cast<ObjcObject(*)(
+            ObjcClass, objc_selector*,
+            NSUInteger, CGPoint, NSUInteger, double,
+            NSInteger, ObjcObject, short, NSInteger, NSInteger)>(objc_msgSend)(
+            getClass("NSEvent"),
+            sel_registerName("otherEventWithType:location:modifierFlags:timestamp:"
+                             "windowNumber:context:subtype:data1:data2:"),
+            (NSUInteger)15, zero, (NSUInteger)0, (double)0.0,
+            (NSInteger)0, nullptr, (short)0, (NSInteger)0, (NSInteger)0
+        );
+        sendMessage<void>(app, "postEvent:atStart:", event, (int)YES);
+    } else {
+        CFRunLoopStop(d_ptr->runLoop);
+    }
 }
 
 static void timerCallback(CFRunLoopTimerRef timer, void *info)

@@ -22,13 +22,16 @@ int main()
         else if (!event->utf8.empty()) std::println("Text: {}", event->utf8);
         if (event->utf8 == "q") loop.quit();
     };
-    auto keyboard = TzKeyboardHandler::create(dispatcher.get(), consoleInput.get(), onKeyboardEvent);
+    auto keyboard = tz::as_scoped_ptr(
+        TzKeyboardHandler::create(dispatcher.get(), consoleInput.get(), onKeyboardEvent));
 
     auto onRepeat = []() { std::println("Tick"); };
-    auto periodic = TzTimer::repeat(dispatcher.get(), std::chrono::seconds(2), onRepeat);
+    auto periodic = tz::as_scoped_ptr(
+        TzTimer::repeat(dispatcher.get(), std::chrono::seconds(2), onRepeat));
     
     auto onSingleShot = [&]() { loop.quit(); };
-    auto quit = TzTimer::singleShot(dispatcher.get(), std::chrono::seconds(5), onSingleShot);
+    auto quit = tz::as_scoped_ptr(
+        TzTimer::singleShot(dispatcher.get(), std::chrono::seconds(5), onSingleShot));
 
     loop.exec();
 
