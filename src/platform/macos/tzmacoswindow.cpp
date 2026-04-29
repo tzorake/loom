@@ -20,10 +20,6 @@ enum class WindowStyle : NSUInteger {
 TZ_DECLARE_FLAGS(WindowStyles, WindowStyle)
 TZ_DECLARE_OPERATORS_FOR_FLAGS(WindowStyles)
 
-// ---------------------------------------------------------------------------
-// ObjC class registration (once per process)
-// ---------------------------------------------------------------------------
-
 static constexpr const char *kPrivateIvar = "tzPrivate";
 
 static void* getPrivate(ObjcObject self)
@@ -76,10 +72,6 @@ static void registerObjcClasses()
         objc_registerClassPair(gContentViewClass);
     });
 }
-
-// ---------------------------------------------------------------------------
-// TzMacosWindowPrivate
-// ---------------------------------------------------------------------------
 
 TzMacosWindowPrivate::TzMacosWindowPrivate(int width, int height)
     : windowWidth(width), windowHeight(height)
@@ -224,10 +216,6 @@ void TzMacosWindowPrivate::onDrawRect(ObjcObject self, CGRect /*rect*/)
     CGColorSpaceRelease(colorSpace);
     CGContextRestoreGState(ctx);
 }
-
-// ---------------------------------------------------------------------------
-// TzMacosWindow
-// ---------------------------------------------------------------------------
 
 TzMacosWindow::TzMacosWindow(int width, int height)
     : d_ptr(new TzMacosWindowPrivate(width, height))

@@ -4,16 +4,18 @@
 #include <event-loop/TzAbstractWindow>
 #include <event-loop/TzEventLoop>
 #include <event-loop/TzTimer>
+#include <event-loop/TzSignalHandler>
 #include <event-loop/TzScopedPointer>
 
 #include <cmath>
+#include <csignal>
 #include <cstdint>
 #include <print>
 #include <vector>
 
-static constexpr int kWidth  = 800;
+static constexpr int kWidth = 800;
 static constexpr int kHeight = 600;
-static constexpr int kFps    = 60;
+static constexpr int kFps = 60;
 
 static std::vector<uint32_t> generateFrame(std::size_t frameId, int width, int height)
 {
@@ -38,16 +40,21 @@ int main()
 
     TzEventLoop loop(dispatcher.get());
 
-    int renderWidth  = kWidth;
+    auto sigint = tz::as_scoped_ptr(
+        TzSignalHandler::create(dispatcher.get(), SIGINT, [&](int) { loop.quit(); }));
+
+    int renderWidth = kWidth;
     int renderHeight = kHeight;
 
     window->setTitle("event-loop window");
     window->setCloseCallback([&]() { loop.quit(); });
-    window->setResizeCallback([&](int w, int h) {
-        renderWidth  = w;
-        renderHeight = h;
-        std::println("Resized: {}x{}", w, h);
-    });
+
+    window->setResizeCallback(
+        [&](int w, int h) {
+            renderWidth  = w;
+            renderHeight = h;
+            std::println("Resized: {}x{}", w, h);
+        });
     window->show();
 
     std::size_t frame = 0;
