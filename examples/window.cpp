@@ -15,16 +15,16 @@ static constexpr int kWidth  = 800;
 static constexpr int kHeight = 600;
 static constexpr int kFps    = 60;
 
-static std::vector<uint32_t> generateFrame(std::size_t frameId)
+static std::vector<uint32_t> generateFrame(std::size_t frameId, int width, int height)
 {
     double t = frameId / (double)kFps;
-    std::vector<uint32_t> pixels(kWidth * kHeight);
-    for (int y = 0; y < kHeight; ++y) {
-        for (int x = 0; x < kWidth; ++x) {
-            uint8_t r = (uint8_t)((std::cos((double)x / kWidth  + t) * 0.5 + 0.5) * 255);
-            uint8_t g = (uint8_t)((std::sin((double)y / kHeight + t) * 0.5 + 0.5) * 255);
-            uint8_t b = (uint8_t)((std::cos((double)(x + y) / (kWidth + kHeight) + t) * 0.5 + 0.5) * 255);
-            pixels[y * kWidth + x] = (0xFFu << 24) | (r << 16) | (g << 8) | b;
+    std::vector<uint32_t> pixels(width * height);
+    for (int y = 0; y < height; ++y) {
+        for (int x = 0; x < width; ++x) {
+            uint8_t r = (uint8_t)((std::cos((double)x / width  + t) * 0.5 + 0.5) * 255);
+            uint8_t g = (uint8_t)((std::sin((double)y / height + t) * 0.5 + 0.5) * 255);
+            uint8_t b = (uint8_t)((std::cos((double)(x + y) / (width + height) + t) * 0.5 + 0.5) * 255);
+            pixels[y * width + x] = (0xFFu << 24) | (r << 16) | (g << 8) | b;
         }
     }
     return pixels;
@@ -38,14 +38,22 @@ int main()
 
     TzEventLoop loop(dispatcher.get());
 
+    int renderWidth  = kWidth;
+    int renderHeight = kHeight;
+
     window->setTitle("event-loop window");
     window->setCloseCallback([&]() { loop.quit(); });
+    window->setResizeCallback([&](int w, int h) {
+        renderWidth  = w;
+        renderHeight = h;
+        std::println("Resized: {}x{}", w, h);
+    });
     window->show();
 
     std::size_t frame = 0;
     auto ticker = tz::as_scoped_ptr(
-        TzTimer::repeat(dispatcher.get(), std::chrono::milliseconds(1000 / kFps), 
-            [&]() { window->render(generateFrame(frame++), kWidth, kHeight); }));
+        TzTimer::repeat(dispatcher.get(), std::chrono::milliseconds(1000 / kFps),
+            [&]() { window->render(generateFrame(frame++, renderWidth, renderHeight), renderWidth, renderHeight); }));
 
     loop.exec();
 

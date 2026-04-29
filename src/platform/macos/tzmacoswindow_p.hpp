@@ -24,6 +24,7 @@ public:
 
     // Called from ObjC callbacks
     bool onWindowShouldClose();
+    void onWindowDidResize();
     void onDrawRect(ObjcObject self, CGRect rect);
 
     ObjcObject window{ nullptr };
@@ -38,7 +39,8 @@ public:
     int pixelHeight{ 0 };
     std::mutex pixelMutex;
 
-    TzAbstractWindow::CloseCallback closeCallback;
+    TzAbstractWindow::CloseCallback  closeCallback;
+    TzAbstractWindow::ResizeCallback resizeCallback;
 };
 
 #endif // TZMACOSWINDOW_P_HPP

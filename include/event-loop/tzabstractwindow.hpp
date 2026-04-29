@@ -9,7 +9,8 @@
 class TzAbstractWindow
 {
 public:
-    using CloseCallback = std::function<void()>;
+    using CloseCallback  = std::function<void()>;
+    using ResizeCallback = std::function<void(int width, int height)>;
 
     virtual ~TzAbstractWindow();
 
@@ -18,6 +19,7 @@ public:
     virtual void hide() = 0;
 
     virtual void setCloseCallback(CloseCallback callback) = 0;
+    virtual void setResizeCallback(ResizeCallback callback) = 0;
 
     virtual void render(const std::vector<uint32_t>& pixels, int width, int height) = 0;
 };

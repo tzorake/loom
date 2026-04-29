@@ -45,6 +45,12 @@ static void drawRect_impl(ObjcObject self, objc_selector*, CGRect rect)
     if (d) d->onDrawRect(self, rect);
 }
 
+static void windowDidResize_impl(ObjcObject self, objc_selector*, ObjcObject /*notification*/)
+{
+    auto* d = static_cast<TzMacosWindowPrivate*>(getPrivate(self));
+    if (d) d->onWindowDidResize();
+}
+
 static ObjcClass gDelegateClass   = nullptr;
 static ObjcClass gContentViewClass = nullptr;
 static std::once_flag gClassRegistration;
@@ -57,6 +63,8 @@ static void registerObjcClasses()
         class_addIvar(gDelegateClass, kPrivateIvar, sizeof(void*), __alignof(void*), "^v");
         class_addMethod(gDelegateClass, sel_registerName("windowShouldClose:"),
             reinterpret_cast<ObjcMethodImpl>(windowShouldClose_impl), "c@:@");
+        class_addMethod(gDelegateClass, sel_registerName("windowDidResize:"),
+            reinterpret_cast<ObjcMethodImpl>(windowDidResize_impl), "v@:@");
         objc_registerClassPair(gDelegateClass);
 
         // Content view class
@@ -168,6 +176,15 @@ bool TzMacosWindowPrivate::onWindowShouldClose()
     return true;
 }
 
+void TzMacosWindowPrivate::onWindowDidResize()
+{
+    CGRect bounds = sendMessage<CGRect>(contentView, "bounds");
+    windowWidth  = (int)bounds.size.width;
+    windowHeight = (int)bounds.size.height;
+    if (resizeCallback)
+        resizeCallback(windowWidth, windowHeight);
+}
+
 void TzMacosWindowPrivate::onDrawRect(ObjcObject self, CGRect /*rect*/)
 {
     std::lock_guard lock(pixelMutex);
@@ -237,6 +254,11 @@ void TzMacosWindow::hide()
 void TzMacosWindow::setCloseCallback(CloseCallback callback)
 {
     d_ptr->closeCallback = std::move(callback);
+}
+
+void TzMacosWindow::setResizeCallback(ResizeCallback callback)
+{
+    d_ptr->resizeCallback = std::move(callback);
 }
 
 void TzMacosWindow::render(const std::vector<uint32_t>& pixels, int width, int height)
