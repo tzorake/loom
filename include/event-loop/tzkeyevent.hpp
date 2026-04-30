@@ -1,6 +1,8 @@
 #ifndef TZKEYEVENT_HPP
 #define TZKEYEVENT_HPP
 
+#include <event-loop/tzflags.hpp>
+
 #include <string>
 
 enum class Key
@@ -34,16 +36,18 @@ enum class Key
 
 enum class KeyModifier
 {
-    None   = 0,
-    Ctrl   = 1 << 0,
-    Alt    = 1 << 1,
-    Shift  = 1 << 2,
+    None = 0,
+    Ctrl = 1 << 0,
+    Alt = 1 << 1,
+    Shift = 1 << 2,
 };
+TZ_DECLARE_FLAGS(KeyModifiers, KeyModifier)
+TZ_DECLARE_OPERATORS_FOR_FLAGS(KeyModifiers)
 
 struct TzKeyEvent
 {
     Key key{ Key::Unknown };
-    int modifiers{ 0 };
+    KeyModifiers modifiers{ KeyModifier::None };
     std::string utf8;
 };
 

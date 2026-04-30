@@ -1,6 +1,8 @@
 #ifndef TZMOUSEEVENT_HPP
 #define TZMOUSEEVENT_HPP
 
+#include <event-loop/tzkeyevent.hpp>
+
 enum class MouseButton
 {
     None   = 0,
@@ -25,7 +27,7 @@ struct TzMouseEvent
     double y{ 0.0 };
     double scrollDx{ 0.0 };
     double scrollDy{ 0.0 };
-    int modifiers{ 0 };
+    KeyModifiers modifiers;
 };
 
 #endif // TZMOUSEEVENT_HPP

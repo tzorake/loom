@@ -295,12 +295,12 @@ static constexpr NSUInteger kNSControlKeyMask = 1 << 18;
 static constexpr NSUInteger kNSAlternateKeyMask = 1 << 19;
 static constexpr NSUInteger kNSCommandKeyMask = 1 << 20;
 
-static int translateModifiers(NSUInteger flags)
+static KeyModifiers translateModifiers(NSUInteger flags)
 {
-    int mods = 0;
-    if (flags & kNSShiftKeyMask)     mods |= (int)KeyModifier::Shift;
-    if (flags & kNSControlKeyMask)   mods |= (int)KeyModifier::Ctrl;
-    if (flags & kNSAlternateKeyMask) mods |= (int)KeyModifier::Alt;
+    KeyModifiers mods;
+    if (flags & kNSShiftKeyMask)     mods |= KeyModifier::Shift;
+    if (flags & kNSControlKeyMask)   mods |= KeyModifier::Ctrl;
+    if (flags & kNSAlternateKeyMask) mods |= KeyModifier::Alt;
     return mods;
 }
 
