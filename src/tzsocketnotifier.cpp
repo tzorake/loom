@@ -3,13 +3,13 @@
 
 #include "tzsocketnotifier_p.hpp"
 
-TzSocketNotifierPrivate::TzSocketNotifierPrivate(TzAbstractEventDispatcher *dispatcher)
-    : dispatcher(dispatcher)
+TzSocketNotifierPrivate::TzSocketNotifierPrivate(TzAbstractEventDispatcher *eventDispatcher)
+    : eventDispatcher(eventDispatcher)
 {
 }
 
-TzSocketNotifier::TzSocketNotifier(TzAbstractEventDispatcher *dispatcher)
-    : d_ptr(new TzSocketNotifierPrivate(dispatcher))
+TzSocketNotifier::TzSocketNotifier(TzAbstractEventDispatcher *eventDispatcher)
+    : d_ptr(new TzSocketNotifierPrivate(eventDispatcher))
 {
 }
 
@@ -40,10 +40,10 @@ void TzSocketNotifier::setCallback(NotifyCallback callback)
 
 void TzSocketNotifier::start()
 {
-    d_ptr->handle = d_ptr->dispatcher->registerSocketNotifier(d_ptr->fd, d_ptr->callback);
+    d_ptr->handle = d_ptr->eventDispatcher->registerSocketNotifier(d_ptr->fd, d_ptr->callback);
 }
 
 void TzSocketNotifier::stop()
 {
-    d_ptr->dispatcher->unregisterSocketNotifier(d_ptr->handle);
+    d_ptr->eventDispatcher->unregisterSocketNotifier(d_ptr->handle);
 }

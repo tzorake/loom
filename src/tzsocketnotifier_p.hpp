@@ -10,12 +10,12 @@ class TzSocketNotifierPrivate
 {
     TZ_DECLARE_PUBLIC(TzSocketNotifier)
 public:
-    explicit TzSocketNotifierPrivate(TzAbstractEventDispatcher *dispatcher);
+    explicit TzSocketNotifierPrivate(TzAbstractEventDispatcher *eventDispatcher);
 
 private:
     TzSocketNotifier *q_ptr{ nullptr };
 
-    TzAbstractEventDispatcher *dispatcher{ nullptr };
+    TzAbstractEventDispatcher *eventDispatcher{ nullptr };
     TzSocketNotifier::NotifyHandle handle{ nullptr };
     int fd{ -1 };
     TzSocketNotifier::NotifyCallback callback;

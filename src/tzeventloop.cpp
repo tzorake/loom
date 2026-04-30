@@ -3,13 +3,13 @@
 
 #include "tzeventloop_p.hpp"
 
-TzEventLoopPrivate::TzEventLoopPrivate(TzAbstractEventDispatcher *dispatcher)
-    : dispatcher(dispatcher)
+TzEventLoopPrivate::TzEventLoopPrivate(TzAbstractEventDispatcher *eventDispatcher)
+    : eventDispatcher(eventDispatcher)
 {
 }
 
-TzEventLoop::TzEventLoop(TzAbstractEventDispatcher *dispatcher)
-    : d_ptr(new TzEventLoopPrivate(dispatcher))
+TzEventLoop::TzEventLoop(TzAbstractEventDispatcher *eventDispatcher)
+    : d_ptr(new TzEventLoopPrivate(eventDispatcher))
 {
     d_ptr->q_ptr = this;
 }
@@ -20,10 +20,10 @@ TzEventLoop::~TzEventLoop()
 
 void TzEventLoop::exec()
 {
-    d_ptr->dispatcher->processEvents();
+    d_ptr->eventDispatcher->processEvents();
 }
 
 void TzEventLoop::quit()
 {
-    d_ptr->dispatcher->interrupt();
+    d_ptr->eventDispatcher->interrupt();
 }

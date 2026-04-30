@@ -12,7 +12,7 @@ class TzEventLoop
 {
     TZ_DECLARE_PRIVATE(TzEventLoop)
 public:
-    explicit TzEventLoop(TzAbstractEventDispatcher *dispatcher);
+    explicit TzEventLoop(TzAbstractEventDispatcher *eventDispatcher);
     ~TzEventLoop();
 
     void exec();

@@ -16,7 +16,7 @@ public:
     using NotifyHandle = void *;
     using NotifyCallback = std::function<void(int)>;
 
-    explicit TzSocketNotifier(TzAbstractEventDispatcher *dispatcher);
+    explicit TzSocketNotifier(TzAbstractEventDispatcher *eventDispatcher);
     ~TzSocketNotifier();
 
     NotifyHandle handle() const;

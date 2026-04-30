@@ -1,22 +1,16 @@
+#include <event-loop/TzCoreApplication>
 #include <event-loop/TzAbstractPlatformIntegration>
-#include <event-loop/TzAbstractEventDispatcher>
-#include <event-loop/TzAbstractConsoleInput>
 #include <event-loop/TzAbstractWindow>
 #include <event-loop/TzKeyEvent>
 #include <event-loop/TzMouseEvent>
-#include <event-loop/TzEventLoop>
 #include <event-loop/TzTimer>
-#include <event-loop/TzSignalHandler>
 #include <event-loop/TzScopedPointer>
 
 #include <cmath>
-#include <csignal>
 #include <cstdint>
 #include <print>
 #include <vector>
 
-static constexpr int kWidth = 800;
-static constexpr int kHeight = 600;
 static constexpr int kFps = 60;
 
 static std::vector<uint32_t> generateFrame(std::size_t frameId, int width, int height)
@@ -34,28 +28,25 @@ static std::vector<uint32_t> generateFrame(std::size_t frameId, int width, int h
     return pixels;
 }
 
-int main()
+int main(int argc, char *argv[])
 {
-    auto platform = tz::as_scoped_ptr(createPlatformIntegration());
-    auto dispatcher = tz::as_scoped_ptr(platform->createEventDispatcher());
-    auto window = tz::as_scoped_ptr(platform->createWindow(kWidth, kHeight));
+    TzCoreApplication app(argc, argv);
 
-    TzEventLoop loop(dispatcher.get());
+    int renderWidth  = 800;
+    int renderHeight = 600;
 
-    auto sigint = tz::as_scoped_ptr(
-        TzSignalHandler::create(dispatcher.get(), SIGINT, [&](int) { loop.quit(); }));
-
-    int renderWidth = kWidth;
-    int renderHeight = kHeight;
-
+    auto window = tz::as_scoped_ptr(app.platformIntegration()->createWindow(renderWidth, renderHeight));
     window->setTitle("event-loop window");
-    window->setCloseCallback([&]() { loop.quit(); });
-
-    window->setKeyCallback([&](TzKeyEvent *event) {
-        if (event->key == Key::Escape) { loop.quit(); return; }
-        if (!event->utf8.empty()) std::println("Key: {}", event->utf8);
+    window->setCloseCallback([&]() { app.quit(); });
+    window->setResizeCallback([&](int w, int h) {
+        renderWidth  = w;
+        renderHeight = h;
+        std::println("Resized: {}x{}", w, h);
     });
-
+    window->setKeyCallback([&](TzKeyEvent *event) {
+        if (event->key == Key::Escape) app.quit();
+        else if (!event->utf8.empty()) std::println("Key: {}", event->utf8);
+    });
     window->setMouseCallback([](TzMouseEvent *event) {
         switch (event->type) {
             case MouseEventType::ButtonPress:
@@ -72,23 +63,14 @@ int main()
             default: break;
         }
     });
-
-    window->setResizeCallback(
-        [&](int w, int h) {
-            renderWidth  = w;
-            renderHeight = h;
-            std::println("Resized: {}x{}", w, h);
-        });
     window->show();
 
     std::size_t frame = 0;
     auto ticker = tz::as_scoped_ptr(
-        TzTimer::repeat(dispatcher.get(), std::chrono::milliseconds(1000 / kFps),
-            [&]() { window->render(generateFrame(frame++, renderWidth, renderHeight), renderWidth, renderHeight); }));
+        TzTimer::repeat(app.eventDispatcher(), std::chrono::milliseconds(1000 / kFps),
+            [&]() {
+                window->render(generateFrame(frame++, renderWidth, renderHeight), renderWidth, renderHeight); 
+            }));
 
-    loop.exec();
-
-    std::println("Window closed.");
-
-    return 0;
+    return app.exec();
 }

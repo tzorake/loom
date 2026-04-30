@@ -75,7 +75,7 @@ static void timerCallback(CFRunLoopTimerRef timer, void *info)
     wrapper->callback();
 
     if (wrapper->singleShot)
-        wrapper->dispatcher->unregisterTimer(static_cast<TzAbstractEventDispatcher::TimerHandle>(wrapper));
+        wrapper->eventDispatcher->unregisterTimer(static_cast<TzAbstractEventDispatcher::TimerHandle>(wrapper));
 }
 
 TzMacosEventDispatcher::TimerHandle TzMacosEventDispatcher::registerTimer(TimerInterval interval, bool singleShot, TimerCallback callback)
@@ -86,7 +86,7 @@ TzMacosEventDispatcher::TimerHandle TzMacosEventDispatcher::registerTimer(TimerI
     auto wrapper = std::make_unique<TzMacosEventDispatcherPrivate::TimerWrapper>();
     wrapper->callback = std::move(callback);
     wrapper->singleShot = singleShot;
-    wrapper->dispatcher = this;
+    wrapper->eventDispatcher = this;
 
     CFRunLoopTimerContext context{
         .version = 0, 
@@ -145,7 +145,7 @@ TzMacosEventDispatcher::NotifyHandle TzMacosEventDispatcher::registerSocketNotif
 {
     auto wrapper = std::make_unique<TzMacosEventDispatcherPrivate::NotifyWrapper>();
     wrapper->callback = std::move(callback);
-    wrapper->dispatcher = this;
+    wrapper->eventDispatcher = this;
 
     CFSocketContext context{
         .version = 0,

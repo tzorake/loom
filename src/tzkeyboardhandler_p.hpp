@@ -12,7 +12,7 @@ class TzKeyboardHandlerPrivate
 {
     TZ_DECLARE_PUBLIC(TzKeyboardHandler)
 public:
-    explicit TzKeyboardHandlerPrivate(TzAbstractEventDispatcher *dispatcher, TzAbstractConsoleInput *consoleInput);
+    explicit TzKeyboardHandlerPrivate(TzAbstractEventDispatcher *eventDispatcher, TzAbstractConsoleInput *consoleInput);
     ~TzKeyboardHandlerPrivate();
 
     void onInputAvailable();
@@ -20,7 +20,7 @@ public:
 
     TzKeyboardHandler *q_ptr{ nullptr };
 
-    TzAbstractEventDispatcher *dispatcher{ nullptr };
+    TzAbstractEventDispatcher *eventDispatcher{ nullptr };
     TzAbstractConsoleInput *consoleInput{ nullptr };
     TzKeyboardHandler::KeyCallback callback;
     std::unique_ptr<TzSocketNotifier> notifier;

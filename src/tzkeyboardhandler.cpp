@@ -8,8 +8,8 @@
 
 #include <algorithm>
 
-TzKeyboardHandlerPrivate::TzKeyboardHandlerPrivate(TzAbstractEventDispatcher *dispatcher, TzAbstractConsoleInput *consoleInput)
-    : dispatcher(dispatcher)
+TzKeyboardHandlerPrivate::TzKeyboardHandlerPrivate(TzAbstractEventDispatcher *eventDispatcher, TzAbstractConsoleInput *consoleInput)
+    : eventDispatcher(eventDispatcher)
     , consoleInput(consoleInput)
 {
 }
@@ -140,8 +140,8 @@ void TzKeyboardHandlerPrivate::onInputAvailable()
     }
 }
 
-TzKeyboardHandler::TzKeyboardHandler(TzAbstractEventDispatcher *dispatcher, TzAbstractConsoleInput *consoleInput)
-    : d_ptr(new TzKeyboardHandlerPrivate(dispatcher, consoleInput))
+TzKeyboardHandler::TzKeyboardHandler(TzAbstractEventDispatcher *eventDispatcher, TzAbstractConsoleInput *consoleInput)
+    : d_ptr(new TzKeyboardHandlerPrivate(eventDispatcher, consoleInput))
 {
 }
 
@@ -157,8 +157,8 @@ void TzKeyboardHandler::setCallback(KeyCallback callback)
 
 void TzKeyboardHandler::start()
 {
-    if (!d_ptr->dispatcher)
-        throw std::runtime_error("KeyboardHandler::start() without dispatcher");
+    if (!d_ptr->eventDispatcher)
+        throw std::runtime_error("KeyboardHandler::start() without eventDispatcher");
 
     if (!d_ptr->callback)
         throw std::runtime_error("KeyboardHandler::start() without callback");
@@ -167,7 +167,7 @@ void TzKeyboardHandler::start()
         return;
 
     d_ptr->consoleInput->start();
-    d_ptr->notifier = std::make_unique<TzSocketNotifier>(d_ptr->dispatcher);
+    d_ptr->notifier = std::make_unique<TzSocketNotifier>(d_ptr->eventDispatcher);
     d_ptr->notifier->setFd(d_ptr->consoleInput->fd());
     d_ptr->notifier->setCallback([this](int) { d_ptr->onInputAvailable(); });
     d_ptr->notifier->start();
@@ -185,9 +185,9 @@ void TzKeyboardHandler::stop()
     d_ptr->active = false;
 }
 
-TzKeyboardHandler *TzKeyboardHandler::create(TzAbstractEventDispatcher *dispatcher, TzAbstractConsoleInput *consoleInput, KeyCallback callback)
+TzKeyboardHandler *TzKeyboardHandler::create(TzAbstractEventDispatcher *eventDispatcher, TzAbstractConsoleInput *consoleInput, KeyCallback callback)
 {
-    TzKeyboardHandler *h = new TzKeyboardHandler(dispatcher, consoleInput);
+    TzKeyboardHandler *h = new TzKeyboardHandler(eventDispatcher, consoleInput);
     h->setCallback(std::move(callback));
     h->start();
     return h;

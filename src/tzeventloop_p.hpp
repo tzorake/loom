@@ -10,12 +10,12 @@ class TzEventLoopPrivate
 {
     TZ_DECLARE_PUBLIC(TzEventLoop)
 public:
-    explicit TzEventLoopPrivate(TzAbstractEventDispatcher *dispatcher);
+    explicit TzEventLoopPrivate(TzAbstractEventDispatcher *eventDispatcher);
 
 private:
     TzEventLoop *q_ptr{ nullptr };
 
-    TzAbstractEventDispatcher *dispatcher{ nullptr };
+    TzAbstractEventDispatcher *eventDispatcher{ nullptr };
 };
 
 #endif // TZEVENTLOOP_P

@@ -15,7 +15,7 @@ class TzSignalHandler
 public:
     using SignalCallback = std::function<void(int signo)>;
 
-    explicit TzSignalHandler(TzAbstractEventDispatcher *dispatcher);
+    explicit TzSignalHandler(TzAbstractEventDispatcher *eventDispatcher);
     ~TzSignalHandler();
 
     void setSignal(int signo);
@@ -24,7 +24,7 @@ public:
     void start();
     void stop();
 
-    static TzSignalHandler *create(TzAbstractEventDispatcher *dispatcher, int signo, SignalCallback callback);
+    static TzSignalHandler *create(TzAbstractEventDispatcher *eventDispatcher, int signo, SignalCallback callback);
 
 private:
     std::unique_ptr<TzSignalHandlerPrivate> d_ptr;

@@ -23,7 +23,7 @@ public:
         CFRunLoopTimerRef timer{ nullptr };
         TzAbstractEventDispatcher::TimerCallback callback;
         bool singleShot{ false };
-        TzMacosEventDispatcher *dispatcher{ nullptr };
+        TzMacosEventDispatcher *eventDispatcher{ nullptr };
     };
     using TimerWrapperPtr = std::unique_ptr<TimerWrapper>;
     std::unordered_map<TzAbstractEventDispatcher::TimerHandle, TimerWrapperPtr> timerMap;
@@ -32,7 +32,7 @@ public:
         CFSocketRef socket{ nullptr };
         CFRunLoopSourceRef source{ nullptr };
         TzAbstractEventDispatcher::NotifyCallback callback;
-        TzMacosEventDispatcher *dispatcher{ nullptr };
+        TzMacosEventDispatcher *eventDispatcher{ nullptr };
     };
     using NotifyWrapperPtr = std::unique_ptr<NotifyWrapper>;
     std::unordered_map<TzAbstractEventDispatcher::NotifyHandle, NotifyWrapperPtr> notifyMap;

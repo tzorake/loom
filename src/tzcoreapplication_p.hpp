@@ -1,0 +1,30 @@
+#ifndef TZCOREAPPLICATION_P_HPP
+#define TZCOREAPPLICATION_P_HPP
+
+#include <event-loop/tzclasshelpermacros.hpp>
+#include <event-loop/tzcoreapplication.hpp>
+
+#include <memory>
+
+class TzAbstractPlatformIntegration;
+class TzAbstractEventDispatcher;
+class TzEventLoop;
+class TzSignalHandler;
+
+class TzCoreApplicationPrivate
+{
+    TZ_DECLARE_PUBLIC(TzCoreApplication)
+public:
+    explicit TzCoreApplicationPrivate(TzCoreApplication *q);
+
+    TzCoreApplication *q_ptr{ nullptr };
+
+    std::unique_ptr<TzAbstractPlatformIntegration> platformIntegration;
+    std::unique_ptr<TzAbstractEventDispatcher> eventDispatcher;
+    std::unique_ptr<TzEventLoop> eventLoop;
+    std::unique_ptr<TzSignalHandler> sigintHandler;
+
+    int exitCode{ 0 };
+};
+
+#endif // TZCOREAPPLICATION_P_HPP

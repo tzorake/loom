@@ -18,7 +18,7 @@ public:
     using TimerInterval = std::chrono::milliseconds;
     using TimerCallback = std::function<void()>;
 
-    explicit TzTimer(TzAbstractEventDispatcher *dispatcher);
+    explicit TzTimer(TzAbstractEventDispatcher *eventDispatcher);
     ~TzTimer();
 
     TimerHandle handle() const;
@@ -35,14 +35,14 @@ public:
 
     /**
      * @brief Starts (or restarts) the timer with the configured interval.
-     * @throws std::runtime_error if no dispatcher has been set.
+     * @throws std::runtime_error if no event dispatcher has been set.
      * @throws std::runtime_error if no callback has been set.
      */
     void start();
     void stop();
 
-    static TzTimer *singleShot(TzAbstractEventDispatcher *dispatcher, TimerInterval interval, TimerCallback callback);
-    static TzTimer *repeat(TzAbstractEventDispatcher *dispatcher, TimerInterval interval, TimerCallback callback);
+    static TzTimer *singleShot(TzAbstractEventDispatcher *eventDispatcher, TimerInterval interval, TimerCallback callback);
+    static TzTimer *repeat(TzAbstractEventDispatcher *eventDispatcher, TimerInterval interval, TimerCallback callback);
 
 private:
     std::unique_ptr<TzTimerPrivate> d_ptr;

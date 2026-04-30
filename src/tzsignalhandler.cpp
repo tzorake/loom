@@ -21,13 +21,13 @@ static void pipeSignalHandler(int signo)
     (void)write(it->second, &byte, 1);
 }
 
-TzSignalHandlerPrivate::TzSignalHandlerPrivate(TzAbstractEventDispatcher *dispatcher)
-    : dispatcher(dispatcher)
+TzSignalHandlerPrivate::TzSignalHandlerPrivate(TzAbstractEventDispatcher *eventDispatcher)
+    : eventDispatcher(eventDispatcher)
 {
 }
 
-TzSignalHandler::TzSignalHandler(TzAbstractEventDispatcher *dispatcher)
-    : d_ptr(new TzSignalHandlerPrivate(dispatcher))
+TzSignalHandler::TzSignalHandler(TzAbstractEventDispatcher *eventDispatcher)
+    : d_ptr(new TzSignalHandlerPrivate(eventDispatcher))
 {
 }
 
@@ -65,7 +65,7 @@ void TzSignalHandler::start()
     gSignalWriteFds[d_ptr->signo] = d_ptr->pipeFds[1];
     signal(d_ptr->signo, pipeSignalHandler);
 
-    d_ptr->notifier = std::make_unique<TzSocketNotifier>(d_ptr->dispatcher);
+    d_ptr->notifier = std::make_unique<TzSocketNotifier>(d_ptr->eventDispatcher);
     d_ptr->notifier->setFd(d_ptr->pipeFds[0]);
     d_ptr->notifier->setCallback([this](int) {
         char byte{};
@@ -94,9 +94,9 @@ void TzSignalHandler::stop()
     d_ptr->active = false;
 }
 
-TzSignalHandler *TzSignalHandler::create(TzAbstractEventDispatcher *dispatcher, int signo, SignalCallback callback)
+TzSignalHandler *TzSignalHandler::create(TzAbstractEventDispatcher *eventDispatcher, int signo, SignalCallback callback)
 {
-    TzSignalHandler *h = new TzSignalHandler(dispatcher);
+    TzSignalHandler *h = new TzSignalHandler(eventDispatcher);
     h->setSignal(signo);
     h->setCallback(std::move(callback));
     h->start();

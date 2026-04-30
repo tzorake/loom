@@ -3,14 +3,14 @@
 
 #include "tztimer_p.hpp"
 
-TzTimerPrivate::TzTimerPrivate(TzAbstractEventDispatcher *dispatcher)
-    : dispatcher(dispatcher)
+TzTimerPrivate::TzTimerPrivate(TzAbstractEventDispatcher *eventDispatcher)
+    : eventDispatcher(eventDispatcher)
 {
 }
 
 
-TzTimer::TzTimer(TzAbstractEventDispatcher *dispatcher)
-    : d_ptr(new TzTimerPrivate(dispatcher))
+TzTimer::TzTimer(TzAbstractEventDispatcher *eventDispatcher)
+    : d_ptr(new TzTimerPrivate(eventDispatcher))
 {
 }
 
@@ -56,14 +56,14 @@ bool TzTimer::isActive() const
 
 void TzTimer::start()
 {
-    if (!d_ptr->dispatcher)
-        throw std::runtime_error("Timer::start() without dispatcher");
+    if (!d_ptr->eventDispatcher)
+        throw std::runtime_error("Timer::start() without event dispatcher");
     
     stop();
     if (!d_ptr->callback)
         throw std::runtime_error("Timer::start() without callback");
 
-    d_ptr->handle = d_ptr->dispatcher->registerTimer(d_ptr->interval, d_ptr->singleShot,
+    d_ptr->handle = d_ptr->eventDispatcher->registerTimer(d_ptr->interval, d_ptr->singleShot,
         [this]() {
             if (d_ptr->callback)
                 d_ptr->callback();
@@ -81,15 +81,15 @@ void TzTimer::start()
 void TzTimer::stop()
 {
     if (d_ptr->active) {
-        d_ptr->dispatcher->unregisterTimer(d_ptr->handle);
+        d_ptr->eventDispatcher->unregisterTimer(d_ptr->handle);
         d_ptr->active = false;
         d_ptr->handle = nullptr;
     }
 }
 
-TzTimer *TzTimer::singleShot(TzAbstractEventDispatcher *dispatcher, TimerInterval interval, TimerCallback callback)
+TzTimer *TzTimer::singleShot(TzAbstractEventDispatcher *eventDispatcher, TimerInterval interval, TimerCallback callback)
 {
-    TzTimer* t = new TzTimer(dispatcher);
+    TzTimer* t = new TzTimer(eventDispatcher);
     t->setSingleShot(true);
     t->setInterval(interval);
     t->setCallback(std::move(callback));
@@ -97,9 +97,9 @@ TzTimer *TzTimer::singleShot(TzAbstractEventDispatcher *dispatcher, TimerInterva
     return t;
 }
 
-TzTimer *TzTimer::repeat(TzAbstractEventDispatcher *dispatcher, TimerInterval interval, TimerCallback callback)
+TzTimer *TzTimer::repeat(TzAbstractEventDispatcher *eventDispatcher, TimerInterval interval, TimerCallback callback)
 {
-    TzTimer* t = new TzTimer(dispatcher);
+    TzTimer* t = new TzTimer(eventDispatcher);
     t->setSingleShot(false);
     t->setInterval(interval);
     t->setCallback(std::move(callback));
