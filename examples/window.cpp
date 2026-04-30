@@ -2,6 +2,8 @@
 #include <event-loop/TzAbstractEventDispatcher>
 #include <event-loop/TzAbstractConsoleInput>
 #include <event-loop/TzAbstractWindow>
+#include <event-loop/TzKeyEvent>
+#include <event-loop/TzMouseEvent>
 #include <event-loop/TzEventLoop>
 #include <event-loop/TzTimer>
 #include <event-loop/TzSignalHandler>
@@ -48,6 +50,28 @@ int main()
 
     window->setTitle("event-loop window");
     window->setCloseCallback([&]() { loop.quit(); });
+
+    window->setKeyCallback([&](TzKeyEvent *event) {
+        if (event->key == Key::Escape) { loop.quit(); return; }
+        if (!event->utf8.empty()) std::println("Key: {}", event->utf8);
+    });
+
+    window->setMouseCallback([](TzMouseEvent *event) {
+        switch (event->type) {
+            case MouseEventType::ButtonPress:
+                std::println("Mouse press   ({:.0f}, {:.0f}) button={}",
+                    event->x, event->y, (int)event->button);
+                break;
+            case MouseEventType::ButtonRelease:
+                std::println("Mouse release ({:.0f}, {:.0f}) button={}",
+                    event->x, event->y, (int)event->button);
+                break;
+            case MouseEventType::Scroll:
+                std::println("Scroll dx={:.1f} dy={:.1f}", event->scrollDx, event->scrollDy);
+                break;
+            default: break;
+        }
+    });
 
     window->setResizeCallback(
         [&](int w, int h) {

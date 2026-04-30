@@ -1,6 +1,9 @@
 #ifndef TZABSTRACTWINDOW_HPP
 #define TZABSTRACTWINDOW_HPP
 
+#include <event-loop/tzkeyevent.hpp>
+#include <event-loop/tzmouseevent.hpp>
+
 #include <cstdint>
 #include <functional>
 #include <string>
@@ -11,6 +14,8 @@ class TzAbstractWindow
 public:
     using CloseCallback  = std::function<void()>;
     using ResizeCallback = std::function<void(int width, int height)>;
+    using KeyCallback    = std::function<void(TzKeyEvent*)>;
+    using MouseCallback  = std::function<void(TzMouseEvent*)>;
 
     virtual ~TzAbstractWindow();
 
@@ -20,6 +25,8 @@ public:
 
     virtual void setCloseCallback(CloseCallback callback) = 0;
     virtual void setResizeCallback(ResizeCallback callback) = 0;
+    virtual void setKeyCallback(KeyCallback callback) = 0;
+    virtual void setMouseCallback(MouseCallback callback) = 0;
 
     virtual void render(const std::vector<uint32_t>& pixels, int width, int height) = 0;
 };

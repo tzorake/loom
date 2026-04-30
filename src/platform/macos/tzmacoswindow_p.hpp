@@ -2,6 +2,8 @@
 #define TZMACOSWINDOW_P_HPP
 
 #include <event-loop/tzabstractwindow.hpp>
+#include <event-loop/tzkeyevent.hpp>
+#include <event-loop/tzmouseevent.hpp>
 
 #include "tzobjcutils.hpp"
 
@@ -26,6 +28,8 @@ public:
     bool onWindowShouldClose();
     void onWindowDidResize();
     void onDrawRect(ObjcObject self, CGRect rect);
+    void onKeyEvent(ObjcObject nsEvent, bool pressed);
+    void onMouseEvent(ObjcObject nsEvent, MouseEventType type, MouseButton button);
 
     ObjcObject window{ nullptr };
     ObjcObject delegate{ nullptr };
@@ -41,6 +45,8 @@ public:
 
     TzAbstractWindow::CloseCallback  closeCallback;
     TzAbstractWindow::ResizeCallback resizeCallback;
+    TzAbstractWindow::KeyCallback    keyCallback;
+    TzAbstractWindow::MouseCallback  mouseCallback;
 };
 
 #endif // TZMACOSWINDOW_P_HPP

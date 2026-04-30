@@ -47,6 +47,86 @@ static void windowDidResize_impl(ObjcObject self, objc_selector*, ObjcObject /*n
     if (d) d->onWindowDidResize();
 }
 
+// Content view — keyboard
+static void keyDown_impl(ObjcObject self, objc_selector*, ObjcObject nsEvent)
+{
+    auto* d = static_cast<TzMacosWindowPrivate*>(getPrivate(self));
+    if (d) d->onKeyEvent(nsEvent, true);
+}
+
+static void keyUp_impl(ObjcObject self, objc_selector*, ObjcObject nsEvent)
+{
+    auto* d = static_cast<TzMacosWindowPrivate*>(getPrivate(self));
+    if (d) d->onKeyEvent(nsEvent, false);
+}
+
+static void flagsChanged_impl(ObjcObject self, objc_selector*, ObjcObject nsEvent)
+{
+    // Treat modifier-only events as press (state is in modifierFlags, not keyCode)
+    auto* d = static_cast<TzMacosWindowPrivate*>(getPrivate(self));
+    if (d) d->onKeyEvent(nsEvent, true);
+}
+
+// Content view — mouse
+static void mouseDown_impl(ObjcObject self, objc_selector*, ObjcObject nsEvent)
+{
+    auto* d = static_cast<TzMacosWindowPrivate*>(getPrivate(self));
+    if (d) d->onMouseEvent(nsEvent, MouseEventType::ButtonPress, MouseButton::Left);
+}
+
+static void mouseUp_impl(ObjcObject self, objc_selector*, ObjcObject nsEvent)
+{
+    auto* d = static_cast<TzMacosWindowPrivate*>(getPrivate(self));
+    if (d) d->onMouseEvent(nsEvent, MouseEventType::ButtonRelease, MouseButton::Left);
+}
+
+static void rightMouseDown_impl(ObjcObject self, objc_selector*, ObjcObject nsEvent)
+{
+    auto* d = static_cast<TzMacosWindowPrivate*>(getPrivate(self));
+    if (d) d->onMouseEvent(nsEvent, MouseEventType::ButtonPress, MouseButton::Right);
+}
+
+static void rightMouseUp_impl(ObjcObject self, objc_selector*, ObjcObject nsEvent)
+{
+    auto* d = static_cast<TzMacosWindowPrivate*>(getPrivate(self));
+    if (d) d->onMouseEvent(nsEvent, MouseEventType::ButtonRelease, MouseButton::Right);
+}
+
+static void otherMouseDown_impl(ObjcObject self, objc_selector*, ObjcObject nsEvent)
+{
+    auto* d = static_cast<TzMacosWindowPrivate*>(getPrivate(self));
+    if (d) d->onMouseEvent(nsEvent, MouseEventType::ButtonPress, MouseButton::Middle);
+}
+
+static void otherMouseUp_impl(ObjcObject self, objc_selector*, ObjcObject nsEvent)
+{
+    auto* d = static_cast<TzMacosWindowPrivate*>(getPrivate(self));
+    if (d) d->onMouseEvent(nsEvent, MouseEventType::ButtonRelease, MouseButton::Middle);
+}
+
+static void mouseMoved_impl(ObjcObject self, objc_selector*, ObjcObject nsEvent)
+{
+    auto* d = static_cast<TzMacosWindowPrivate*>(getPrivate(self));
+    if (d) d->onMouseEvent(nsEvent, MouseEventType::Move, MouseButton::None);
+}
+
+static void mouseDragged_impl(ObjcObject self, objc_selector*, ObjcObject nsEvent)
+{
+    auto* d = static_cast<TzMacosWindowPrivate*>(getPrivate(self));
+    if (d) d->onMouseEvent(nsEvent, MouseEventType::Move, MouseButton::None);
+}
+
+static void scrollWheel_impl(ObjcObject self, objc_selector*, ObjcObject nsEvent)
+{
+    auto* d = static_cast<TzMacosWindowPrivate*>(getPrivate(self));
+    if (d) d->onMouseEvent(nsEvent, MouseEventType::Scroll, MouseButton::None);
+}
+
+static BOOL acceptsFirstResponder_impl(ObjcObject /*self*/, objc_selector*)
+{
+    return YES;
+}
+
 static ObjcClass gDelegateClass   = nullptr;
 static ObjcClass gContentViewClass = nullptr;
 static std::once_flag gClassRegistration;
@@ -69,6 +149,34 @@ static void registerObjcClasses()
         class_addMethod(gContentViewClass, sel_registerName("drawRect:"),
             reinterpret_cast<ObjcMethodImpl>(drawRect_impl),
             "v@:{CGRect={CGPoint=dd}{CGSize=dd}}");
+        // Keyboard
+        class_addMethod(gContentViewClass, sel_registerName("keyDown:"),
+            reinterpret_cast<ObjcMethodImpl>(keyDown_impl), "v@:@");
+        class_addMethod(gContentViewClass, sel_registerName("keyUp:"),
+            reinterpret_cast<ObjcMethodImpl>(keyUp_impl), "v@:@");
+        class_addMethod(gContentViewClass, sel_registerName("flagsChanged:"),
+            reinterpret_cast<ObjcMethodImpl>(flagsChanged_impl), "v@:@");
+        class_addMethod(gContentViewClass, sel_registerName("acceptsFirstResponder"),
+            reinterpret_cast<ObjcMethodImpl>(acceptsFirstResponder_impl), "c@:");
+        // Mouse
+        class_addMethod(gContentViewClass, sel_registerName("mouseDown:"),
+            reinterpret_cast<ObjcMethodImpl>(mouseDown_impl), "v@:@");
+        class_addMethod(gContentViewClass, sel_registerName("mouseUp:"),
+            reinterpret_cast<ObjcMethodImpl>(mouseUp_impl), "v@:@");
+        class_addMethod(gContentViewClass, sel_registerName("rightMouseDown:"),
+            reinterpret_cast<ObjcMethodImpl>(rightMouseDown_impl), "v@:@");
+        class_addMethod(gContentViewClass, sel_registerName("rightMouseUp:"),
+            reinterpret_cast<ObjcMethodImpl>(rightMouseUp_impl), "v@:@");
+        class_addMethod(gContentViewClass, sel_registerName("otherMouseDown:"),
+            reinterpret_cast<ObjcMethodImpl>(otherMouseDown_impl), "v@:@");
+        class_addMethod(gContentViewClass, sel_registerName("otherMouseUp:"),
+            reinterpret_cast<ObjcMethodImpl>(otherMouseUp_impl), "v@:@");
+        class_addMethod(gContentViewClass, sel_registerName("mouseMoved:"),
+            reinterpret_cast<ObjcMethodImpl>(mouseMoved_impl), "v@:@");
+        class_addMethod(gContentViewClass, sel_registerName("mouseDragged:"),
+            reinterpret_cast<ObjcMethodImpl>(mouseDragged_impl), "v@:@");
+        class_addMethod(gContentViewClass, sel_registerName("scrollWheel:"),
+            reinterpret_cast<ObjcMethodImpl>(scrollWheel_impl), "v@:@");
         objc_registerClassPair(gContentViewClass);
     });
 }
@@ -118,6 +226,10 @@ TzMacosWindowPrivate::TzMacosWindowPrivate(int width, int height)
     contentView = sendMessage<ObjcObject>(cv, "initWithFrame:", contentBounds);
     object_setInstanceVariable(contentView, kPrivateIvar, this);
     sendMessage<void>(window, "setContentView:", contentView);
+
+    // Enable mouse-moved events (off by default in Cocoa)
+    sendMessage<void>(window, "setAcceptsMouseMovedEvents:", (int)YES);
+    sendMessage<void>(window, "makeFirstResponder:", contentView);
     (void)existingBounds;
 }
 
@@ -175,6 +287,104 @@ void TzMacosWindowPrivate::onWindowDidResize()
     windowHeight = (int)bounds.size.height;
     if (resizeCallback)
         resizeCallback(windowWidth, windowHeight);
+}
+
+// NSEvent modifierFlags bit constants (matches NSEventModifierFlags)
+static constexpr NSUInteger kNSShiftKeyMask   = 1 << 17;
+static constexpr NSUInteger kNSControlKeyMask = 1 << 18;
+static constexpr NSUInteger kNSAlternateKeyMask = 1 << 19;
+static constexpr NSUInteger kNSCommandKeyMask = 1 << 20;
+
+static int translateModifiers(NSUInteger flags)
+{
+    int mods = 0;
+    if (flags & kNSShiftKeyMask)     mods |= (int)KeyModifier::Shift;
+    if (flags & kNSControlKeyMask)   mods |= (int)KeyModifier::Ctrl;
+    if (flags & kNSAlternateKeyMask) mods |= (int)KeyModifier::Alt;
+    return mods;
+}
+
+// NSEvent keyCode values for special keys
+static Key translateKeyCode(unsigned short keyCode)
+{
+    switch (keyCode) {
+        case 0x35: return Key::Escape;
+        case 0x24: return Key::Enter;
+        case 0x4C: return Key::Enter;   // numpad enter
+        case 0x30: return Key::Tab;
+        case 0x33: return Key::Backspace;
+        case 0x7E: return Key::Up;
+        case 0x7D: return Key::Down;
+        case 0x7B: return Key::Left;
+        case 0x7C: return Key::Right;
+        case 0x73: return Key::Home;
+        case 0x77: return Key::End;
+        case 0x74: return Key::PageUp;
+        case 0x79: return Key::PageDown;
+        case 0x7A: return Key::F1;
+        case 0x78: return Key::F2;
+        case 0x63: return Key::F3;
+        case 0x76: return Key::F4;
+        case 0x60: return Key::F5;
+        case 0x61: return Key::F6;
+        case 0x62: return Key::F7;
+        case 0x64: return Key::F8;
+        case 0x65: return Key::F9;
+        case 0x6D: return Key::F10;
+        case 0x67: return Key::F11;
+        case 0x6F: return Key::F12;
+        default:   return Key::Unknown;
+    }
+}
+
+void TzMacosWindowPrivate::onKeyEvent(ObjcObject nsEvent, bool /*pressed*/)
+{
+    if (!keyCallback)
+        return;
+
+    NSUInteger flags    = sendMessage<NSUInteger>(nsEvent, "modifierFlags");
+    unsigned short code = sendMessage<unsigned short>(nsEvent, "keyCode");
+
+    TzKeyEvent event;
+    event.modifiers = translateModifiers(flags);
+    event.key       = translateKeyCode(code);
+
+    // characters gives UTF-8 text for printable keys
+    ObjcObject chars = sendMessage<ObjcObject>(nsEvent, "characters");
+    if (chars) {
+        const char* utf8 = sendMessage<const char*>(chars, "UTF8String");
+        if (utf8 && event.key == Key::Unknown)
+            event.utf8 = utf8;
+    }
+
+    keyCallback(&event);
+}
+
+void TzMacosWindowPrivate::onMouseEvent(ObjcObject nsEvent, MouseEventType type, MouseButton button)
+{
+    if (!mouseCallback)
+        return;
+
+    // Convert from window coords to view (flipped: origin top-left)
+    CGPoint windowPos = sendMessage<CGPoint>(nsEvent, "locationInWindow");
+    CGPoint viewPos   = sendMessage<CGPoint>(contentView, "convertPoint:fromView:", windowPos, nullptr);
+    CGRect  bounds    = sendMessage<CGRect>(contentView, "bounds");
+
+    NSUInteger flags  = sendMessage<NSUInteger>(nsEvent, "modifierFlags");
+
+    TzMouseEvent event;
+    event.type      = type;
+    event.button    = button;
+    event.x         = viewPos.x;
+    event.y         = bounds.size.height - viewPos.y; // flip to top-left origin
+    event.modifiers = translateModifiers(flags);
+
+    if (type == MouseEventType::Scroll) {
+        event.scrollDx = sendMessage<double>(nsEvent, "scrollingDeltaX");
+        event.scrollDy = sendMessage<double>(nsEvent, "scrollingDeltaY");
+    }
+
+    mouseCallback(&event);
 }
 
 void TzMacosWindowPrivate::onDrawRect(ObjcObject self, CGRect /*rect*/)
@@ -247,6 +457,16 @@ void TzMacosWindow::setCloseCallback(CloseCallback callback)
 void TzMacosWindow::setResizeCallback(ResizeCallback callback)
 {
     d_ptr->resizeCallback = std::move(callback);
+}
+
+void TzMacosWindow::setKeyCallback(KeyCallback callback)
+{
+    d_ptr->keyCallback = std::move(callback);
+}
+
+void TzMacosWindow::setMouseCallback(MouseCallback callback)
+{
+    d_ptr->mouseCallback = std::move(callback);
 }
 
 void TzMacosWindow::render(const std::vector<uint32_t>& pixels, int width, int height)
