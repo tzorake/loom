@@ -1,5 +1,4 @@
-#include <event-loop/TzCoreApplication>
-#include <event-loop/TzAbstractPlatformIntegration>
+#include <event-loop/TzGuiApplication>
 #include <event-loop/TzAbstractWindow>
 #include <event-loop/TzKeyEvent>
 #include <event-loop/TzMouseEvent>
@@ -30,12 +29,12 @@ static std::vector<uint32_t> generateFrame(std::size_t frameId, int width, int h
 
 int main(int argc, char *argv[])
 {
-    TzCoreApplication app(argc, argv);
+    TzGuiApplication app(argc, argv);
 
     int renderWidth  = 800;
     int renderHeight = 600;
 
-    auto window = tz::as_scoped_ptr(app.platformIntegration()->createWindow(renderWidth, renderHeight));
+    auto window = tz::as_scoped_ptr(app.createWindow(renderWidth, renderHeight));
     window->setTitle("event-loop window");
     window->setCloseCallback([&]() { app.quit(); });
     window->setResizeCallback([&](int w, int h) {

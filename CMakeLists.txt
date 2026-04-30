@@ -17,6 +17,7 @@ add_library(event-loop
     src/tzkeyboardhandler.cpp
     src/tzsignalhandler.cpp
     src/tzcoreapplication.cpp
+    src/tzguiapplication.cpp
 )
 target_include_directories(event-loop PUBLIC include)
 
