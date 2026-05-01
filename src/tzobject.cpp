@@ -1,4 +1,6 @@
 #include <event-loop/tzobject.hpp>
+#include <event-loop/tzevent.hpp>
+#include <event-loop/tzcoreapplication.hpp>
 
 #include "tzobject_p.hpp"
 
@@ -54,6 +56,9 @@ TzObject::TzObject(TzObject *parent)
 
 TzObject::~TzObject()
 {
+    if (TzCoreApplication *app = TzCoreApplication::instance())
+        app->removePostedEvents(this);
+
     // Remove self from parent's children list without touching siblings
     d_ptr->unlinkFromParent();
 
@@ -108,4 +113,9 @@ std::vector<TzObject *> TzObject::children() const
     for (TzObject *c = d_ptr->firstChild; c; c = c->d_ptr->nextSibling)
         result.push_back(c);
     return result;
+}
+
+bool TzObject::event(TzEvent * /*event*/)
+{
+    return false;
 }

@@ -17,6 +17,8 @@ public:
 
     virtual void processEvents() override;
     virtual void interrupt() override;
+    virtual void wakeUp() override;
+    virtual void setPreWaitCallback(PreWaitCallback callback) override;
 
     virtual TimerHandle registerTimer(TimerInterval interval, bool singleShot, TimerCallback callback) override;
     virtual void unregisterTimer(TimerHandle) override;

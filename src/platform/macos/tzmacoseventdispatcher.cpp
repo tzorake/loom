@@ -19,6 +19,10 @@ TzMacosEventDispatcher::~TzMacosEventDispatcher()
 {
     while (!d_ptr->timerMap.empty())
         unregisterTimer(d_ptr->timerMap.begin()->first);
+    if (d_ptr->preWaitObserver) {
+        CFRunLoopRemoveObserver(d_ptr->runLoop, d_ptr->preWaitObserver, kCFRunLoopCommonModes);
+        CFRelease(d_ptr->preWaitObserver);
+    }
     CFRelease(d_ptr->runLoop);
 }
 
@@ -64,6 +68,43 @@ void TzMacosEventDispatcher::interrupt()
     } else {
         CFRunLoopStop(d_ptr->runLoop);
     }
+}
+
+void TzMacosEventDispatcher::wakeUp()
+{
+    CFRunLoopWakeUp(d_ptr->runLoop);
+}
+
+static void preWaitObserverCallback(CFRunLoopObserverRef, CFRunLoopActivity, void *info)
+{
+    auto *d = static_cast<TzMacosEventDispatcherPrivate *>(info);
+    if (d->preWaitCallback)
+        d->preWaitCallback();
+}
+
+void TzMacosEventDispatcher::setPreWaitCallback(PreWaitCallback callback)
+{
+    d_ptr->preWaitCallback = std::move(callback);
+
+    if (d_ptr->preWaitObserver)
+        return;
+
+    CFRunLoopObserverContext ctx{
+        .version = 0,
+        .info = d_ptr.get(),
+        .retain = nullptr,
+        .release = nullptr,
+        .copyDescription = nullptr
+    };
+    d_ptr->preWaitObserver = CFRunLoopObserverCreate(
+        kCFAllocatorDefault,
+        kCFRunLoopBeforeWaiting,
+        true,
+        0,
+        preWaitObserverCallback,
+        &ctx
+    );
+    CFRunLoopAddObserver(d_ptr->runLoop, d_ptr->preWaitObserver, kCFRunLoopCommonModes);
 }
 
 static void timerCallback(CFRunLoopTimerRef timer, void *info)

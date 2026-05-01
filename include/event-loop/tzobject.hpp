@@ -6,6 +6,8 @@
 #include <memory>
 #include <vector>
 
+class TzEvent;
+
 class TzObjectPrivate;
 
 class TzObject
@@ -24,6 +26,8 @@ public:
     TzObject *previousSibling() const;
 
     std::vector<TzObject *> children() const;
+
+    virtual bool event(TzEvent *event);
 
 private:
     std::unique_ptr<TzObjectPrivate> d_ptr;

@@ -19,6 +19,9 @@ public:
     CFRunLoopRef runLoop{ nullptr };
     bool interrupted{ false };
 
+    CFRunLoopObserverRef preWaitObserver{ nullptr };
+    TzAbstractEventDispatcher::PreWaitCallback preWaitCallback;
+
     struct TimerWrapper {
         CFRunLoopTimerRef timer{ nullptr };
         TzAbstractEventDispatcher::TimerCallback callback;

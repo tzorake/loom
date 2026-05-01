@@ -4,12 +4,17 @@
 #include <event-loop/tzclasshelpermacros.hpp>
 #include <event-loop/tzcoreapplication.hpp>
 
+#include <event-loop/tzevent.hpp>
+
 #include <memory>
+#include <mutex>
+#include <vector>
 
 class TzAbstractPlatformIntegration;
 class TzAbstractEventDispatcher;
 class TzEventLoop;
 class TzSignalHandler;
+class TzObject;
 
 class TzCoreApplicationPrivate
 {
@@ -25,6 +30,13 @@ public:
     std::unique_ptr<TzSignalHandler> sigintHandler;
 
     int exitCode{ 0 };
+
+    struct PendingEvent {
+        TzObject *receiver;
+        std::unique_ptr<TzEvent> event;
+    };
+    std::mutex eventQueueMutex;
+    std::vector<PendingEvent> eventQueue;
 };
 
 #endif // TZCOREAPPLICATION_P_HPP

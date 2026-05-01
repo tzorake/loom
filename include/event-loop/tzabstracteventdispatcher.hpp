@@ -3,6 +3,7 @@
 
 #include <chrono>
 #include <functional>
+#include <utility>
 
 class TzAbstractEventDispatcher
 {
@@ -16,8 +17,12 @@ public:
 
     virtual ~TzAbstractEventDispatcher();
 
+    using PreWaitCallback = std::function<void()>;
+
     virtual void processEvents() = 0;
     virtual void interrupt() = 0;
+    virtual void wakeUp() = 0;
+    virtual void setPreWaitCallback(PreWaitCallback callback) = 0;
 
     virtual TimerHandle registerTimer(TimerInterval interval, bool singleShot, TimerCallback callback) = 0;
     virtual void unregisterTimer(TimerHandle handle) = 0;

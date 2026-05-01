@@ -3,9 +3,12 @@
 #include <event-loop/tzabstracteventdispatcher.hpp>
 #include <event-loop/tzeventloop.hpp>
 #include <event-loop/tzsignalhandler.hpp>
+#include <event-loop/tzobject.hpp>
+#include <event-loop/tzevent.hpp>
 
 #include "tzcoreapplication_p.hpp"
 
+#include <algorithm>
 #include <csignal>
 #include <stdexcept>
 
@@ -28,6 +31,8 @@ TzCoreApplication::TzCoreApplication(int /*argc*/, char * /*argv*/[])
     d_ptr->eventLoop = std::make_unique<TzEventLoop>(d_ptr->eventDispatcher.get());
     d_ptr->sigintHandler = std::unique_ptr<TzSignalHandler>(
         TzSignalHandler::create(d_ptr->eventDispatcher.get(), SIGINT, [this](int) { quit(); }));
+
+    d_ptr->eventDispatcher->setPreWaitCallback([this] { processPostedEvents(); });
 }
 
 TzCoreApplication::~TzCoreApplication()
@@ -61,4 +66,45 @@ void TzCoreApplication::quit(int exitCode)
 {
     d_ptr->exitCode = exitCode;
     d_ptr->eventLoop->quit();
+}
+
+void TzCoreApplication::postEvent(TzObject *receiver, TzEvent *event)
+{
+    TzCoreApplication *app = instance();
+    if (!app) {
+        delete event;
+        return;
+    }
+    {
+        std::lock_guard lock(app->d_ptr->eventQueueMutex);
+        app->d_ptr->eventQueue.push_back({ receiver, std::unique_ptr<TzEvent>(event) });
+    }
+    app->d_ptr->eventDispatcher->wakeUp();
+}
+
+bool TzCoreApplication::sendEvent(TzObject *receiver, TzEvent *event)
+{
+    if (!receiver || !event)
+        return false;
+    return receiver->event(event);
+}
+
+void TzCoreApplication::removePostedEvents(TzObject *receiver)
+{
+    std::lock_guard lock(d_ptr->eventQueueMutex);
+    std::erase_if(d_ptr->eventQueue,
+        [receiver](const TzCoreApplicationPrivate::PendingEvent &pe) {
+            return pe.receiver == receiver;
+        });
+}
+
+void TzCoreApplication::processPostedEvents()
+{
+    std::vector<TzCoreApplicationPrivate::PendingEvent> batch;
+    {
+        std::lock_guard lock(d_ptr->eventQueueMutex);
+        batch.swap(d_ptr->eventQueue);
+    }
+    for (TzCoreApplicationPrivate::PendingEvent &pe : batch)
+        pe.receiver->event(pe.event.get());
 }
