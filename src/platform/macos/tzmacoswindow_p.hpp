@@ -2,8 +2,10 @@
 #define TZMACOSWINDOW_P_HPP
 
 #include <event-loop/tzabstractwindow.hpp>
+#include <event-loop/tzevent.hpp>
 #include <event-loop/tzkeyevent.hpp>
 #include <event-loop/tzmouseevent.hpp>
+#include <event-loop/tzcoreapplication.hpp>
 
 #include "tzobjcutils.hpp"
 
@@ -16,7 +18,7 @@
 class TzMacosWindowPrivate
 {
 public:
-    TzMacosWindowPrivate(int width, int height);
+    TzMacosWindowPrivate(int width, int height, TzAbstractWindow *owner);
     ~TzMacosWindowPrivate();
 
     void setTitle(const std::string& title);
@@ -29,7 +31,9 @@ public:
     void onWindowDidResize();
     void onDrawRect(ObjcObject self, CGRect rect);
     void onKeyEvent(ObjcObject nsEvent, bool pressed);
-    void onMouseEvent(ObjcObject nsEvent, MouseEventType type, MouseButton button);
+    void onMouseEvent(ObjcObject nsEvent, TzEvent::Type type, MouseButton button);
+
+    TzAbstractWindow *owner{ nullptr };
 
     ObjcObject window{ nullptr };
     ObjcObject delegate{ nullptr };
@@ -43,10 +47,10 @@ public:
     int pixelHeight{ 0 };
     std::mutex pixelMutex;
 
+    // Close and resize are delivered synchronously: close must answer Cocoa
+    // immediately; resize updates geometry before any dependent code runs.
     TzAbstractWindow::CloseCallback  closeCallback;
     TzAbstractWindow::ResizeCallback resizeCallback;
-    TzAbstractWindow::KeyCallback    keyCallback;
-    TzAbstractWindow::MouseCallback  mouseCallback;
 };
 
 #endif // TZMACOSWINDOW_P_HPP

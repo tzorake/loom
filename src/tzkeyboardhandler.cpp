@@ -3,6 +3,7 @@
 #include <event-loop/tzabstractconsoleinput.hpp>
 #include <event-loop/tzsocketnotifier.hpp>
 #include <event-loop/tzkeyevent.hpp>
+#include <event-loop/tzcoreapplication.hpp>
 
 #include "tzkeyboardhandler_p.hpp"
 
@@ -20,7 +21,7 @@ TzKeyboardHandlerPrivate::~TzKeyboardHandlerPrivate()
 
 void TzKeyboardHandlerPrivate::processKeyEvent(TzKeyEvent *event)
 {
-    if (callback) callback(event);
+    TzCoreApplication::postEvent(q_ptr, event->clone());
 }
 
 void TzKeyboardHandlerPrivate::onInputAvailable()
@@ -38,7 +39,7 @@ void TzKeyboardHandlerPrivate::onInputAvailable()
         if (c == 0x1B) {
             if (buffer.size() >= 2 && buffer[1] == 0x1B) {
                 buffer.erase(0, 1);
-                TzKeyEvent event{ Key::Escape, KeyModifier::None, "" };
+                TzKeyEvent event(TzEvent::KeyPress, Key::Escape);
                 processKeyEvent(&event);
                 continue;
             }
@@ -48,47 +49,27 @@ void TzKeyboardHandlerPrivate::onInputAvailable()
                 if (it != buffer.end()) {
                     std::string seq(buffer.begin(), it + 1);
                     buffer.erase(0, seq.size());
-                    if (seq == "\x1B[A") {
-                        TzKeyEvent event{ Key::Up, KeyModifier::None, "" };
-                        processKeyEvent(&event);
-                    } else if (seq == "\x1B[B") {
-                        TzKeyEvent event{ Key::Down, KeyModifier::None, "" };
-                        processKeyEvent(&event);
-                    } else if (seq == "\x1B[C") {
-                        TzKeyEvent event{ Key::Right, KeyModifier::None, "" };
-                        processKeyEvent(&event);
-                    } else if (seq == "\x1B[D") {
-                        TzKeyEvent event{ Key::Left, KeyModifier::None, "" };
-                        processKeyEvent(&event);
-                    } else if (seq == "\x1B[1~") {
-                        TzKeyEvent event{ Key::Home, KeyModifier::None, "" };
-                        processKeyEvent(&event);
-                    } else if (seq == "\x1B[4~") {
-                        TzKeyEvent event{ Key::End, KeyModifier::None, "" };
-                        processKeyEvent(&event);
-                    } else if (seq == "\x1B[5~") {
-                        TzKeyEvent event{ Key::PageUp, KeyModifier::None, "" };
-                        processKeyEvent(&event);
-                    } else if (seq == "\x1B[6~") {
-                        TzKeyEvent event{ Key::PageDown, KeyModifier::None, "" };
-                        processKeyEvent(&event);
-                    } else if (seq == "\x1B[11~") {
-                        TzKeyEvent event{ Key::F1, KeyModifier::None, "" };
-                        processKeyEvent(&event);
-                    } else if (seq == "\x1B[12~") {
-                        TzKeyEvent event{ Key::F2, KeyModifier::None, "" };
-                        processKeyEvent(&event);
-                    } else {
-                        TzKeyEvent event{ Key::Unknown, KeyModifier::None, "" };
-                        processKeyEvent(&event);
-                    } continue;
+                    Key k = Key::Unknown;
+                    if      (seq == "\x1B[A")  k = Key::Up;
+                    else if (seq == "\x1B[B")  k = Key::Down;
+                    else if (seq == "\x1B[C")  k = Key::Right;
+                    else if (seq == "\x1B[D")  k = Key::Left;
+                    else if (seq == "\x1B[1~") k = Key::Home;
+                    else if (seq == "\x1B[4~") k = Key::End;
+                    else if (seq == "\x1B[5~") k = Key::PageUp;
+                    else if (seq == "\x1B[6~") k = Key::PageDown;
+                    else if (seq == "\x1B[11~") k = Key::F1;
+                    else if (seq == "\x1B[12~") k = Key::F2;
+                    TzKeyEvent event(TzEvent::KeyPress, k);
+                    processKeyEvent(&event);
+                    continue;
                 } else {
                     break; // incomplete sequence
                 }
             }
             // lone ESC (or unrecognised sequence)
             buffer.erase(0, 1);
-            TzKeyEvent event{ Key::Escape, KeyModifier::None, "" };
+            TzKeyEvent event(TzEvent::KeyPress, Key::Escape);
             processKeyEvent(&event);
             continue;
         }
@@ -114,35 +95,39 @@ void TzKeyboardHandlerPrivate::onInputAvailable()
                 case 0x01:
                 case 0x03:
                 case 0x04: {
-                    TzKeyEvent event{ Key::Unknown, KeyModifier::Ctrl, "" };
+                    TzKeyEvent event(TzEvent::KeyPress, Key::Unknown, KeyModifier::Ctrl);
                     processKeyEvent(&event);
                 } continue;
                 case 0x08:
                 case 0x7F: {
-                    TzKeyEvent event{ Key::Backspace, KeyModifier::None, "" };
+                    TzKeyEvent event(TzEvent::KeyPress, Key::Backspace);
                     processKeyEvent(&event);
                 } continue;
                 case '\n':
                 case '\r': {
-                    TzKeyEvent event{ Key::Enter, KeyModifier::None, "" };
+                    TzKeyEvent event(TzEvent::KeyPress, Key::Enter);
                     processKeyEvent(&event);
                 } continue;
                 case '\t': {
-                    TzKeyEvent event{ Key::Tab, KeyModifier::None, "" };
+                    TzKeyEvent event(TzEvent::KeyPress, Key::Tab);
                     processKeyEvent(&event);
                 } continue;
                 default: break;
             }
         }
         // Printable text (ASCII or multi-byte UTF-8)
-        TzKeyEvent event{ Key::Unknown, KeyModifier::None, seq };
+        TzKeyEvent event(TzEvent::KeyPress, Key::Unknown, KeyModifier::None, seq);
         processKeyEvent(&event);
     }
 }
 
-TzKeyboardHandler::TzKeyboardHandler(TzAbstractEventDispatcher *eventDispatcher, TzAbstractConsoleInput *consoleInput)
-    : d_ptr(new TzKeyboardHandlerPrivate(eventDispatcher, consoleInput))
+TzKeyboardHandler::TzKeyboardHandler(TzAbstractEventDispatcher *eventDispatcher,
+                                     TzAbstractConsoleInput *consoleInput,
+                                     TzObject *parent)
+    : TzObject(parent)
+    , d_ptr(new TzKeyboardHandlerPrivate(eventDispatcher, consoleInput))
 {
+    d_ptr->q_ptr = this;
 }
 
 TzKeyboardHandler::~TzKeyboardHandler()
@@ -153,6 +138,15 @@ TzKeyboardHandler::~TzKeyboardHandler()
 void TzKeyboardHandler::setCallback(KeyCallback callback)
 {
     d_ptr->callback = std::move(callback);
+}
+
+bool TzKeyboardHandler::event(TzEvent *e)
+{
+    if ((e->type() == TzEvent::KeyPress || e->type() == TzEvent::KeyRelease) && d_ptr->callback) {
+        d_ptr->callback(static_cast<TzKeyEvent *>(e));
+        return true;
+    }
+    return TzObject::event(e);
 }
 
 void TzKeyboardHandler::start()
@@ -185,9 +179,12 @@ void TzKeyboardHandler::stop()
     d_ptr->active = false;
 }
 
-TzKeyboardHandler *TzKeyboardHandler::create(TzAbstractEventDispatcher *eventDispatcher, TzAbstractConsoleInput *consoleInput, KeyCallback callback)
+TzKeyboardHandler *TzKeyboardHandler::create(TzAbstractEventDispatcher *eventDispatcher,
+                                             TzAbstractConsoleInput *consoleInput,
+                                             KeyCallback callback,
+                                             TzObject *parent)
 {
-    TzKeyboardHandler *h = new TzKeyboardHandler(eventDispatcher, consoleInput);
+    TzKeyboardHandler *h = new TzKeyboardHandler(eventDispatcher, consoleInput, parent);
     h->setCallback(std::move(callback));
     h->start();
     return h;

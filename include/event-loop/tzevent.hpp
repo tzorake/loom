@@ -5,9 +5,15 @@ class TzEvent
 {
 public:
     enum Type {
-        None          = 0,
-        DeferredDelete = 1,
-        User          = 1000,  // custom event types start here
+        None               = 0,
+        DeferredDelete     = 1,
+        KeyPress           = 2,
+        KeyRelease         = 3,
+        MouseMove          = 4,
+        MouseButtonPress   = 5,
+        MouseButtonRelease = 6,
+        MouseScroll        = 7,
+        User               = 1000,  // custom event types start here
     };
 
     explicit TzEvent(int type);

@@ -169,10 +169,10 @@ void TzMacosEventDispatcher::unregisterTimer(TimerHandle handle)
     d_ptr->timerMap.erase(it);
 }
 
-static void notifyCallback(CFSocketRef s, CFSocketCallBackType type, CFDataRef address, const void* data, void* info)
+static void notifyCallback(CFSocketRef s, CFSocketCallBackType type, CFDataRef address, const void *data, void *info)
 {
     (void)address; (void)data;
-    auto* wrapper = static_cast<TzMacosEventDispatcherPrivate::NotifyWrapper *>(info);
+    auto *wrapper = static_cast<TzMacosEventDispatcherPrivate::NotifyWrapper *>(info);
     if (!wrapper || !wrapper->callback)
         return;
 
@@ -225,7 +225,7 @@ void TzMacosEventDispatcher::unregisterSocketNotifier(NotifyHandle handle)
     auto it = d_ptr->notifyMap.find(handle);
     if (it == d_ptr->notifyMap.end())
         return;
-    
+
     if (it->second->source) {
         CFRunLoopRemoveSource(d_ptr->runLoop, it->second->source, kCFRunLoopCommonModes);
         CFRelease(it->second->source);

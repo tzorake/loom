@@ -43,21 +43,21 @@ int main(int argc, char *argv[])
         std::println("Resized: {}x{}", w, h);
     });
     window->setKeyCallback([&](TzKeyEvent *event) {
-        if (event->key == Key::Escape) app.quit();
-        else if (!event->utf8.empty()) std::println("Key: {}", event->utf8);
+        if (event->key() == Key::Escape) app.quit();
+        else if (!event->utf8().empty()) std::println("Key: {}", event->utf8());
     });
     window->setMouseCallback([](TzMouseEvent *event) {
-        switch (event->type) {
-            case MouseEventType::ButtonPress:
+        switch (event->type()) {
+            case TzEvent::MouseButtonPress:
                 std::println("Mouse press   ({:.0f}, {:.0f}) button={}",
-                    event->x, event->y, (int)event->button);
+                    event->x(), event->y(), (int)event->button());
                 break;
-            case MouseEventType::ButtonRelease:
+            case TzEvent::MouseButtonRelease:
                 std::println("Mouse release ({:.0f}, {:.0f}) button={}",
-                    event->x, event->y, (int)event->button);
+                    event->x(), event->y(), (int)event->button());
                 break;
-            case MouseEventType::Scroll:
-                std::println("Scroll dx={:.1f} dy={:.1f}", event->scrollDx, event->scrollDy);
+            case TzEvent::MouseScroll:
+                std::println("Scroll dx={:.1f} dy={:.1f}", event->scrollDx(), event->scrollDy());
                 break;
             default: break;
         }

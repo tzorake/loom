@@ -2,6 +2,7 @@
 #define TZKEYBOARDHANDLER_HPP
 
 #include <event-loop/tzclasshelpermacros.hpp>
+#include <event-loop/tzobject.hpp>
 
 #include <functional>
 #include <memory>
@@ -11,21 +12,28 @@ class TzAbstractConsoleInput;
 class TzKeyEvent;
 class TzKeyboardHandlerPrivate;
 
-class TzKeyboardHandler
+class TzKeyboardHandler : public TzObject
 {
     TZ_DECLARE_PRIVATE(TzKeyboardHandler)
 public:
     using KeyCallback = std::function<void(TzKeyEvent *)>;
 
-    explicit TzKeyboardHandler(TzAbstractEventDispatcher *eventDispatcher, TzAbstractConsoleInput *consoleInput);
-    ~TzKeyboardHandler();
+    explicit TzKeyboardHandler(TzAbstractEventDispatcher *eventDispatcher,
+                               TzAbstractConsoleInput *consoleInput,
+                               TzObject *parent = nullptr);
+    ~TzKeyboardHandler() override;
 
     void setCallback(KeyCallback callback);
 
     void start();
     void stop();
 
-    static TzKeyboardHandler *create(TzAbstractEventDispatcher *eventDispatcher, TzAbstractConsoleInput *consoleInput, KeyCallback callback);
+    bool event(TzEvent *event) override;
+
+    static TzKeyboardHandler *create(TzAbstractEventDispatcher *eventDispatcher,
+                                     TzAbstractConsoleInput *consoleInput,
+                                     KeyCallback callback,
+                                     TzObject *parent = nullptr);
 
 private:
     std::unique_ptr<TzKeyboardHandlerPrivate> d_ptr;

@@ -71,55 +71,55 @@ static void flagsChanged_impl(ObjcObject self, objc_selector*, ObjcObject nsEven
 static void mouseDown_impl(ObjcObject self, objc_selector*, ObjcObject nsEvent)
 {
     auto* d = static_cast<TzMacosWindowPrivate*>(getPrivate(self));
-    if (d) d->onMouseEvent(nsEvent, MouseEventType::ButtonPress, MouseButton::Left);
+    if (d) d->onMouseEvent(nsEvent, TzEvent::MouseButtonPress, MouseButton::Left);
 }
 
 static void mouseUp_impl(ObjcObject self, objc_selector*, ObjcObject nsEvent)
 {
     auto* d = static_cast<TzMacosWindowPrivate*>(getPrivate(self));
-    if (d) d->onMouseEvent(nsEvent, MouseEventType::ButtonRelease, MouseButton::Left);
+    if (d) d->onMouseEvent(nsEvent, TzEvent::MouseButtonRelease, MouseButton::Left);
 }
 
 static void rightMouseDown_impl(ObjcObject self, objc_selector*, ObjcObject nsEvent)
 {
     auto* d = static_cast<TzMacosWindowPrivate*>(getPrivate(self));
-    if (d) d->onMouseEvent(nsEvent, MouseEventType::ButtonPress, MouseButton::Right);
+    if (d) d->onMouseEvent(nsEvent, TzEvent::MouseButtonPress, MouseButton::Right);
 }
 
 static void rightMouseUp_impl(ObjcObject self, objc_selector*, ObjcObject nsEvent)
 {
     auto* d = static_cast<TzMacosWindowPrivate*>(getPrivate(self));
-    if (d) d->onMouseEvent(nsEvent, MouseEventType::ButtonRelease, MouseButton::Right);
+    if (d) d->onMouseEvent(nsEvent, TzEvent::MouseButtonRelease, MouseButton::Right);
 }
 
 static void otherMouseDown_impl(ObjcObject self, objc_selector*, ObjcObject nsEvent)
 {
     auto* d = static_cast<TzMacosWindowPrivate*>(getPrivate(self));
-    if (d) d->onMouseEvent(nsEvent, MouseEventType::ButtonPress, MouseButton::Middle);
+    if (d) d->onMouseEvent(nsEvent, TzEvent::MouseButtonPress, MouseButton::Middle);
 }
 
 static void otherMouseUp_impl(ObjcObject self, objc_selector*, ObjcObject nsEvent)
 {
     auto* d = static_cast<TzMacosWindowPrivate*>(getPrivate(self));
-    if (d) d->onMouseEvent(nsEvent, MouseEventType::ButtonRelease, MouseButton::Middle);
+    if (d) d->onMouseEvent(nsEvent, TzEvent::MouseButtonRelease, MouseButton::Middle);
 }
 
 static void mouseMoved_impl(ObjcObject self, objc_selector*, ObjcObject nsEvent)
 {
     auto* d = static_cast<TzMacosWindowPrivate*>(getPrivate(self));
-    if (d) d->onMouseEvent(nsEvent, MouseEventType::Move, MouseButton::None);
+    if (d) d->onMouseEvent(nsEvent, TzEvent::MouseMove, MouseButton::None);
 }
 
 static void mouseDragged_impl(ObjcObject self, objc_selector*, ObjcObject nsEvent)
 {
     auto* d = static_cast<TzMacosWindowPrivate*>(getPrivate(self));
-    if (d) d->onMouseEvent(nsEvent, MouseEventType::Move, MouseButton::None);
+    if (d) d->onMouseEvent(nsEvent, TzEvent::MouseMove, MouseButton::None);
 }
 
 static void scrollWheel_impl(ObjcObject self, objc_selector*, ObjcObject nsEvent)
 {
     auto* d = static_cast<TzMacosWindowPrivate*>(getPrivate(self));
-    if (d) d->onMouseEvent(nsEvent, MouseEventType::Scroll, MouseButton::None);
+    if (d) d->onMouseEvent(nsEvent, TzEvent::MouseScroll, MouseButton::None);
 }
 
 static BOOL acceptsFirstResponder_impl(ObjcObject /*self*/, objc_selector*)
@@ -181,8 +181,8 @@ static void registerObjcClasses()
     });
 }
 
-TzMacosWindowPrivate::TzMacosWindowPrivate(int width, int height)
-    : windowWidth(width), windowHeight(height)
+TzMacosWindowPrivate::TzMacosWindowPrivate(int width, int height, TzAbstractWindow *owner)
+    : owner(owner), windowWidth(width), windowHeight(height)
 {
     registerObjcClasses();
 
@@ -337,54 +337,46 @@ static Key translateKeyCode(unsigned short keyCode)
     }
 }
 
-void TzMacosWindowPrivate::onKeyEvent(ObjcObject nsEvent, bool /*pressed*/)
+void TzMacosWindowPrivate::onKeyEvent(ObjcObject nsEvent, bool pressed)
 {
-    if (!keyCallback)
-        return;
+    NSUInteger     flags = sendMessage<NSUInteger>(nsEvent, "modifierFlags");
+    unsigned short code  = sendMessage<unsigned short>(nsEvent, "keyCode");
 
-    NSUInteger flags    = sendMessage<NSUInteger>(nsEvent, "modifierFlags");
-    unsigned short code = sendMessage<unsigned short>(nsEvent, "keyCode");
+    Key          key  = translateKeyCode(code);
+    KeyModifiers mods = translateModifiers(flags);
 
-    TzKeyEvent event;
-    event.modifiers = translateModifiers(flags);
-    event.key       = translateKeyCode(code);
-
-    // characters gives UTF-8 text for printable keys
-    ObjcObject chars = sendMessage<ObjcObject>(nsEvent, "characters");
-    if (chars) {
-        const char* utf8 = sendMessage<const char*>(chars, "UTF8String");
-        if (utf8 && event.key == Key::Unknown)
-            event.utf8 = utf8;
+    std::string utf8;
+    if (key == Key::Unknown) {
+        ObjcObject chars = sendMessage<ObjcObject>(nsEvent, "characters");
+        if (chars) {
+            const char *str = sendMessage<const char *>(chars, "UTF8String");
+            if (str) utf8 = str;
+        }
     }
 
-    keyCallback(&event);
+    TzCoreApplication::postEvent(owner,
+        new TzKeyEvent(pressed ? TzEvent::KeyPress : TzEvent::KeyRelease, key, mods, std::move(utf8)));
 }
 
-void TzMacosWindowPrivate::onMouseEvent(ObjcObject nsEvent, MouseEventType type, MouseButton button)
+void TzMacosWindowPrivate::onMouseEvent(ObjcObject nsEvent, TzEvent::Type type, MouseButton button)
 {
-    if (!mouseCallback)
-        return;
-
     // Convert from window coords to view (flipped: origin top-left)
-    CGPoint windowPos = sendMessage<CGPoint>(nsEvent, "locationInWindow");
-    CGPoint viewPos   = sendMessage<CGPoint>(contentView, "convertPoint:fromView:", windowPos, nullptr);
-    CGRect  bounds    = sendMessage<CGRect>(contentView, "bounds");
+    CGPoint    windowPos = sendMessage<CGPoint>(nsEvent, "locationInWindow");
+    CGPoint    viewPos   = sendMessage<CGPoint>(contentView, "convertPoint:fromView:", windowPos, nullptr);
+    CGRect     bounds    = sendMessage<CGRect>(contentView, "bounds");
+    NSUInteger flags     = sendMessage<NSUInteger>(nsEvent, "modifierFlags");
 
-    NSUInteger flags  = sendMessage<NSUInteger>(nsEvent, "modifierFlags");
-
-    TzMouseEvent event;
-    event.type      = type;
-    event.button    = button;
-    event.x         = viewPos.x;
-    event.y         = bounds.size.height - viewPos.y; // flip to top-left origin
-    event.modifiers = translateModifiers(flags);
-
-    if (type == MouseEventType::Scroll) {
-        event.scrollDx = sendMessage<double>(nsEvent, "scrollingDeltaX");
-        event.scrollDy = sendMessage<double>(nsEvent, "scrollingDeltaY");
+    double scrollDx = 0.0, scrollDy = 0.0;
+    if (type == TzEvent::MouseScroll) {
+        scrollDx = sendMessage<double>(nsEvent, "scrollingDeltaX");
+        scrollDy = sendMessage<double>(nsEvent, "scrollingDeltaY");
     }
 
-    mouseCallback(&event);
+    TzCoreApplication::postEvent(owner,
+        new TzMouseEvent(type, button,
+                         viewPos.x, bounds.size.height - viewPos.y, // flip to top-left origin
+                         translateModifiers(flags),
+                         scrollDx, scrollDy));
 }
 
 void TzMacosWindowPrivate::onDrawRect(ObjcObject self, CGRect /*rect*/)
@@ -428,7 +420,7 @@ void TzMacosWindowPrivate::onDrawRect(ObjcObject self, CGRect /*rect*/)
 }
 
 TzMacosWindow::TzMacosWindow(int width, int height)
-    : d_ptr(new TzMacosWindowPrivate(width, height))
+    : d_ptr(new TzMacosWindowPrivate(width, height, this))
 {
 }
 
@@ -457,16 +449,6 @@ void TzMacosWindow::setCloseCallback(CloseCallback callback)
 void TzMacosWindow::setResizeCallback(ResizeCallback callback)
 {
     d_ptr->resizeCallback = std::move(callback);
-}
-
-void TzMacosWindow::setKeyCallback(KeyCallback callback)
-{
-    d_ptr->keyCallback = std::move(callback);
-}
-
-void TzMacosWindow::setMouseCallback(MouseCallback callback)
-{
-    d_ptr->mouseCallback = std::move(callback);
 }
 
 void TzMacosWindow::render(const std::vector<uint32_t>& pixels, int width, int height)

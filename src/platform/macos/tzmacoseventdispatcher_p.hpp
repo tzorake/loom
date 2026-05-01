@@ -32,7 +32,7 @@ public:
     std::unordered_map<TzAbstractEventDispatcher::TimerHandle, TimerWrapperPtr> timerMap;
 
     struct NotifyWrapper {
-        CFSocketRef socket{ nullptr };
+        CFSocketRef        socket{ nullptr };
         CFRunLoopSourceRef source{ nullptr };
         TzAbstractEventDispatcher::NotifyCallback callback;
         TzMacosEventDispatcher *eventDispatcher{ nullptr };

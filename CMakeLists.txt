@@ -17,6 +17,8 @@ add_library(event-loop
     src/tzkeyboardhandler.cpp
     src/tzsignalhandler.cpp
     src/tzevent.cpp
+    src/tzkeyevent.cpp
+    src/tzmouseevent.cpp
     src/tzcoreapplication.cpp
     src/tzguiapplication.cpp
     src/tzobject.cpp

@@ -19,8 +19,6 @@ public:
 
     virtual void setCloseCallback(CloseCallback callback) override;
     virtual void setResizeCallback(ResizeCallback callback) override;
-    virtual void setKeyCallback(KeyCallback callback) override;
-    virtual void setMouseCallback(MouseCallback callback) override;
 
     virtual void render(const std::vector<uint32_t>& pixels, int width, int height) override;
 

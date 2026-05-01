@@ -1,6 +1,7 @@
 #ifndef TZMOUSEEVENT_HPP
 #define TZMOUSEEVENT_HPP
 
+#include <event-loop/tzevent.hpp>
 #include <event-loop/tzkeyevent.hpp>
 
 enum class MouseButton
@@ -11,23 +12,28 @@ enum class MouseButton
     Middle = 1 << 2,
 };
 
-enum class MouseEventType
+class TzMouseEvent : public TzEvent
 {
-    Move,
-    ButtonPress,
-    ButtonRelease,
-    Scroll,
-};
+public:
+    TzMouseEvent(int type, MouseButton button, double x, double y,
+                 KeyModifiers modifiers, double scrollDx = 0.0, double scrollDy = 0.0);
 
-struct TzMouseEvent
-{
-    MouseEventType type{ MouseEventType::Move };
-    MouseButton button{ MouseButton::None };
-    double x{ 0.0 };
-    double y{ 0.0 };
-    double scrollDx{ 0.0 };
-    double scrollDy{ 0.0 };
-    KeyModifiers modifiers;
+    MouseButton  button()    const;
+    double       x()         const;
+    double       y()         const;
+    double       scrollDx()  const;
+    double       scrollDy()  const;
+    KeyModifiers modifiers() const;
+
+    TzMouseEvent *clone() const override;
+
+private:
+    MouseButton  m_button;
+    double       m_x;
+    double       m_y;
+    double       m_scrollDx;
+    double       m_scrollDy;
+    KeyModifiers m_modifiers;
 };
 
 #endif // TZMOUSEEVENT_HPP
