@@ -15,6 +15,7 @@ public:
     TzObject *firstChild{ nullptr };
     TzObject *nextSibling{ nullptr };
     TzObject *previousSibling{ nullptr };
+    bool pendingDelete{ false };
 
     void unlinkFromParent();
     void appendToParent(TzObject *newParent);

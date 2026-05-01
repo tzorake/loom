@@ -7,6 +7,7 @@
 #include <event-loop/tzevent.hpp>
 
 #include "tzcoreapplication_p.hpp"
+#include "tzobject_p.hpp"
 
 #include <algorithm>
 #include <csignal>
@@ -94,7 +95,13 @@ void TzCoreApplication::removePostedEvents(TzObject *receiver)
     std::lock_guard lock(d_ptr->eventQueueMutex);
     std::erase_if(d_ptr->eventQueue,
         [receiver](const TzCoreApplicationPrivate::PendingEvent &pe) {
-            return pe.receiver == receiver;
+            if (pe.receiver != receiver)
+                return false;
+            // Reset the deferred-delete guard so deleteLater() can be reused
+            // if the caller removes events without destroying the object.
+            if (pe.event->type() == TzEvent::DeferredDelete)
+                pe.receiver->d_ptr->pendingDelete = false;
+            return true;
         });
 }
 
@@ -105,6 +112,10 @@ void TzCoreApplication::processPostedEvents()
         std::lock_guard lock(d_ptr->eventQueueMutex);
         batch.swap(d_ptr->eventQueue);
     }
-    for (TzCoreApplicationPrivate::PendingEvent &pe : batch)
-        pe.receiver->event(pe.event.get());
+    for (TzCoreApplicationPrivate::PendingEvent &pe : batch) {
+        if (pe.event->type() == TzEvent::DeferredDelete)
+            delete pe.receiver;  // receiver owns itself; destructor cleans up remaining events
+        else
+            pe.receiver->event(pe.event.get());
+    }
 }

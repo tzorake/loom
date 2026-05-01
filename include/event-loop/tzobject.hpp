@@ -7,6 +7,7 @@
 #include <vector>
 
 class TzEvent;
+class TzCoreApplication;
 
 class TzObjectPrivate;
 
@@ -29,8 +30,12 @@ public:
 
     virtual bool event(TzEvent *event);
 
+    void deleteLater();
+
 private:
     std::unique_ptr<TzObjectPrivate> d_ptr;
+
+    friend class TzCoreApplication;
 };
 
 #endif // TZOBJECT_HPP

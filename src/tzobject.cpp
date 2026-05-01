@@ -1,5 +1,5 @@
 #include <event-loop/tzobject.hpp>
-#include <event-loop/tzevent.hpp>
+#include <event-loop/tzdeferreddeleteevent.hpp>
 #include <event-loop/tzcoreapplication.hpp>
 
 #include "tzobject_p.hpp"
@@ -118,4 +118,12 @@ std::vector<TzObject *> TzObject::children() const
 bool TzObject::event(TzEvent * /*event*/)
 {
     return false;
+}
+
+void TzObject::deleteLater()
+{
+    if (d_ptr->pendingDelete)
+        return;
+    d_ptr->pendingDelete = true;
+    TzCoreApplication::postEvent(this, new TzDeferredDeleteEvent());
 }
