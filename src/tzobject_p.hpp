@@ -1,0 +1,23 @@
+#ifndef TZOBJECT_P_HPP
+#define TZOBJECT_P_HPP
+
+#include <event-loop/tzclasshelpermacros.hpp>
+#include <event-loop/tzobject.hpp>
+
+class TzObjectPrivate
+{
+    TZ_DECLARE_PUBLIC(TzObject)
+public:
+    explicit TzObjectPrivate(TzObject *q);
+
+    TzObject *q_ptr{ nullptr };
+    TzObject *parent{ nullptr };
+    TzObject *firstChild{ nullptr };
+    TzObject *nextSibling{ nullptr };
+    TzObject *previousSibling{ nullptr };
+
+    void unlinkFromParent();
+    void appendToParent(TzObject *newParent);
+};
+
+#endif // TZOBJECT_P_HPP
