@@ -12,8 +12,10 @@ public:
 
     TzAbstractWindow *q_ptr{ nullptr };
 
-    TzAbstractWindow::KeyCallback keyCallback;
-    TzAbstractWindow::MouseCallback mouseCallback;
+    TzAbstractWindow::CloseCallback  closeCallback;
+    TzAbstractWindow::ResizeCallback resizeCallback;
+    TzAbstractWindow::KeyCallback    keyCallback;
+    TzAbstractWindow::MouseCallback  mouseCallback;
 };
 
 #endif // TZABSTRACTWINDOW_P_HPP

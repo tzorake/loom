@@ -13,6 +13,8 @@ public:
         MouseButtonPress   = 5,
         MouseButtonRelease = 6,
         MouseScroll        = 7,
+        WindowClose        = 8,
+        WindowResize       = 9,
         User               = 1000,  // custom event types start here
     };
 

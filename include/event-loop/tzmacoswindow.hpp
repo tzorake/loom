@@ -17,9 +17,6 @@ public:
     virtual void show() override;
     virtual void hide() override;
 
-    virtual void setCloseCallback(CloseCallback callback) override;
-    virtual void setResizeCallback(ResizeCallback callback) override;
-
     virtual void render(const std::vector<uint32_t>& pixels, int width, int height) override;
 
 private:

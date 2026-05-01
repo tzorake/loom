@@ -2,6 +2,8 @@
 #include <event-loop/tzevent.hpp>
 #include <event-loop/tzkeyevent.hpp>
 #include <event-loop/tzmouseevent.hpp>
+#include <event-loop/tzcloseevent.hpp>
+#include <event-loop/tzresizeevent.hpp>
 
 #include "tzabstractwindow_p.hpp"
 
@@ -15,8 +17,16 @@ TzAbstractWindow::TzAbstractWindow(TzObject *parent)
 {
 }
 
-TzAbstractWindow::~TzAbstractWindow()
+TzAbstractWindow::~TzAbstractWindow() = default;
+
+void TzAbstractWindow::setCloseCallback(CloseCallback callback)
 {
+    d_ptr->closeCallback = std::move(callback);
+}
+
+void TzAbstractWindow::setResizeCallback(ResizeCallback callback)
+{
+    d_ptr->resizeCallback = std::move(callback);
 }
 
 void TzAbstractWindow::setKeyCallback(KeyCallback callback)
@@ -32,6 +42,18 @@ void TzAbstractWindow::setMouseCallback(MouseCallback callback)
 bool TzAbstractWindow::event(TzEvent *e)
 {
     switch (e->type()) {
+        case TzEvent::WindowClose:
+            if (d_ptr->closeCallback)
+                d_ptr->closeCallback();
+            return true;
+
+        case TzEvent::WindowResize: {
+            auto *re = static_cast<TzResizeEvent *>(e);
+            if (d_ptr->resizeCallback)
+                d_ptr->resizeCallback(re->width(), re->height());
+            return true;
+        }
+
         case TzEvent::KeyPress:
         case TzEvent::KeyRelease:
             if (d_ptr->keyCallback) {

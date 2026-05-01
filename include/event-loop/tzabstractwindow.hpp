@@ -4,6 +4,8 @@
 #include <event-loop/tzobject.hpp>
 #include <event-loop/tzkeyevent.hpp>
 #include <event-loop/tzmouseevent.hpp>
+#include <event-loop/tzcloseevent.hpp>
+#include <event-loop/tzresizeevent.hpp>
 
 #include <cstdint>
 #include <functional>
@@ -27,9 +29,9 @@ public:
     virtual void show() = 0;
     virtual void hide() = 0;
 
-    virtual void setCloseCallback(CloseCallback callback)   = 0;
-    virtual void setResizeCallback(ResizeCallback callback) = 0;
-
+    // All four callbacks stored in base; dispatched through event()
+    void setCloseCallback(CloseCallback callback);
+    void setResizeCallback(ResizeCallback callback);
     void setKeyCallback(KeyCallback callback);
     void setMouseCallback(MouseCallback callback);
 

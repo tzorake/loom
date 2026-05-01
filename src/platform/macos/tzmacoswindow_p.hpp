@@ -5,6 +5,8 @@
 #include <event-loop/tzevent.hpp>
 #include <event-loop/tzkeyevent.hpp>
 #include <event-loop/tzmouseevent.hpp>
+#include <event-loop/tzcloseevent.hpp>
+#include <event-loop/tzresizeevent.hpp>
 #include <event-loop/tzcoreapplication.hpp>
 
 #include "tzobjcutils.hpp"
@@ -47,10 +49,6 @@ public:
     int pixelHeight{ 0 };
     std::mutex pixelMutex;
 
-    // Close and resize are delivered synchronously: close must answer Cocoa
-    // immediately; resize updates geometry before any dependent code runs.
-    TzAbstractWindow::CloseCallback  closeCallback;
-    TzAbstractWindow::ResizeCallback resizeCallback;
 };
 
 #endif // TZMACOSWINDOW_P_HPP
