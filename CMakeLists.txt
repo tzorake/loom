@@ -22,6 +22,10 @@ add_library(event-loop
     src/tzcoreapplication.cpp
     src/tzguiapplication.cpp
     src/tzobject.cpp
+    src/tzwidget.cpp
+    src/tzanchors.cpp
+    src/tzpainter.cpp
+    src/tzscene.cpp
 )
 target_include_directories(event-loop PUBLIC include)
 

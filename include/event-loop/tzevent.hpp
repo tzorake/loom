@@ -15,6 +15,9 @@ public:
         MouseScroll        = 7,
         WindowClose        = 8,
         WindowResize       = 9,
+        GeometryChange     = 10,
+        FocusIn            = 11,
+        FocusOut           = 12,
         User               = 1000,  // custom event types start here
     };
 

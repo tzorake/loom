@@ -452,6 +452,10 @@ void TzMacosWindow::setTitle(const std::string& title)
 void TzMacosWindow::show()
 {
     d_ptr->show();
+    // Fire an initial resize so any attached scene can layout and paint before
+    // the first frame is displayed, without requiring a manual resize.
+    TzResizeEvent re(d_ptr->windowWidth, d_ptr->windowHeight);
+    TzCoreApplication::sendEvent(this, &re);
 }
 
 void TzMacosWindow::hide()
