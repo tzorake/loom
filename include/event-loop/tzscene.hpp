@@ -16,27 +16,21 @@ public:
     explicit TzScene(TzAbstractWindow *window);
     ~TzScene();
 
-    // ── Root widget ───────────────────────────────────────────────────────
     TzWidget *root() const;
-    void      setRoot(TzWidget *root);
+    void setRoot(TzWidget *root);
 
-    // ── Layout ────────────────────────────────────────────────────────────
     void doLayout();
 
-    // ── Painting ──────────────────────────────────────────────────────────
     void doPaint();
     void markPaintDirty();
     bool isPaintDirty() const;
     void markLayoutDirty();
 
-    // ── Focus ─────────────────────────────────────────────────────────────
     TzWidget *focusedWidget() const;
-    void      setFocusedWidget(TzWidget *widget);
+    void setFocusedWidget(TzWidget *widget);
 
-    // ── Hit-testing ───────────────────────────────────────────────────────
     TzWidget *widgetAt(double x, double y) const;
 
-    // ── Window size ───────────────────────────────────────────────────────
     int width()  const;
     int height() const;
 

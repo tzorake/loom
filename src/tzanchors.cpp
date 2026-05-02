@@ -1,9 +1,9 @@
 #include <event-loop/tzanchors.hpp>
 #include <event-loop/tzwidget.hpp>
+#include <event-loop/tzmargins.hpp>
+#include <event-loop/tzrect.hpp>
 
 #include "tzanchors_p.hpp"
-
-// ── Constructor / destructor ──────────────────────────────────────────────
 
 TzAnchors::TzAnchors(TzWidget *owner)
     : d_ptr(new TzAnchorsPrivate)
@@ -16,8 +16,6 @@ TzAnchors::TzAnchors(TzWidget *owner)
 TzAnchors::~TzAnchors()
 {
 }
-
-// ── Individual setters ────────────────────────────────────────────────────
 
 void TzAnchors::setLeft(TzWidget *target, Edge edge, double margin)
 {
@@ -55,8 +53,6 @@ void TzAnchors::setVCenter(TzWidget *target, Edge edge, double margin)
     d->vcenter = { target, edge, margin, true };
 }
 
-// ── Clear ──────────────────────────────────────────────────────────────────
-
 void TzAnchors::clearLeft()    { TZ_D(TzAnchors); d->left    = {}; }
 void TzAnchors::clearRight()   { TZ_D(TzAnchors); d->right   = {}; }
 void TzAnchors::clearTop()     { TZ_D(TzAnchors); d->top     = {}; }
@@ -80,10 +76,10 @@ void TzAnchors::fill(TzWidget *target, double margin)
 void TzAnchors::fill(TzWidget *target, const TzMargins &margins)
 {
     TZ_D(TzAnchors);
-    d->left    = { target, Left,   margins.left,   true };
-    d->right   = { target, Right,  margins.right,  true };
-    d->top     = { target, Top,    margins.top,    true };
-    d->bottom  = { target, Bottom, margins.bottom, true };
+    d->left = { target, Left, margins.left, true };
+    d->right = { target, Right, margins.right, true };
+    d->top = { target, Top, margins.top, true };
+    d->bottom = { target, Bottom, margins.bottom, true };
     d->hcenter = {};
     d->vcenter = {};
 }
@@ -96,16 +92,41 @@ void TzAnchors::centerIn(TzWidget *target)
     d->left = d->right = d->top = d->bottom = {};
 }
 
-// ── Inspection ────────────────────────────────────────────────────────────
+bool TzAnchors::hasLeft() const
+{
+    TZ_D(const TzAnchors);
+    return d->left.set;
+}
 
-bool TzAnchors::hasLeft()    const { TZ_D(const TzAnchors); return d->left.set;    }
-bool TzAnchors::hasRight()   const { TZ_D(const TzAnchors); return d->right.set;   }
-bool TzAnchors::hasTop()     const { TZ_D(const TzAnchors); return d->top.set;     }
-bool TzAnchors::hasBottom()  const { TZ_D(const TzAnchors); return d->bottom.set;  }
-bool TzAnchors::hasHCenter() const { TZ_D(const TzAnchors); return d->hcenter.set; }
-bool TzAnchors::hasVCenter() const { TZ_D(const TzAnchors); return d->vcenter.set; }
+bool TzAnchors::hasRight() const
+{
+    TZ_D(const TzAnchors);
+    return d->right.set;
+}
 
-// ── Edge value helper (file-local) ────────────────────────────────────────
+bool TzAnchors::hasTop() const
+{
+    TZ_D(const TzAnchors);
+    return d->top.set;
+}
+
+bool TzAnchors::hasBottom() const
+{
+    TZ_D(const TzAnchors);
+    return d->bottom.set;
+}
+
+bool TzAnchors::hasHCenter() const
+{
+    TZ_D(const TzAnchors);
+    return d->hcenter.set;
+}
+
+bool TzAnchors::hasVCenter() const
+{
+    TZ_D(const TzAnchors);
+    return d->vcenter.set;
+}
 
 static double edgeValue(const TzWidget *target, TzAnchors::Edge e, bool targetIsParent)
 {

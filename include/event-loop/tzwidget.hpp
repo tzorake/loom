@@ -3,11 +3,13 @@
 
 #include <event-loop/tzobject.hpp>
 #include <event-loop/tzclasshelpermacros.hpp>
-#include <event-loop/tzgeometry.hpp>
 
 class TzAnchors;
 class TzPainter;
 class TzScene;
+struct TzRect;
+struct TzPoint;
+struct TzSize;
 class TzWidgetPrivate;
 
 class TzWidget : public TzObject
@@ -23,12 +25,13 @@ public:
     void setY(double y);
     double y() const;
     
-    void setWidth(double w);
+    void setWidth(double width);
     double width() const;
 
-    void setHeight(double h);
+    void setHeight(double height);
     double height() const;
 
+    bool setGeometry(double x, double y, double width, double height);
     bool setGeometry(const TzRect &rect);
     TzRect geometry() const;
 
@@ -73,11 +76,6 @@ protected:
     virtual void geometryChanged(const TzRect &newGeom, const TzRect &oldGeom);
 
 private:
-    void resetWidth();
-    void resetHeight();
-    void clearFocus();
-    bool resolveAnchors();
-
     friend class TzScene;
     friend class TzScenePrivate;
 };

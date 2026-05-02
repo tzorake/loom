@@ -8,6 +8,7 @@
 #include <event-loop/TzMouseEvent>
 #include <event-loop/TzTimer>
 #include <event-loop/TzScopedPointer>
+#include <event-loop/TzRect>
 
 #include <print>
 #include <string>

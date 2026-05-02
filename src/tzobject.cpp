@@ -52,7 +52,6 @@ void TzObjectPrivate::appendToParent(TzObject *newParent)
 TzObject::TzObject(TzObject *parent)
     : TzObject(*new TzObjectPrivate, parent)
 {
-    d_ptr->q_ptr = this;
 }
 
 TzObject::TzObject(TzObjectPrivate &d, TzObject *parent)

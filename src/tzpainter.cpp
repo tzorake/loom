@@ -1,4 +1,6 @@
 #include <event-loop/tzpainter.hpp>
+#include <event-loop/tzrect.hpp>
+#include <event-loop/tzpoint.hpp>
 
 #include "tzpainter_p.hpp"
 
@@ -106,8 +108,6 @@ static const uint8_t kFont8x8[95][8] = {
     { 0x6E,0x3B,0x00,0x00,0x00,0x00,0x00,0x00 }, // 0x7E '~'
 };
 
-// ── TzPainterPrivate helpers ──────────────────────────────────────────────
-
 bool TzPainterPrivate::inClip(int px, int py) const
 {
     return px >= (int)clip.x
@@ -152,8 +152,6 @@ void TzPainterPrivate::setPixel(int px, int py, uint32_t argb)
     }
 }
 
-// ── Constructor / destructor ──────────────────────────────────────────────
-
 TzPainter::TzPainter(uint32_t *pixels, int bufferWidth, int bufferHeight,
                      const TzRect &clip, const TzPoint &offset)
     : d_ptr(new TzPainterPrivate)
@@ -167,9 +165,9 @@ TzPainter::TzPainter(uint32_t *pixels, int bufferWidth, int bufferHeight,
     d->offset       = offset;
 }
 
-TzPainter::~TzPainter() = default;
-
-// ── Filled rectangle ──────────────────────────────────────────────────────
+TzPainter::~TzPainter()
+{
+}
 
 void TzPainter::fillRect(const TzRect &rect, uint32_t argb)
 {
@@ -181,26 +179,22 @@ void TzPainter::fillRect(double lx, double ly, double lw, double lh, uint32_t ar
     TZ_D(TzPainter);
     int x0 = (int)std::floor(d->offset.x + lx);
     int y0 = (int)std::floor(d->offset.y + ly);
-    int x1 = (int)std::ceil (d->offset.x + lx + lw);
-    int y1 = (int)std::ceil (d->offset.y + ly + lh);
+    int x1 = (int)std::ceil(d->offset.x + lx + lw);
+    int y1 = (int)std::ceil(d->offset.y + ly + lh);
 
     for (int py = y0; py < y1; ++py)
         for (int px = x0; px < x1; ++px)
             d->setPixel(px, py, argb);
 }
 
-// ── Outlined rectangle ────────────────────────────────────────────────────
-
 void TzPainter::drawRect(const TzRect &rect, uint32_t argb, double lineWidth)
 {
     double lw = lineWidth;
-    fillRect(rect.x, rect.y,                    rect.width, lw,             argb);
-    fillRect(rect.x, rect.y + rect.height - lw, rect.width, lw,             argb);
-    fillRect(rect.x,                  rect.y + lw, lw, rect.height - 2*lw, argb);
-    fillRect(rect.x + rect.width - lw, rect.y + lw, lw, rect.height - 2*lw, argb);
+    fillRect(rect.x, rect.y, rect.width, lw, argb);
+    fillRect(rect.x, rect.y + rect.height - lw, rect.width, lw, argb);
+    fillRect(rect.x, rect.y + lw, lw, rect.height - 2 * lw, argb);
+    fillRect(rect.x + rect.width - lw, rect.y + lw, lw, rect.height - 2 * lw, argb);
 }
-
-// ── Line (Bresenham) ──────────────────────────────────────────────────────
 
 void TzPainter::drawLine(const TzPoint &a, const TzPoint &b, uint32_t argb, double /*lineWidth*/)
 {
@@ -250,12 +244,17 @@ void TzPainter::drawText(double lx, double ly, const std::string &text, uint32_t
     }
 }
 
-// ── Inspection ────────────────────────────────────────────────────────────
+TzRect TzPainter::clipRect() const
+{
+    TZ_D(const TzPainter);
+    return d->clip;
+}
 
-TzRect  TzPainter::clipRect() const { TZ_D(const TzPainter); return d->clip;   }
-TzPoint TzPainter::offset()   const { TZ_D(const TzPainter); return d->offset; }
-
-// ── Child painter ─────────────────────────────────────────────────────────
+TzPoint TzPainter::offset() const
+{
+    TZ_D(const TzPainter);
+    return d->offset;
+}
 
 TzPainter TzPainter::childPainter(const TzPoint &childOffset, const TzRect &childClip) const
 {
@@ -267,6 +266,6 @@ TzPainter TzPainter::childPainter(const TzPoint &childOffset, const TzRect &chil
         childClip.width,
         childClip.height
     };
-    absClip = intersected(absClip, d->clip);
+    absClip = absClip.intersected(d->clip);
     return TzPainter(d->pixels, d->bufferWidth, d->bufferHeight, absClip, absOffset);
 }

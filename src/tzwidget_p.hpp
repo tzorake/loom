@@ -3,10 +3,13 @@
 
 #include <event-loop/tzclasshelpermacros.hpp>
 #include <event-loop/tzwidget.hpp>
+#include <event-loop/tzrect.hpp>
+#include <event-loop/tzsize.hpp>
 
 #include "tzobject_p.hpp"
 
 #include <memory>
+#include <optional>
 
 class TzScene;
 class TzAnchors;
@@ -16,12 +19,23 @@ class TzWidgetPrivate : public TzObjectPrivate
     TZ_DECLARE_PUBLIC(TzWidget)
 public:
     virtual ~TzWidgetPrivate() override;
+    
+    double effectiveWidth() const;
+    double effectiveHeight() const;
+    TzRect effectiveGeometry() const;
+    
+    void resetWidth();
+    void resetHeight();
+    bool resolveAnchors();
+    void clearFocus();
 
-    TzRect geometry{};
-    TzSize implicitSize{};
+    double x{ 0.0 };
+    double y{ 0.0 };
+    std::optional<double> explicitWidth;
+    std::optional<double> explicitHeight;
+    double implicitWidth{ 0.0 };
+    double implicitHeight{ 0.0 };
 
-    bool explicitWidth{ false };
-    bool explicitHeight{ false };
     bool visible{ true };
     bool focused{ false };
 

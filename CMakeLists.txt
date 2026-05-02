@@ -19,6 +19,7 @@ add_library(event-loop
     src/tzevent.cpp
     src/tzkeyevent.cpp
     src/tzmouseevent.cpp
+    src/tzgeometrychangeevent.cpp
     src/tzcoreapplication.cpp
     src/tzguiapplication.cpp
     src/tzobject.cpp
@@ -26,6 +27,10 @@ add_library(event-loop
     src/tzanchors.cpp
     src/tzpainter.cpp
     src/tzscene.cpp
+    src/tzmargins.cpp
+    src/tzpoint.cpp
+    src/tzrect.cpp
+    src/tzsize.cpp
 )
 target_include_directories(event-loop PUBLIC include)
 
