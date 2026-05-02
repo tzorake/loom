@@ -8,6 +8,7 @@
 class TzWidget;
 struct TzMargins;
 class TzAnchorsPrivate;
+class TzWidgetPrivate;
 
 class TzAnchors
 {
@@ -48,6 +49,7 @@ public:
 
 private:
     std::unique_ptr<TzAnchorsPrivate> d_ptr;
+    friend TzWidgetPrivate;
 };
 
 #endif // TZANCHORS_HPP

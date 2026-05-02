@@ -23,7 +23,7 @@ public:
     double effectiveWidth() const;
     double effectiveHeight() const;
     TzRect effectiveGeometry() const;
-    
+
     void resetWidth();
     void resetHeight();
     bool resolveAnchors();

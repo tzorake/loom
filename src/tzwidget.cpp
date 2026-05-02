@@ -11,7 +11,7 @@
 #include <event-loop/tznumeric.hpp>
 
 #include "tzwidget_p.hpp"
-
+#include "tzanchors_p.hpp"
 
 double TzWidgetPrivate::effectiveWidth() const
 {
@@ -28,19 +28,42 @@ TzRect TzWidgetPrivate::effectiveGeometry() const
     return { x, y, effectiveWidth(), effectiveHeight() };
 }
 
-void TzWidgetPrivate::resetWidth() 
+void TzWidgetPrivate::resetWidth()
 {
     explicitWidth = std::nullopt;
 }
 
-void TzWidgetPrivate::resetHeight() 
+void TzWidgetPrivate::resetHeight()
 {
     explicitHeight = std::nullopt;
 }
 
 bool TzWidgetPrivate::resolveAnchors()
 {
-    return anchors ? anchors->resolve() : false;
+    if (!anchors)
+        return false;
+
+    std::optional<TzAnchorsPrivate::Layout> layout = static_cast<TzAnchorsPrivate *>(anchors->d_ptr.get())->computeLayout();
+    if (!layout)
+        return false;
+
+    TzRect old = effectiveGeometry();
+    x = layout->x;
+    y = layout->y;
+    if (layout->width)
+        explicitWidth  = layout->width;
+
+    if (layout->height)
+        explicitHeight = layout->height;
+
+    TzRect newEff = effectiveGeometry();
+    if (old == newEff)
+        return false;
+
+    TZ_Q(TzWidget);
+    q->geometryChanged(newEff, old);
+
+    return true;
 }
 
 void TzWidgetPrivate::clearFocus()
@@ -123,7 +146,7 @@ double TzWidget::width() const
 void TzWidget::setHeight(double height)
 {
     TZ_D(TzWidget);
-    if (d->explicitHeight.has_value() &&
+    if (d->explicitHeight.has_value() && 
         tzFuzzyCompare(d->explicitHeight.value(), height))
         return;
     TzRect old = d->effectiveGeometry();
@@ -158,10 +181,8 @@ TzSize TzWidget::size() const
 bool TzWidget::setGeometry(double x, double y, double width, double height)
 {
     TZ_D(TzWidget);
-    if (tzFuzzyCompare(x, d->x) && 
-        tzFuzzyCompare(y, d->y) &&
-        d->explicitWidth.has_value() && tzFuzzyCompare(d->explicitWidth.value(), width) && 
-        d->explicitHeight.has_value() && tzFuzzyCompare(d->explicitHeight.value(), height))
+    TzRect next{ x, y, width, height };
+    if (d->effectiveGeometry() == next)
         return false;
     TzRect old = d->effectiveGeometry();
     d->x = x;
@@ -230,7 +251,7 @@ double TzWidget::implicitHeight() const
 TzSize TzWidget::implicitSize() const
 {
     TZ_D(const TzWidget);
-    return { d->effectiveWidth(), d->effectiveHeight() };
+    return { d->implicitWidth, d->implicitHeight };
 }
 
 double TzWidget::effectiveWidth() const

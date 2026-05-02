@@ -145,60 +145,64 @@ static double edgeValue(const TzWidget *target, TzAnchors::Edge e, bool targetIs
     return 0.0;
 }
 
-// ── Resolve ───────────────────────────────────────────────────────────────
-
-bool TzAnchors::resolve()
+std::optional<TzAnchorsPrivate::Layout> TzAnchorsPrivate::computeLayout() const
 {
-    TZ_D(TzAnchors);
+    const bool anyH = left.set || right.set || hcenter.set;
+    const bool anyV = top.set  || bottom.set || vcenter.set;
+    if (!anyH && !anyV) return std::nullopt;
 
-    TzRect next = d->owner->geometry();
+    const double implW = owner->implicitWidth();
+    const double implH = owner->implicitHeight();
 
-    double effectiveW = d->owner->effectiveWidth();
-    double effectiveH = d->owner->effectiveHeight();
+    TzRect cur = owner->geometry();
+    Layout out{ cur.x, cur.y, std::nullopt, std::nullopt };
 
-    TzWidget *ownerParent = d->owner->parentWidget();
-
+    TzWidget *ownerParent = owner->parentWidget();
     auto ev = [&](const TzAnchorLine &line) {
         return edgeValue(line.target, line.edge, line.target == ownerParent);
     };
 
-    // ── Horizontal ──────────────────────────────────────────────────────
-    if (d->left.set && d->right.set) {
-        double lv  = ev(d->left)  + d->left.margin;
-        double rv  = ev(d->right) - d->right.margin;
-        next.x     = lv;
-        next.width = rv - lv;
-    } else if (d->left.set) {
-        next.x     = ev(d->left) + d->left.margin;
-        next.width = effectiveW;
-    } else if (d->right.set) {
-        next.width = effectiveW;
-        next.x     = ev(d->right) - d->right.margin - next.width;
-    } else if (d->hcenter.set) {
-        next.width = effectiveW;
-        next.x     = ev(d->hcenter) + d->hcenter.margin - next.width / 2.0;
-    } else {
-        next.width = effectiveW;
+    if (left.set && right.set) {
+        double lv = ev(left)  + left.margin;
+        double rv = ev(right) - right.margin;
+        out.x     = lv;
+        out.width = rv - lv;
+    } else if (left.set) {
+        out.x = ev(left) + left.margin;
+    } else if (right.set) {
+        out.x = ev(right) - right.margin - implW;
+    } else if (hcenter.set) {
+        out.x = ev(hcenter) + hcenter.margin - implW / 2.0;
     }
 
-    // ── Vertical ────────────────────────────────────────────────────────
-    if (d->top.set && d->bottom.set) {
-        double tv   = ev(d->top)    + d->top.margin;
-        double bv   = ev(d->bottom) - d->bottom.margin;
-        next.y      = tv;
-        next.height = bv - tv;
-    } else if (d->top.set) {
-        next.y      = ev(d->top) + d->top.margin;
-        next.height = effectiveH;
-    } else if (d->bottom.set) {
-        next.height = effectiveH;
-        next.y      = ev(d->bottom) - d->bottom.margin - next.height;
-    } else if (d->vcenter.set) {
-        next.height = effectiveH;
-        next.y      = ev(d->vcenter) + d->vcenter.margin - next.height / 2.0;
-    } else {
-        next.height = effectiveH;
+    if (top.set && bottom.set) {
+        double tv  = ev(top)    + top.margin;
+        double bv  = ev(bottom) - bottom.margin;
+        out.y      = tv;
+        out.height = bv - tv;
+    } else if (top.set) {
+        out.y = ev(top) + top.margin;
+    } else if (bottom.set) {
+        out.y = ev(bottom) - bottom.margin - implH;
+    } else if (vcenter.set) {
+        out.y = ev(vcenter) + vcenter.margin - implH / 2.0;
     }
 
+    return out;
+}
+
+bool TzAnchors::resolve()
+{
+    TZ_D(TzAnchors);
+    auto layout = d->computeLayout();
+    if (!layout)
+        return false;
+    TzRect next = d->owner->geometry();
+    next.x = layout->x;
+    next.y = layout->y;
+    if (layout->width.has_value())
+        next.width = layout->width.value();
+    if (layout->height.has_value())
+        next.height = layout->height.value();
     return d->owner->setGeometry(next);
 }
