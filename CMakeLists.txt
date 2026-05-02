@@ -27,6 +27,7 @@ add_library(event-loop
     src/tzanchors.cpp
     src/tzpainter.cpp
     src/tzscene.cpp
+    src/tzwindow.cpp
     src/tzmargins.cpp
     src/tzpoint.cpp
     src/tzrect.cpp
