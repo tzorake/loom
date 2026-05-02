@@ -15,20 +15,18 @@ class TzWidgetPrivate : public TzObjectPrivate
 {
     TZ_DECLARE_PUBLIC(TzWidget)
 public:
-    ~TzWidgetPrivate() override;
-    // q_ptr, parent, firstChild, nextSibling, previousSibling, pendingDelete
-    // are inherited from TzObjectPrivate.
+    virtual ~TzWidgetPrivate() override;
 
-    TzRect     geometry{};
-    TzSize     implicitSize{};
+    TzRect geometry{};
+    TzSize implicitSize{};
 
-    bool       explicitWidth{ false };
-    bool       explicitHeight{ false };
-    bool       visible{ true };
-    bool       focused{ false };
+    bool explicitWidth{ false };
+    bool explicitHeight{ false };
+    bool visible{ true };
+    bool focused{ false };
 
-    std::unique_ptr<TzAnchors> anchors;  // lazily allocated
-    TzScene   *scene{ nullptr };
+    std::unique_ptr<TzAnchors> anchors;
+    TzScene *scene{ nullptr };
 };
 
 #endif // TZWIDGET_P_HPP

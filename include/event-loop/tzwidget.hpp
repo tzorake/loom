@@ -17,74 +17,66 @@ public:
     explicit TzWidget(TzWidget *parent = nullptr);
     virtual ~TzWidget() override;
 
-    // ── Geometry (parent-local coordinates) ─────────────────────────────
-    double x()      const;
-    double y()      const;
-    double width()  const;
+    void setX(double x);
+    double x() const;
+
+    void setY(double y);
+    double y() const;
+    
+    void setWidth(double w);
+    double width() const;
+
+    void setHeight(double h);
     double height() const;
 
-    TzRect  geometry()     const;
-    TzPoint pos()          const;
-    TzSize  size()         const;
-
     bool setGeometry(const TzRect &rect);
+    TzRect geometry() const;
+
+    TzPoint position() const;
+    TzSize size() const;
+
     void move(const TzPoint &pos);
     void resize(const TzSize &size);
 
-    void setX(double x);
-    void setY(double y);
-    void setWidth(double w);
-    void setHeight(double h);
-    void resetWidth();
-    void resetHeight();
-
-    // ── Implicit (content-preferred) size ───────────────────────────────
-    double implicitWidth()  const;
-    double implicitHeight() const;
-    TzSize implicitSize()   const;
-
     void setImplicitWidth(double w);
-    void setImplicitHeight(double h);
-    void setImplicitSize(double w, double h);
+    double implicitWidth() const;
 
-    // ── Effective size used by layout ────────────────────────────────────
+    void setImplicitHeight(double h);
+    double implicitHeight() const;
+
+    void setImplicitSize(double w, double h);
+    TzSize implicitSize() const;
+
     double effectiveWidth()  const;
     double effectiveHeight() const;
 
-    // ── Anchors (created lazily on first call) ───────────────────────────
     TzAnchors *anchors();
 
-    // ── Visibility ───────────────────────────────────────────────────────
-    bool isVisible() const;
     void setVisible(bool visible);
+    bool isVisible() const;
 
-    // ── Focus ────────────────────────────────────────────────────────────
-    bool hasFocus() const;
     void setFocus();
-    void clearFocus();
+    bool hasFocus() const;
 
-    // ── Scene interaction ────────────────────────────────────────────────
-    void     update();
+    void update();
     TzScene *scene() const;
 
-    // ── Parent widget convenience ────────────────────────────────────────
     TzWidget *parentWidget() const;
 
-    // ── Painting ─────────────────────────────────────────────────────────
     virtual void paint(TzPainter *painter);
 
-    // ── Event dispatch ───────────────────────────────────────────────────
     bool event(TzEvent *event) override;
 
-    // ── Anchor resolution (called by TzScene during layout) ─────────────
-    bool resolveAnchors();
-
 protected:
-    // Subclasses supply their own (derived) TzWidgetPrivate so no second
-    // allocation is needed for the extra private data.
     explicit TzWidget(TzWidgetPrivate &d, TzWidget *parent = nullptr);
 
     virtual void geometryChanged(const TzRect &newGeom, const TzRect &oldGeom);
+
+private:
+    void resetWidth();
+    void resetHeight();
+    void clearFocus();
+    bool resolveAnchors();
 
     friend class TzScene;
     friend class TzScenePrivate;
