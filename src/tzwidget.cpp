@@ -3,182 +3,190 @@
 #include <event-loop/tzscene.hpp>
 #include <event-loop/tzgeometrychangeevent.hpp>
 #include <event-loop/tzfocusevent.hpp>
+#include <event-loop/tzpaintevent.hpp>
 #include <event-loop/tzevent.hpp>
 
 #include "tzwidget_p.hpp"
 
+// ── Constructors ──────────────────────────────────────────────────────────
+
 TzWidget::TzWidget(TzWidget *parent)
-    : TzObject(parent)
-    , d_ptr(new TzWidgetPrivate)
+    : TzWidget(*new TzWidgetPrivate, parent)
 {
-    d_ptr->q_ptr = this;
+}
 
-    // Inherit scene from parent if it is already in one
+TzWidget::TzWidget(TzWidgetPrivate &dd, TzWidget *parent)
+    : TzObject(dd, parent)
+{
+    TZ_D(TzWidget);
+    d->q_ptr = this;
     if (parent)
-        d_ptr->scene = parent->d_ptr->scene;
+        d->scene = static_cast<TzWidgetPrivate *>(parent->d_ptr)->scene;
 }
 
-TzWidget::~TzWidget()
-{
-    delete d_ptr->anchors;
-}
+TzWidgetPrivate::~TzWidgetPrivate() = default;
+
+TzWidget::~TzWidget() = default;
 
 // ── Geometry ──────────────────────────────────────────────────────────────
 
-double TzWidget::x()      const { return d_ptr->geometry.x; }
-double TzWidget::y()      const { return d_ptr->geometry.y; }
-double TzWidget::width()  const { return d_ptr->geometry.width; }
-double TzWidget::height() const { return d_ptr->geometry.height; }
+double TzWidget::x()      const { TZ_D(const TzWidget); return d->geometry.x; }
+double TzWidget::y()      const { TZ_D(const TzWidget); return d->geometry.y; }
+double TzWidget::width()  const { TZ_D(const TzWidget); return d->geometry.width; }
+double TzWidget::height() const { TZ_D(const TzWidget); return d->geometry.height; }
 
-TzRect  TzWidget::geometry() const { return d_ptr->geometry; }
-TzPoint TzWidget::pos()      const { return d_ptr->geometry.topLeft(); }
-TzSize  TzWidget::size()     const { return d_ptr->geometry.size(); }
+TzRect  TzWidget::geometry() const { TZ_D(const TzWidget); return d->geometry; }
+TzPoint TzWidget::pos()      const { TZ_D(const TzWidget); return d->geometry.topLeft(); }
+TzSize  TzWidget::size()     const { TZ_D(const TzWidget); return d->geometry.size(); }
 
 bool TzWidget::setGeometry(const TzRect &rect)
 {
-    if (d_ptr->geometry == rect)
+    TZ_D(TzWidget);
+    if (d->geometry == rect)
         return false;
-    TzRect old = d_ptr->geometry;
-    d_ptr->geometry = rect;
+    TzRect old = d->geometry;
+    d->geometry = rect;
     geometryChanged(rect, old);
     return true;
 }
 
 void TzWidget::move(const TzPoint &pos)
 {
-    setGeometry({ pos.x, pos.y, d_ptr->geometry.width, d_ptr->geometry.height });
+    TZ_D(TzWidget);
+    setGeometry({ pos.x, pos.y, d->geometry.width, d->geometry.height });
 }
 
 void TzWidget::resize(const TzSize &sz)
 {
-    setGeometry({ d_ptr->geometry.x, d_ptr->geometry.y, sz.width, sz.height });
+    TZ_D(TzWidget);
+    setGeometry({ d->geometry.x, d->geometry.y, sz.width, sz.height });
 }
 
 void TzWidget::setX(double x)
 {
-    setGeometry({ x, d_ptr->geometry.y, d_ptr->geometry.width, d_ptr->geometry.height });
+    TZ_D(TzWidget);
+    setGeometry({ x, d->geometry.y, d->geometry.width, d->geometry.height });
 }
 
 void TzWidget::setY(double y)
 {
-    setGeometry({ d_ptr->geometry.x, y, d_ptr->geometry.width, d_ptr->geometry.height });
+    TZ_D(TzWidget);
+    setGeometry({ d->geometry.x, y, d->geometry.width, d->geometry.height });
 }
 
 void TzWidget::setWidth(double w)
 {
-    d_ptr->explicitWidth = true;
-    setGeometry({ d_ptr->geometry.x, d_ptr->geometry.y, w, d_ptr->geometry.height });
+    TZ_D(TzWidget);
+    d->explicitWidth = true;
+    setGeometry({ d->geometry.x, d->geometry.y, w, d->geometry.height });
 }
 
 void TzWidget::setHeight(double h)
 {
-    d_ptr->explicitHeight = true;
-    setGeometry({ d_ptr->geometry.x, d_ptr->geometry.y, d_ptr->geometry.width, h });
+    TZ_D(TzWidget);
+    d->explicitHeight = true;
+    setGeometry({ d->geometry.x, d->geometry.y, d->geometry.width, h });
 }
 
-void TzWidget::resetWidth()
-{
-    d_ptr->explicitWidth = false;
-}
-
-void TzWidget::resetHeight()
-{
-    d_ptr->explicitHeight = false;
-}
+void TzWidget::resetWidth()  { TZ_D(TzWidget); d->explicitWidth  = false; }
+void TzWidget::resetHeight() { TZ_D(TzWidget); d->explicitHeight = false; }
 
 // ── Implicit size ────────────────────────────────────────────────────────
 
-double TzWidget::implicitWidth()  const { return d_ptr->implicitSize.width; }
-double TzWidget::implicitHeight() const { return d_ptr->implicitSize.height; }
-TzSize TzWidget::implicitSize()   const { return d_ptr->implicitSize; }
+double TzWidget::implicitWidth()  const { TZ_D(const TzWidget); return d->implicitSize.width; }
+double TzWidget::implicitHeight() const { TZ_D(const TzWidget); return d->implicitSize.height; }
+TzSize TzWidget::implicitSize()   const { TZ_D(const TzWidget); return d->implicitSize; }
 
 double TzWidget::effectiveWidth() const
 {
-    return d_ptr->explicitWidth ? d_ptr->geometry.width : d_ptr->implicitSize.width;
+    TZ_D(const TzWidget);
+    return d->explicitWidth ? d->geometry.width : d->implicitSize.width;
 }
 
 double TzWidget::effectiveHeight() const
 {
-    return d_ptr->explicitHeight ? d_ptr->geometry.height : d_ptr->implicitSize.height;
+    TZ_D(const TzWidget);
+    return d->explicitHeight ? d->geometry.height : d->implicitSize.height;
 }
 
 void TzWidget::setImplicitWidth(double w)
 {
-    if (d_ptr->implicitSize.width == w) return;
-    d_ptr->implicitSize.width = w;
-    if (d_ptr->scene) d_ptr->scene->markLayoutDirty();
+    TZ_D(TzWidget);
+    if (d->implicitSize.width == w) return;
+    d->implicitSize.width = w;
+    if (d->scene) d->scene->markLayoutDirty();
 }
 
 void TzWidget::setImplicitHeight(double h)
 {
-    if (d_ptr->implicitSize.height == h) return;
-    d_ptr->implicitSize.height = h;
-    if (d_ptr->scene) d_ptr->scene->markLayoutDirty();
+    TZ_D(TzWidget);
+    if (d->implicitSize.height == h) return;
+    d->implicitSize.height = h;
+    if (d->scene) d->scene->markLayoutDirty();
 }
 
 void TzWidget::setImplicitSize(double w, double h)
 {
-    if (d_ptr->implicitSize.width == w && d_ptr->implicitSize.height == h) return;
-    d_ptr->implicitSize = { w, h };
-    if (d_ptr->scene) d_ptr->scene->markLayoutDirty();
+    TZ_D(TzWidget);
+    if (d->implicitSize.width == w && d->implicitSize.height == h) return;
+    d->implicitSize = { w, h };
+    if (d->scene) d->scene->markLayoutDirty();
 }
 
 // ── Anchors ──────────────────────────────────────────────────────────────
 
 TzAnchors *TzWidget::anchors()
 {
-    if (!d_ptr->anchors)
-        d_ptr->anchors = new TzAnchors(this);
-    return d_ptr->anchors;
+    TZ_D(TzWidget);
+    if (!d->anchors)
+        d->anchors.reset(new TzAnchors(this));
+    return d->anchors.get();
 }
 
 bool TzWidget::resolveAnchors()
 {
-    if (!d_ptr->anchors)
-        return false;
-    return d_ptr->anchors->resolve();
+    TZ_D(TzWidget);
+    return d->anchors ? d->anchors->resolve() : false;
 }
 
 // ── Visibility ────────────────────────────────────────────────────────────
 
-bool TzWidget::isVisible() const { return d_ptr->visible; }
+bool TzWidget::isVisible() const { TZ_D(const TzWidget); return d->visible; }
 
 void TzWidget::setVisible(bool visible)
 {
-    if (d_ptr->visible == visible)
-        return;
-    d_ptr->visible = visible;
+    TZ_D(TzWidget);
+    if (d->visible == visible) return;
+    d->visible = visible;
     update();
 }
 
 // ── Focus ─────────────────────────────────────────────────────────────────
 
-bool TzWidget::hasFocus() const { return d_ptr->focused; }
+bool TzWidget::hasFocus() const { TZ_D(const TzWidget); return d->focused; }
 
 void TzWidget::setFocus()
 {
-    if (d_ptr->scene)
-        d_ptr->scene->setFocusedWidget(this);
+    TZ_D(TzWidget);
+    if (d->scene) d->scene->setFocusedWidget(this);
 }
 
 void TzWidget::clearFocus()
 {
-    if (d_ptr->scene && d_ptr->scene->focusedWidget() == this)
-        d_ptr->scene->setFocusedWidget(nullptr);
+    TZ_D(TzWidget);
+    if (d->scene && d->scene->focusedWidget() == this)
+        d->scene->setFocusedWidget(nullptr);
 }
 
 // ── Scene interaction ────────────────────────────────────────────────────
 
 void TzWidget::update()
 {
-    if (d_ptr->scene)
-        d_ptr->scene->markPaintDirty();
+    TZ_D(TzWidget);
+    if (d->scene) d->scene->markPaintDirty();
 }
 
-TzScene *TzWidget::scene() const
-{
-    return d_ptr->scene;
-}
+TzScene *TzWidget::scene() const { TZ_D(const TzWidget); return d->scene; }
 
 // ── Parent widget ────────────────────────────────────────────────────────
 
@@ -191,14 +199,18 @@ TzWidget *TzWidget::parentWidget() const
 
 void TzWidget::paint(TzPainter * /*painter*/)
 {
-    // Default: transparent (no fill). Subclasses override.
 }
 
 // ── Events ───────────────────────────────────────────────────────────────
 
 bool TzWidget::event(TzEvent *e)
 {
+    TZ_D(TzWidget);
     switch (e->type()) {
+        case TzEvent::Paint:
+            paint(static_cast<TzPaintEvent *>(e)->painter());
+            return true;
+
         case TzEvent::GeometryChange:
             geometryChanged(
                 static_cast<TzGeometryChangeEvent *>(e)->newGeometry(),
@@ -206,12 +218,12 @@ bool TzWidget::event(TzEvent *e)
             return true;
 
         case TzEvent::FocusIn:
-            d_ptr->focused = true;
+            d->focused = true;
             update();
             return true;
 
         case TzEvent::FocusOut:
-            d_ptr->focused = false;
+            d->focused = false;
             update();
             return true;
 
@@ -220,7 +232,7 @@ bool TzWidget::event(TzEvent *e)
     }
 }
 
-// ── Protected helpers ────────────────────────────────────────────────────
+// ── Protected ────────────────────────────────────────────────────────────
 
 void TzWidget::geometryChanged(const TzRect & /*newGeom*/, const TzRect & /*oldGeom*/)
 {

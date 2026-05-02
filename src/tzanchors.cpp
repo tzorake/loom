@@ -1,10 +1,19 @@
 #include <event-loop/tzanchors.hpp>
 #include <event-loop/tzwidget.hpp>
 
-#include "tzwidget_p.hpp"
+#include "tzanchors_p.hpp"
+
+// ── Constructor / destructor ──────────────────────────────────────────────
 
 TzAnchors::TzAnchors(TzWidget *owner)
-    : m_owner(owner)
+    : d_ptr(new TzAnchorsPrivate)
+{
+    TZ_D(TzAnchors);
+    d->q_ptr = this;
+    d->owner = owner;
+}
+
+TzAnchors::~TzAnchors()
 {
 }
 
@@ -12,46 +21,53 @@ TzAnchors::TzAnchors(TzWidget *owner)
 
 void TzAnchors::setLeft(TzWidget *target, Edge edge, double margin)
 {
-    m_left = { target, edge, margin, true };
+    TZ_D(TzAnchors);
+    d->left = { target, edge, margin, true };
 }
 
 void TzAnchors::setRight(TzWidget *target, Edge edge, double margin)
 {
-    m_right = { target, edge, margin, true };
+    TZ_D(TzAnchors);
+    d->right = { target, edge, margin, true };
 }
 
 void TzAnchors::setTop(TzWidget *target, Edge edge, double margin)
 {
-    m_top = { target, edge, margin, true };
+    TZ_D(TzAnchors);
+    d->top = { target, edge, margin, true };
 }
 
 void TzAnchors::setBottom(TzWidget *target, Edge edge, double margin)
 {
-    m_bottom = { target, edge, margin, true };
+    TZ_D(TzAnchors);
+    d->bottom = { target, edge, margin, true };
 }
 
 void TzAnchors::setHCenter(TzWidget *target, Edge edge, double margin)
 {
-    m_hcenter = { target, edge, margin, true };
+    TZ_D(TzAnchors);
+    d->hcenter = { target, edge, margin, true };
 }
 
 void TzAnchors::setVCenter(TzWidget *target, Edge edge, double margin)
 {
-    m_vcenter = { target, edge, margin, true };
+    TZ_D(TzAnchors);
+    d->vcenter = { target, edge, margin, true };
 }
 
 // ── Clear ──────────────────────────────────────────────────────────────────
 
-void TzAnchors::clearLeft()    { m_left    = {}; }
-void TzAnchors::clearRight()   { m_right   = {}; }
-void TzAnchors::clearTop()     { m_top     = {}; }
-void TzAnchors::clearBottom()  { m_bottom  = {}; }
-void TzAnchors::clearHCenter() { m_hcenter = {}; }
-void TzAnchors::clearVCenter() { m_vcenter = {}; }
+void TzAnchors::clearLeft()    { TZ_D(TzAnchors); d->left    = {}; }
+void TzAnchors::clearRight()   { TZ_D(TzAnchors); d->right   = {}; }
+void TzAnchors::clearTop()     { TZ_D(TzAnchors); d->top     = {}; }
+void TzAnchors::clearBottom()  { TZ_D(TzAnchors); d->bottom  = {}; }
+void TzAnchors::clearHCenter() { TZ_D(TzAnchors); d->hcenter = {}; }
+void TzAnchors::clearVCenter() { TZ_D(TzAnchors); d->vcenter = {}; }
 
 void TzAnchors::clearAll()
 {
-    m_left = m_right = m_top = m_bottom = m_hcenter = m_vcenter = {};
+    TZ_D(TzAnchors);
+    d->left = d->right = d->top = d->bottom = d->hcenter = d->vcenter = {};
 }
 
 // ── Shorthand ─────────────────────────────────────────────────────────────
@@ -63,51 +79,47 @@ void TzAnchors::fill(TzWidget *target, double margin)
 
 void TzAnchors::fill(TzWidget *target, const TzMargins &margins)
 {
-    m_left   = { target, Left,   margins.left,   true };
-    m_right  = { target, Right,  margins.right,  true };
-    m_top    = { target, Top,    margins.top,    true };
-    m_bottom = { target, Bottom, margins.bottom, true };
-    m_hcenter = {};
-    m_vcenter = {};
+    TZ_D(TzAnchors);
+    d->left    = { target, Left,   margins.left,   true };
+    d->right   = { target, Right,  margins.right,  true };
+    d->top     = { target, Top,    margins.top,    true };
+    d->bottom  = { target, Bottom, margins.bottom, true };
+    d->hcenter = {};
+    d->vcenter = {};
 }
 
 void TzAnchors::centerIn(TzWidget *target)
 {
-    m_hcenter = { target, HCenter, 0.0, true };
-    m_vcenter = { target, VCenter, 0.0, true };
-    m_left = m_right = m_top = m_bottom = {};
+    TZ_D(TzAnchors);
+    d->hcenter = { target, HCenter, 0.0, true };
+    d->vcenter = { target, VCenter, 0.0, true };
+    d->left = d->right = d->top = d->bottom = {};
 }
 
 // ── Inspection ────────────────────────────────────────────────────────────
 
-bool TzAnchors::hasLeft()    const { return m_left.set;    }
-bool TzAnchors::hasRight()   const { return m_right.set;   }
-bool TzAnchors::hasTop()     const { return m_top.set;     }
-bool TzAnchors::hasBottom()  const { return m_bottom.set;  }
-bool TzAnchors::hasHCenter() const { return m_hcenter.set; }
-bool TzAnchors::hasVCenter() const { return m_vcenter.set; }
+bool TzAnchors::hasLeft()    const { TZ_D(const TzAnchors); return d->left.set;    }
+bool TzAnchors::hasRight()   const { TZ_D(const TzAnchors); return d->right.set;   }
+bool TzAnchors::hasTop()     const { TZ_D(const TzAnchors); return d->top.set;     }
+bool TzAnchors::hasBottom()  const { TZ_D(const TzAnchors); return d->bottom.set;  }
+bool TzAnchors::hasHCenter() const { TZ_D(const TzAnchors); return d->hcenter.set; }
+bool TzAnchors::hasVCenter() const { TZ_D(const TzAnchors); return d->vcenter.set; }
 
-// ── Edge value resolver ───────────────────────────────────────────────────
-//
-// Geometries are stored in parent-local coordinates.  When a child anchors to
-// its own parent the target rect must be expressed in the parent's *own* local
-// space (i.e. origin at 0,0 with the parent's dimensions), not in the
-// grandparent space that geometry() returns.  For siblings the geometry() is
-// already in the same space as the owner, so no adjustment is needed.
+// ── Edge value helper (file-local) ────────────────────────────────────────
 
-double TzAnchors::edgeValue(const TzWidget *target, Edge e, bool targetIsParent)
+static double edgeValue(const TzWidget *target, TzAnchors::Edge e, bool targetIsParent)
 {
     TzRect g = targetIsParent
         ? TzRect{ 0.0, 0.0, target->width(), target->height() }
         : target->geometry();
 
     switch (e) {
-        case Left:    return g.x;
-        case Right:   return g.x + g.width;
-        case Top:     return g.y;
-        case Bottom:  return g.y + g.height;
-        case HCenter: return g.x + g.width  / 2.0;
-        case VCenter: return g.y + g.height / 2.0;
+        case TzAnchors::Left:    return g.x;
+        case TzAnchors::Right:   return g.x + g.width;
+        case TzAnchors::Top:     return g.y;
+        case TzAnchors::Bottom:  return g.y + g.height;
+        case TzAnchors::HCenter: return g.x + g.width  / 2.0;
+        case TzAnchors::VCenter: return g.y + g.height / 2.0;
     }
     return 0.0;
 }
@@ -116,54 +128,56 @@ double TzAnchors::edgeValue(const TzWidget *target, Edge e, bool targetIsParent)
 
 bool TzAnchors::resolve()
 {
-    TzRect next = m_owner->geometry();
+    TZ_D(TzAnchors);
 
-    double effectiveW = m_owner->effectiveWidth();
-    double effectiveH = m_owner->effectiveHeight();
+    TzRect next = d->owner->geometry();
 
-    TzWidget *ownerParent = m_owner->parentWidget();
+    double effectiveW = d->owner->effectiveWidth();
+    double effectiveH = d->owner->effectiveHeight();
 
-    auto ev = [&](const AnchorLine &line) {
+    TzWidget *ownerParent = d->owner->parentWidget();
+
+    auto ev = [&](const TzAnchorLine &line) {
         return edgeValue(line.target, line.edge, line.target == ownerParent);
     };
 
     // ── Horizontal ──────────────────────────────────────────────────────
-    if (m_left.set && m_right.set) {
-        double lv  = ev(m_left)  + m_left.margin;
-        double rv  = ev(m_right) - m_right.margin;
+    if (d->left.set && d->right.set) {
+        double lv  = ev(d->left)  + d->left.margin;
+        double rv  = ev(d->right) - d->right.margin;
         next.x     = lv;
         next.width = rv - lv;
-    } else if (m_left.set) {
-        next.x     = ev(m_left) + m_left.margin;
+    } else if (d->left.set) {
+        next.x     = ev(d->left) + d->left.margin;
         next.width = effectiveW;
-    } else if (m_right.set) {
+    } else if (d->right.set) {
         next.width = effectiveW;
-        next.x     = ev(m_right) - m_right.margin - next.width;
-    } else if (m_hcenter.set) {
+        next.x     = ev(d->right) - d->right.margin - next.width;
+    } else if (d->hcenter.set) {
         next.width = effectiveW;
-        next.x     = ev(m_hcenter) + m_hcenter.margin - next.width / 2.0;
+        next.x     = ev(d->hcenter) + d->hcenter.margin - next.width / 2.0;
     } else {
         next.width = effectiveW;
     }
 
     // ── Vertical ────────────────────────────────────────────────────────
-    if (m_top.set && m_bottom.set) {
-        double tv   = ev(m_top)    + m_top.margin;
-        double bv   = ev(m_bottom) - m_bottom.margin;
+    if (d->top.set && d->bottom.set) {
+        double tv   = ev(d->top)    + d->top.margin;
+        double bv   = ev(d->bottom) - d->bottom.margin;
         next.y      = tv;
         next.height = bv - tv;
-    } else if (m_top.set) {
-        next.y      = ev(m_top) + m_top.margin;
+    } else if (d->top.set) {
+        next.y      = ev(d->top) + d->top.margin;
         next.height = effectiveH;
-    } else if (m_bottom.set) {
+    } else if (d->bottom.set) {
         next.height = effectiveH;
-        next.y      = ev(m_bottom) - m_bottom.margin - next.height;
-    } else if (m_vcenter.set) {
+        next.y      = ev(d->bottom) - d->bottom.margin - next.height;
+    } else if (d->vcenter.set) {
         next.height = effectiveH;
-        next.y      = ev(m_vcenter) + m_vcenter.margin - next.height / 2.0;
+        next.y      = ev(d->vcenter) + d->vcenter.margin - next.height / 2.0;
     } else {
         next.height = effectiveH;
     }
 
-    return m_owner->setGeometry(next);
+    return d->owner->setGeometry(next);
 }

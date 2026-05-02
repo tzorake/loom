@@ -4,68 +4,17 @@
 #include <event-loop/tzkeyevent.hpp>
 #include <event-loop/tzmouseevent.hpp>
 #include <event-loop/tzfocusevent.hpp>
+#include <event-loop/tzpaintevent.hpp>
 #include <event-loop/tzcoreapplication.hpp>
 #include <event-loop/tzpainter.hpp>
 
+#include "tzscene_p.hpp"
 #include "tzwidget_p.hpp"
 
-TzScene::TzScene(TzAbstractWindow *window)
-    : m_window(window)
+// ── TzScenePrivate helpers ────────────────────────────────────────────────
+
+void TzScenePrivate::layoutWidget(TzWidget *w, int passesLeft)
 {
-    window->setResizeCallback([this](int w, int h) { onResize(w, h); });
-    window->setKeyCallback   ([this](TzKeyEvent *e) { onKey(e); });
-    window->setMouseCallback ([this](TzMouseEvent *e) { onMouse(e); });
-    // Close is intentionally left to the user (they set the close callback separately).
-}
-
-TzScene::~TzScene()
-{
-    if (m_root)
-        unregisterSubtree(m_root);
-}
-
-// ── Root ──────────────────────────────────────────────────────────────────
-
-TzWidget *TzScene::root() const { return m_root; }
-
-void TzScene::setRoot(TzWidget *root)
-{
-    if (m_root)
-        unregisterSubtree(m_root);
-
-    m_root = root;
-
-    if (m_root) {
-        registerSubtree(m_root);
-        // Set implicit size to current window dimensions so the root fills the window
-        m_root->setImplicitSize((double)m_width, (double)m_height);
-        m_root->resetWidth();
-        m_root->resetHeight();
-        m_root->setGeometry({ 0.0, 0.0, (double)m_width, (double)m_height });
-        doLayout();
-        markPaintDirty();
-    }
-}
-
-// ── Layout ────────────────────────────────────────────────────────────────
-
-void TzScene::doLayout()
-{
-    if (!m_root) return;
-
-    // Root always fills the window
-    m_root->setImplicitSize((double)m_width, (double)m_height);
-    m_root->setGeometry({ 0.0, 0.0, (double)m_width, (double)m_height });
-
-    // Resolve children with up to 3 passes to handle sibling-to-sibling anchors
-    layoutWidget(m_root, 3);
-
-    markPaintDirty();
-}
-
-void TzScene::layoutWidget(TzWidget *w, int passesLeft)
-{
-    // Resolve immediate children (multiple passes for sibling→sibling anchors)
     for (int pass = 0; pass < passesLeft; ++pass) {
         bool changed = false;
         TzObject *child = w->firstChild();
@@ -77,7 +26,6 @@ void TzScene::layoutWidget(TzWidget *w, int passesLeft)
         if (!changed) break;
     }
 
-    // Recurse
     TzObject *child = w->firstChild();
     while (child) {
         if (TzWidget *cw = dynamic_cast<TzWidget *>(child))
@@ -86,24 +34,8 @@ void TzScene::layoutWidget(TzWidget *w, int passesLeft)
     }
 }
 
-// ── Painting ──────────────────────────────────────────────────────────────
-
-void TzScene::doPaint()
-{
-    if (!m_root || m_width <= 0 || m_height <= 0) return;
-    if (m_layoutDirty) { doLayout(); m_layoutDirty = false; }
-
-    m_pixels.assign((size_t)(m_width * m_height), 0xFF000000u);
-
-    TzRect windowRect = { 0.0, 0.0, (double)m_width, (double)m_height };
-    paintWidget(m_root, 0.0, 0.0, windowRect);
-
-    m_window->render(m_pixels, m_width, m_height);
-    m_paintDirty = false;
-}
-
-void TzScene::paintWidget(TzWidget *w, double parentAbsX, double parentAbsY,
-                           const TzRect &parentClip)
+void TzScenePrivate::paintWidget(TzWidget *w, double parentAbsX, double parentAbsY,
+                                  const TzRect &parentClip)
 {
     if (!w->isVisible()) return;
 
@@ -115,8 +47,9 @@ void TzScene::paintWidget(TzWidget *w, double parentAbsX, double parentAbsY,
 
     if (clip.isEmpty()) return;
 
-    TzPainter painter(m_pixels.data(), m_width, m_height, clip, { absX, absY });
-    w->paint(&painter);
+    TzPainter painter(pixels.data(), width, height, clip, { absX, absY });
+    TzPaintEvent pe(&painter);
+    TzCoreApplication::sendEvent(w, &pe);
 
     TzObject *child = w->firstChild();
     while (child) {
@@ -126,44 +59,33 @@ void TzScene::paintWidget(TzWidget *w, double parentAbsX, double parentAbsY,
     }
 }
 
-void TzScene::markPaintDirty()  { m_paintDirty  = true; }
-bool TzScene::isPaintDirty()    const { return m_paintDirty; }
-void TzScene::markLayoutDirty() { m_layoutDirty = true; m_paintDirty = true; }
-
-// ── Focus ──────────────────────────────────────────────────────────────────
-
-TzWidget *TzScene::focusedWidget() const { return m_focusedWidget; }
-
-void TzScene::setFocusedWidget(TzWidget *widget)
+void TzScenePrivate::registerSubtree(TzWidget *w)
 {
-    if (m_focusedWidget == widget) return;
-
-    if (m_focusedWidget) {
-        m_focusedWidget->d_ptr->focused = false;
-        TzFocusEvent out(TzEvent::FocusOut);
-        TzCoreApplication::sendEvent(m_focusedWidget, &out);
-    }
-
-    m_focusedWidget = widget;
-
-    if (m_focusedWidget) {
-        m_focusedWidget->d_ptr->focused = true;
-        TzFocusEvent in(TzEvent::FocusIn);
-        TzCoreApplication::sendEvent(m_focusedWidget, &in);
+    TZ_Q(TzScene);
+    static_cast<TzWidgetPrivate *>(w->d_ptr)->scene = q;
+    TzObject *child = w->firstChild();
+    while (child) {
+        if (TzWidget *cw = dynamic_cast<TzWidget *>(child))
+            registerSubtree(cw);
+        child = child->nextSibling();
     }
 }
 
-// ── Hit-testing ───────────────────────────────────────────────────────────
-
-TzWidget *TzScene::widgetAt(double x, double y) const
+void TzScenePrivate::unregisterSubtree(TzWidget *w)
 {
-    if (!m_root) return nullptr;
-    return widgetAtHelper(m_root, x, y, 0.0, 0.0);
+    static_cast<TzWidgetPrivate *>(w->d_ptr)->scene = nullptr;
+    if (focusedWidget == w) focusedWidget = nullptr;
+    TzObject *child = w->firstChild();
+    while (child) {
+        if (TzWidget *cw = dynamic_cast<TzWidget *>(child))
+            unregisterSubtree(cw);
+        child = child->nextSibling();
+    }
 }
 
-TzWidget *TzScene::widgetAtHelper(TzWidget *w,
-                                   double x, double y,
-                                   double parentAbsX, double parentAbsY) const
+TzWidget *TzScenePrivate::widgetAtHelper(TzWidget *w,
+                                          double x, double y,
+                                          double parentAbsX, double parentAbsY) const
 {
     if (!w->isVisible()) return nullptr;
 
@@ -174,7 +96,6 @@ TzWidget *TzScene::widgetAtHelper(TzWidget *w,
 
     if (!abs.contains(x, y)) return nullptr;
 
-    // Check children in reverse order so topmost (last-painted) wins
     std::vector<TzObject *> children;
     TzObject *child = w->firstChild();
     while (child) { children.push_back(child); child = child->nextSibling(); }
@@ -188,60 +109,136 @@ TzWidget *TzScene::widgetAtHelper(TzWidget *w,
     return w;
 }
 
+// ── TzScene ───────────────────────────────────────────────────────────────
+
+TzScene::TzScene(TzAbstractWindow *window)
+    : d_ptr(new TzScenePrivate)
+{
+    TZ_D(TzScene);
+    d->q_ptr  = this;
+    d->window = window;
+
+    window->setResizeCallback([this](int w, int h) {
+        TZ_D(TzScene);
+        d->width  = w;
+        d->height = h;
+        doLayout();
+        doPaint();
+    });
+    window->setKeyCallback([this](TzKeyEvent *e) {
+        TZ_D(TzScene);
+        if (d->focusedWidget)
+            TzCoreApplication::sendEvent(d->focusedWidget, e);
+    });
+    window->setMouseCallback([this](TzMouseEvent *e) {
+        TzWidget *target = widgetAt(e->x(), e->y());
+        if (!target) return;
+        if (e->type() == TzEvent::MouseButtonPress && target != focusedWidget())
+            setFocusedWidget(target);
+        TzCoreApplication::sendEvent(target, e);
+    });
+}
+
+TzScene::~TzScene()
+{
+    TZ_D(TzScene);
+    if (d->root)
+        d->unregisterSubtree(d->root);
+}
+
+// ── Root ──────────────────────────────────────────────────────────────────
+
+TzWidget *TzScene::root() const { TZ_D(const TzScene); return d->root; }
+
+void TzScene::setRoot(TzWidget *root)
+{
+    TZ_D(TzScene);
+    if (d->root)
+        d->unregisterSubtree(d->root);
+
+    d->root = root;
+
+    if (d->root) {
+        d->registerSubtree(d->root);
+        d->root->setImplicitSize((double)d->width, (double)d->height);
+        d->root->resetWidth();
+        d->root->resetHeight();
+        d->root->setGeometry({ 0.0, 0.0, (double)d->width, (double)d->height });
+        doLayout();
+        markPaintDirty();
+    }
+}
+
+// ── Layout ────────────────────────────────────────────────────────────────
+
+void TzScene::doLayout()
+{
+    TZ_D(TzScene);
+    if (!d->root) return;
+
+    d->root->setImplicitSize((double)d->width, (double)d->height);
+    d->root->setGeometry({ 0.0, 0.0, (double)d->width, (double)d->height });
+
+    d->layoutWidget(d->root, 3);
+
+    markPaintDirty();
+}
+
+// ── Painting ──────────────────────────────────────────────────────────────
+
+void TzScene::doPaint()
+{
+    TZ_D(TzScene);
+    if (!d->root || d->width <= 0 || d->height <= 0) return;
+    if (d->layoutDirty) { doLayout(); d->layoutDirty = false; }
+
+    d->pixels.assign((size_t)(d->width * d->height), 0xFF000000u);
+
+    TzRect windowRect = { 0.0, 0.0, (double)d->width, (double)d->height };
+    d->paintWidget(d->root, 0.0, 0.0, windowRect);
+
+    d->window->render(d->pixels, d->width, d->height);
+    d->paintDirty = false;
+}
+
+void TzScene::markPaintDirty()  { TZ_D(TzScene); d->paintDirty  = true; }
+bool TzScene::isPaintDirty()    const { TZ_D(const TzScene); return d->paintDirty; }
+void TzScene::markLayoutDirty() { TZ_D(TzScene); d->layoutDirty = true; d->paintDirty = true; }
+
+// ── Focus ──────────────────────────────────────────────────────────────────
+
+TzWidget *TzScene::focusedWidget() const { TZ_D(const TzScene); return d->focusedWidget; }
+
+void TzScene::setFocusedWidget(TzWidget *widget)
+{
+    TZ_D(TzScene);
+    if (d->focusedWidget == widget) return;
+
+    if (d->focusedWidget) {
+        static_cast<TzWidgetPrivate *>(d->focusedWidget->d_ptr)->focused = false;
+        TzFocusEvent out(TzEvent::FocusOut);
+        TzCoreApplication::sendEvent(d->focusedWidget, &out);
+    }
+
+    d->focusedWidget = widget;
+
+    if (d->focusedWidget) {
+        static_cast<TzWidgetPrivate *>(d->focusedWidget->d_ptr)->focused = true;
+        TzFocusEvent in(TzEvent::FocusIn);
+        TzCoreApplication::sendEvent(d->focusedWidget, &in);
+    }
+}
+
+// ── Hit-testing ───────────────────────────────────────────────────────────
+
+TzWidget *TzScene::widgetAt(double x, double y) const
+{
+    TZ_D(const TzScene);
+    if (!d->root) return nullptr;
+    return d->widgetAtHelper(d->root, x, y, 0.0, 0.0);
+}
+
 // ── Window size ───────────────────────────────────────────────────────────
 
-int TzScene::width()  const { return m_width;  }
-int TzScene::height() const { return m_height; }
-
-// ── Window event handlers ─────────────────────────────────────────────────
-
-void TzScene::onResize(int w, int h)
-{
-    m_width  = w;
-    m_height = h;
-    doLayout();
-    doPaint();
-}
-
-void TzScene::onKey(TzKeyEvent *event)
-{
-    if (m_focusedWidget)
-        TzCoreApplication::sendEvent(m_focusedWidget, event);
-}
-
-void TzScene::onMouse(TzMouseEvent *event)
-{
-    TzWidget *target = widgetAt(event->x(), event->y());
-    if (!target) return;
-
-    // On press, transfer focus to the clicked widget
-    if (event->type() == TzEvent::MouseButtonPress && target != m_focusedWidget)
-        setFocusedWidget(target);
-
-    TzCoreApplication::sendEvent(target, event);
-}
-
-// ── Scene registration helpers ────────────────────────────────────────────
-
-void TzScene::registerSubtree(TzWidget *w)
-{
-    w->d_ptr->scene = this;
-    TzObject *child = w->firstChild();
-    while (child) {
-        if (TzWidget *cw = dynamic_cast<TzWidget *>(child))
-            registerSubtree(cw);
-        child = child->nextSibling();
-    }
-}
-
-void TzScene::unregisterSubtree(TzWidget *w)
-{
-    w->d_ptr->scene = nullptr;
-    if (m_focusedWidget == w) m_focusedWidget = nullptr;
-    TzObject *child = w->firstChild();
-    while (child) {
-        if (TzWidget *cw = dynamic_cast<TzWidget *>(child))
-            unregisterSubtree(cw);
-        child = child->nextSibling();
-    }
-}
+int TzScene::width()  const { TZ_D(const TzScene); return d->width;  }
+int TzScene::height() const { TZ_D(const TzScene); return d->height; }

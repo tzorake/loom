@@ -18,6 +18,7 @@ public:
         GeometryChange     = 10,
         FocusIn            = 11,
         FocusOut           = 12,
+        Paint              = 13,
         User               = 1000,  // custom event types start here
     };
 

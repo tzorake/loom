@@ -1,28 +1,34 @@
 #ifndef TZWIDGET_P_HPP
 #define TZWIDGET_P_HPP
 
+#include <event-loop/tzclasshelpermacros.hpp>
 #include <event-loop/tzwidget.hpp>
+
+#include "tzobject_p.hpp"
+
+#include <memory>
 
 class TzScene;
 class TzAnchors;
 
-class TzWidgetPrivate
+class TzWidgetPrivate : public TzObjectPrivate
 {
+    TZ_DECLARE_PUBLIC(TzWidget)
 public:
-    explicit TzWidgetPrivate() = default;
+    ~TzWidgetPrivate() override;
+    // q_ptr, parent, firstChild, nextSibling, previousSibling, pendingDelete
+    // are inherited from TzObjectPrivate.
 
-    TzWidget  *q_ptr{ nullptr };
+    TzRect     geometry{};
+    TzSize     implicitSize{};
 
-    TzRect    geometry{};
-    TzSize    implicitSize{};
+    bool       explicitWidth{ false };
+    bool       explicitHeight{ false };
+    bool       visible{ true };
+    bool       focused{ false };
 
-    bool      explicitWidth{ false };
-    bool      explicitHeight{ false };
-    bool      visible{ true };
-    bool      focused{ false };
-
-    TzAnchors *anchors{ nullptr };  // lazily allocated
-    TzScene   *scene{ nullptr };    // set by TzScene when widget joins scene
+    std::unique_ptr<TzAnchors> anchors;  // lazily allocated
+    TzScene   *scene{ nullptr };
 };
 
 #endif // TZWIDGET_P_HPP

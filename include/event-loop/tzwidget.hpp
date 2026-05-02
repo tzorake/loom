@@ -2,9 +2,8 @@
 #define TZWIDGET_HPP
 
 #include <event-loop/tzobject.hpp>
+#include <event-loop/tzclasshelpermacros.hpp>
 #include <event-loop/tzgeometry.hpp>
-
-#include <memory>
 
 class TzAnchors;
 class TzPainter;
@@ -13,6 +12,7 @@ class TzWidgetPrivate;
 
 class TzWidget : public TzObject
 {
+    TZ_DECLARE_PRIVATE_D(d_ptr, TzWidget)
 public:
     explicit TzWidget(TzWidget *parent = nullptr);
     virtual ~TzWidget() override;
@@ -33,17 +33,21 @@ public:
 
     void setX(double x);
     void setY(double y);
-    void setWidth(double w);   // marks width as explicit
-    void setHeight(double h);  // marks height as explicit
-    void resetWidth();         // reverts to implicit width
-    void resetHeight();        // reverts to implicit height
+    void setWidth(double w);
+    void setHeight(double h);
+    void resetWidth();
+    void resetHeight();
 
     // ── Implicit (content-preferred) size ───────────────────────────────
     double implicitWidth()  const;
     double implicitHeight() const;
     TzSize implicitSize()   const;
 
-    // ── Effective size used by layout (explicit > implicit, anchor overrides both) ──
+    void setImplicitWidth(double w);
+    void setImplicitHeight(double h);
+    void setImplicitSize(double w, double h);
+
+    // ── Effective size used by layout ────────────────────────────────────
     double effectiveWidth()  const;
     double effectiveHeight() const;
 
@@ -60,7 +64,7 @@ public:
     void clearFocus();
 
     // ── Scene interaction ────────────────────────────────────────────────
-    void    update();       // marks scene paint-dirty; no-op if not in a scene
+    void     update();
     TzScene *scene() const;
 
     // ── Parent widget convenience ────────────────────────────────────────
@@ -73,21 +77,17 @@ public:
     bool event(TzEvent *event) override;
 
     // ── Anchor resolution (called by TzScene during layout) ─────────────
-    // Returns true if geometry changed.
     bool resolveAnchors();
 
-    void setImplicitWidth(double w);
-    void setImplicitHeight(double h);
-    void setImplicitSize(double w, double h);
-
 protected:
+    // Subclasses supply their own (derived) TzWidgetPrivate so no second
+    // allocation is needed for the extra private data.
+    explicit TzWidget(TzWidgetPrivate &d, TzWidget *parent = nullptr);
+
     virtual void geometryChanged(const TzRect &newGeom, const TzRect &oldGeom);
 
-private:
-    std::unique_ptr<TzWidgetPrivate> d_ptr;
-
     friend class TzScene;
-    friend class TzAnchors;
+    friend class TzScenePrivate;
 };
 
 #endif // TZWIDGET_HPP

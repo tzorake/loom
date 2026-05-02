@@ -8,7 +8,8 @@ class TzObjectPrivate
 {
     TZ_DECLARE_PUBLIC(TzObject)
 public:
-    explicit TzObjectPrivate(TzObject *q);
+    explicit TzObjectPrivate();
+    virtual ~TzObjectPrivate();
 
     TzObject *q_ptr{ nullptr };
     TzObject *parent{ nullptr };

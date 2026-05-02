@@ -1,21 +1,22 @@
 #ifndef TZPAINTER_HPP
 #define TZPAINTER_HPP
 
+#include <event-loop/tzclasshelpermacros.hpp>
 #include <event-loop/tzgeometry.hpp>
 
 #include <cstdint>
+#include <memory>
 #include <string>
 
-// TzPainter — immediate-mode pixel-buffer renderer.
-//
-// Coordinates passed to draw methods are in the widget's local space
-// (0,0 = top-left corner of the widget).  The painter internally translates
-// by its offset and clips to its clip rectangle before writing pixels.
+class TzPainterPrivate;
+
 class TzPainter
 {
+    TZ_DECLARE_PRIVATE(TzPainter)
 public:
     TzPainter(uint32_t *pixels, int bufferWidth, int bufferHeight,
               const TzRect &clip, const TzPoint &offset);
+    ~TzPainter();
 
     // ── Filled shapes ────────────────────────────────────────────────────
     void fillRect(const TzRect &rect, uint32_t argb);
@@ -34,24 +35,10 @@ public:
     TzPoint offset()   const;
 
     // ── Create a child painter for a sub-widget ───────────────────────────
-    // childOffset is the sub-widget's top-left in the current widget's local coords.
-    // childClip   is the sub-widget's bounding box in the current widget's local coords.
     TzPainter childPainter(const TzPoint &childOffset, const TzRect &childClip) const;
 
 private:
-    uint32_t *m_pixels;
-    int       m_bufferWidth;
-    int       m_bufferHeight;
-    TzRect    m_clip;   // window-absolute clip rectangle
-    TzPoint   m_offset; // widget top-left in window coords
-
-    // Sets pixel at window-absolute (px, py) with alpha-over blending.
-    void setPixel(int px, int py, uint32_t argb);
-
-    // Returns true if (px, py) is inside m_clip.
-    bool inClip(int px, int py) const;
-
-    static uint32_t blendOver(uint32_t dst, uint32_t src);
+    std::unique_ptr<TzPainterPrivate> d_ptr;
 };
 
 #endif // TZPAINTER_HPP
