@@ -10,6 +10,8 @@ add_library(event-loop
     src/tzabstractplatformintegration.cpp
     src/tzabstracteventdispatcher.cpp
     src/tzabstractconsoleinput.cpp
+    src/tzsurface.cpp
+    src/tzplatformsurface.cpp
     src/tzabstractwindow.cpp
     src/tzeventloop.cpp
     src/tztimer.cpp

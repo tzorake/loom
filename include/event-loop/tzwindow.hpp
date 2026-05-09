@@ -2,6 +2,7 @@
 #define TZWINDOW_HPP
 
 #include <event-loop/tzobject.hpp>
+#include <event-loop/tzsurface.hpp>
 #include <event-loop/tzclasshelpermacros.hpp>
 
 #include <functional>
@@ -11,7 +12,7 @@ class TzWidget;
 class TzScene;
 class TzWindowPrivate;
 
-class TzWindow : public TzObject
+class TzWindow : public TzObject, public TzSurface
 {
     TZ_DECLARE_PRIVATE_D(d_ptr, TzWindow)
 public:
@@ -32,6 +33,10 @@ public:
     int height() const;
 
     void setOnClose(std::function<void()> cb);
+
+    SurfaceType surfaceType() const override;
+    TzPlatformSurface *surfaceHandle() override;
+    const TzPlatformSurface *surfaceHandle() const override;
 
 protected:
     explicit TzWindow(TzWindowPrivate &d, int width, int height, TzWindow *parent = nullptr);

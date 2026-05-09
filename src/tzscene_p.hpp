@@ -7,7 +7,7 @@
 #include <cstdint>
 #include <vector>
 
-class TzAbstractWindow;
+class TzPlatformSurface;
 class TzWidget;
 struct TzRect;
 
@@ -23,7 +23,7 @@ public:
 
     TzScene *q_ptr{ nullptr };
 
-    TzAbstractWindow *window{ nullptr };
+    TzPlatformSurface *platformSurface{ nullptr };
     TzWidget *root{ nullptr };
     TzWidget *focusedWidget{ nullptr };
 

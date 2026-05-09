@@ -5,7 +5,7 @@
 
 #include <memory>
 
-class TzAbstractWindow;
+class TzSurface;
 class TzWidget;
 class TzScenePrivate;
 
@@ -13,7 +13,7 @@ class TzScene
 {
     TZ_DECLARE_PRIVATE(TzScene)
 public:
-    explicit TzScene(TzAbstractWindow *window);
+    explicit TzScene(TzSurface *surface);
     ~TzScene();
 
     TzWidget *root() const;

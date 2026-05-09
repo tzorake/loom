@@ -1,4 +1,6 @@
 #include <event-loop/tzwindow.hpp>
+#include <event-loop/tzsurface.hpp>
+#include <event-loop/tzplatformsurface.hpp>
 #include <event-loop/tzscene.hpp>
 #include <event-loop/tzwidget.hpp>
 #include <event-loop/tztimer.hpp>
@@ -43,8 +45,9 @@ TzWindow::TzWindow(TzWindowPrivate &dd, int width, int height, TzWindow *parent)
 
     TzAbstractPlatformIntegration *platformIntegration = TzCoreApplication::instance()->platformIntegration();
     d->platformWindow = platformIntegration->createWindow(width, height);
+    d->platformWindow->setSurface(this);
 
-    d->scene = new TzScene(d->platformWindow);
+    d->scene = new TzScene(this);
 
     d->platformWindow->setCloseCallback([this] {
         TZ_D(TzWindow);
@@ -134,4 +137,21 @@ void TzWindow::setOnClose(std::function<void()> callback)
 void TzWindow::closeEvent()
 {
     hide();
+}
+
+TzSurface::SurfaceType TzWindow::surfaceType() const
+{
+    return TzSurface::RasterSurface;
+}
+
+TzPlatformSurface *TzWindow::surfaceHandle()
+{
+    TZ_D(TzWindow);
+    return d->platformWindow;
+}
+
+const TzPlatformSurface *TzWindow::surfaceHandle() const
+{
+    TZ_D(const TzWindow);
+    return d->platformWindow;
 }

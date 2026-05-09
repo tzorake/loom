@@ -8,14 +8,13 @@ class TzAbstractWindowPrivate
 {
     TZ_DECLARE_PUBLIC(TzAbstractWindow)
 public:
-    explicit TzAbstractWindowPrivate();
-
     TzAbstractWindow *q_ptr{ nullptr };
+    TzSurface *surface{ nullptr };
 
-    TzAbstractWindow::CloseCallback  closeCallback;
-    TzAbstractWindow::ResizeCallback resizeCallback;
-    TzAbstractWindow::KeyCallback    keyCallback;
-    TzAbstractWindow::MouseCallback  mouseCallback;
+    TzPlatformSurface::CloseCallback closeCallback;
+    TzPlatformSurface::ResizeCallback resizeCallback;
+    TzPlatformSurface::KeyCallback keyCallback;
+    TzPlatformSurface::MouseCallback mouseCallback;
 };
 
 #endif // TZABSTRACTWINDOW_P_HPP

@@ -1,6 +1,7 @@
 #include <event-loop/tzscene.hpp>
 #include <event-loop/tzwidget.hpp>
-#include <event-loop/tzabstractwindow.hpp>
+#include <event-loop/tzsurface.hpp>
+#include <event-loop/tzplatformsurface.hpp>
 #include <event-loop/tzkeyevent.hpp>
 #include <event-loop/tzmouseevent.hpp>
 #include <event-loop/tzfocusevent.hpp>
@@ -118,26 +119,26 @@ TzWidget *TzScenePrivate::widgetAtHelper(TzWidget *w,
     return w;
 }
 
-TzScene::TzScene(TzAbstractWindow *window)
+TzScene::TzScene(TzSurface *surface)
     : d_ptr(new TzScenePrivate)
 {
     TZ_D(TzScene);
-    d->q_ptr  = this;
-    d->window = window;
+    d->q_ptr = this;
+    d->platformSurface = surface->surfaceHandle();
 
-    window->setResizeCallback([this](int w, int h) {
+    d->platformSurface->setResizeCallback([this](int w, int h) {
         TZ_D(TzScene);
         d->width  = w;
         d->height = h;
         doLayout();
         doPaint();
     });
-    window->setKeyCallback([this](TzKeyEvent *e) {
+    d->platformSurface->setKeyCallback([this](TzKeyEvent *e) {
         TZ_D(TzScene);
         if (d->focusedWidget)
             TzCoreApplication::sendEvent(d->focusedWidget, e);
     });
-    window->setMouseCallback([this](TzMouseEvent *e) {
+    d->platformSurface->setMouseCallback([this](TzMouseEvent *e) {
         TzWidget *target = widgetAt(e->x(), e->y());
         if (!target) return;
         if (e->type() == TzEvent::MouseButtonPress && target != focusedWidget())
@@ -210,7 +211,7 @@ void TzScene::doPaint()
     TzRect windowRect = { 0.0, 0.0, (double)d->width, (double)d->height };
     d->paintWidget(d->root, 0.0, 0.0, windowRect);
 
-    d->window->render(d->pixels, d->width, d->height);
+    d->platformSurface->render(d->pixels, d->width, d->height);
     d->paintDirty = false;
 }
 
