@@ -6,3 +6,6 @@ target_link_libraries(window PRIVATE event-loop "-framework Cocoa")
 
 add_executable(widget widget.cpp)
 target_link_libraries(widget PRIVATE event-loop "-framework Cocoa")
+
+add_executable(nested_windows nested_windows.cpp)
+target_link_libraries(nested_windows PRIVATE event-loop "-framework Cocoa")

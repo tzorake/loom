@@ -2,45 +2,42 @@
 #define TZABSTRACTWINDOW_HPP
 
 #include <event-loop/tzobject.hpp>
+#include <event-loop/tzplatformsurface.hpp>
 #include <event-loop/tzkeyevent.hpp>
 #include <event-loop/tzmouseevent.hpp>
 #include <event-loop/tzcloseevent.hpp>
 #include <event-loop/tzresizeevent.hpp>
 
-#include <cstdint>
-#include <functional>
 #include <string>
-#include <vector>
 
 class TzAbstractWindowPrivate;
 
-class TzAbstractWindow : public TzObject
+class TzAbstractWindow : public TzObject, public TzPlatformSurface
 {
 public:
-    using CloseCallback  = std::function<void()>;
-    using ResizeCallback = std::function<void(int width, int height)>;
-    using KeyCallback    = std::function<void(TzKeyEvent *)>;
-    using MouseCallback  = std::function<void(TzMouseEvent *)>;
-
     explicit TzAbstractWindow(TzObject *parent = nullptr);
-    virtual ~TzAbstractWindow() override;
+    ~TzAbstractWindow() override;
 
     virtual void setTitle(const std::string &title) = 0;
     virtual void show() = 0;
     virtual void hide() = 0;
 
-    // All four callbacks stored in base; dispatched through event()
-    void setCloseCallback(CloseCallback callback);
-    void setResizeCallback(ResizeCallback callback);
-    void setKeyCallback(KeyCallback callback);
-    void setMouseCallback(MouseCallback callback);
+    // ── TzPlatformSurface ─────────────────────────────────────────────────
+    TzSurface *surface() const override;
+    void       setSurface(TzSurface *surface) override;
 
-    virtual void render(const std::vector<uint32_t> &pixels, int width, int height) = 0;
+    void setCloseCallback (CloseCallback  cb) override;
+    void setResizeCallback(ResizeCallback cb) override;
+    void setKeyCallback   (KeyCallback    cb) override;
+    void setMouseCallback (MouseCallback  cb) override;
 
+    // render() remains pure virtual — implemented by platform subclass
+
+    // ── TzObject ──────────────────────────────────────────────────────────
     bool event(TzEvent *event) override;
 
 private:
-    std::unique_ptr<TzAbstractWindowPrivate> d_ptr;
+    TzAbstractWindowPrivate *d_ptr;
 };
 
 #endif // TZABSTRACTWINDOW_HPP

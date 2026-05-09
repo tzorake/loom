@@ -3,12 +3,10 @@
 
 #include <event-loop/tzclasshelpermacros.hpp>
 
-#include <memory>
 #include <vector>
 
 class TzEvent;
 class TzCoreApplication;
-
 class TzObjectPrivate;
 
 class TzObject
@@ -22,8 +20,8 @@ public:
     void setParent(TzObject *parent);
     TzObject *parent() const;
 
-    TzObject *firstChild() const;
-    TzObject *nextSibling() const;
+    TzObject *firstChild()      const;
+    TzObject *nextSibling()     const;
     TzObject *previousSibling() const;
 
     std::vector<TzObject *> children() const;
@@ -32,8 +30,14 @@ public:
 
     void deleteLater();
 
-private:
-    std::unique_ptr<TzObjectPrivate> d_ptr;
+protected:
+    // Used by subclasses that supply their own (derived) private object so only
+    // one allocation is made for the entire class hierarchy.
+    explicit TzObject(TzObjectPrivate &d, TzObject *parent = nullptr);
+
+    // Owned by this class; deleted in ~TzObject().  Subclasses access it via
+    // TZ_DECLARE_PRIVATE_D(d_ptr, SubClass) and the TZ_D() macro.
+    TzObjectPrivate *d_ptr;
 
     friend class TzCoreApplication;
 };

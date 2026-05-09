@@ -4,8 +4,11 @@
 
 #include "tzobject_p.hpp"
 
-TzObjectPrivate::TzObjectPrivate(TzObject *q)
-    : q_ptr(q)
+TzObjectPrivate::TzObjectPrivate()
+{
+}
+
+TzObjectPrivate::~TzObjectPrivate()
 {
 }
 
@@ -14,7 +17,7 @@ void TzObjectPrivate::unlinkFromParent()
     if (!parent)
         return;
 
-    TzObjectPrivate *pd = parent->d_ptr.get();
+    TzObjectPrivate *pd = parent->d_ptr;
     if (previousSibling)
         previousSibling->d_ptr->nextSibling = nextSibling;
     else
@@ -23,14 +26,14 @@ void TzObjectPrivate::unlinkFromParent()
     if (nextSibling)
         nextSibling->d_ptr->previousSibling = previousSibling;
 
-    parent      = nullptr;
+    parent = nullptr;
     previousSibling = nullptr;
     nextSibling = nullptr;
 }
 
 void TzObjectPrivate::appendToParent(TzObject *newParent)
 {
-    TzObjectPrivate *pd = newParent->d_ptr.get();
+    TzObjectPrivate *pd = newParent->d_ptr;
     parent = newParent;
 
     if (!pd->firstChild) {
@@ -38,7 +41,6 @@ void TzObjectPrivate::appendToParent(TzObject *newParent)
         return;
     }
 
-    // Walk to last sibling
     TzObject *last = pd->firstChild;
     while (last->d_ptr->nextSibling)
         last = last->d_ptr->nextSibling;
@@ -48,8 +50,14 @@ void TzObjectPrivate::appendToParent(TzObject *newParent)
 }
 
 TzObject::TzObject(TzObject *parent)
-    : d_ptr(new TzObjectPrivate(this))
+    : TzObject(*new TzObjectPrivate, parent)
 {
+}
+
+TzObject::TzObject(TzObjectPrivate &d, TzObject *parent)
+    : d_ptr(&d)
+{
+    d_ptr->q_ptr = this;
     if (parent)
         d_ptr->appendToParent(parent);
 }
@@ -59,30 +67,27 @@ TzObject::~TzObject()
     if (TzCoreApplication *app = TzCoreApplication::instance())
         app->removePostedEvents(this);
 
-    // Remove self from parent's children list without touching siblings
     d_ptr->unlinkFromParent();
 
-    // Destroy all children; clear their parent pointer first so their
-    // destructors don't attempt to unlink from us while we iterate.
     TzObject *child = d_ptr->firstChild;
     while (child) {
         TzObject *next = child->d_ptr->nextSibling;
-        child->d_ptr->parent      = nullptr;
+        child->d_ptr->parent          = nullptr;
         child->d_ptr->previousSibling = nullptr;
-        child->d_ptr->nextSibling = nullptr;
+        child->d_ptr->nextSibling     = nullptr;
         delete child;
         child = next;
     }
     d_ptr->firstChild = nullptr;
+
+    delete d_ptr;
 }
 
 void TzObject::setParent(TzObject *parent)
 {
     if (d_ptr->parent == parent)
         return;
-
     d_ptr->unlinkFromParent();
-
     if (parent)
         d_ptr->appendToParent(parent);
 }
@@ -115,8 +120,9 @@ std::vector<TzObject *> TzObject::children() const
     return result;
 }
 
-bool TzObject::event(TzEvent * /*event*/)
+bool TzObject::event(TzEvent *event)
 {
+    (void)event;
     return false;
 }
 

@@ -2,21 +2,17 @@
 #define TZGEOMETRYCHANGEEVENT_HPP
 
 #include <event-loop/tzevent.hpp>
-#include <event-loop/tzgeometry.hpp>
+#include <event-loop/tzrect.hpp>
 
 class TzGeometryChangeEvent : public TzEvent
 {
 public:
-    TzGeometryChangeEvent(const TzRect &oldGeometry, const TzRect &newGeometry)
-        : TzEvent(TzEvent::GeometryChange)
-        , m_oldGeometry(oldGeometry)
-        , m_newGeometry(newGeometry)
-    {}
+    TzGeometryChangeEvent(const TzRect &oldGeometry, const TzRect &newGeometry);
 
-    const TzRect &oldGeometry() const { return m_oldGeometry; }
-    const TzRect &newGeometry() const { return m_newGeometry; }
+    const TzRect &oldGeometry() const;
+    const TzRect &newGeometry() const;
 
-    TzGeometryChangeEvent *clone() const override { return new TzGeometryChangeEvent(*this); }
+    TzGeometryChangeEvent *clone() const override;
 
 private:
     TzRect m_oldGeometry;

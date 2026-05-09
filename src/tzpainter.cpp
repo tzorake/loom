@@ -1,4 +1,8 @@
 #include <event-loop/tzpainter.hpp>
+#include <event-loop/tzrect.hpp>
+#include <event-loop/tzpoint.hpp>
+
+#include "tzpainter_p.hpp"
 
 #include <algorithm>
 #include <cmath>
@@ -104,39 +108,23 @@ static const uint8_t kFont8x8[95][8] = {
     { 0x6E,0x3B,0x00,0x00,0x00,0x00,0x00,0x00 }, // 0x7E '~'
 };
 
-// ── Constructor ───────────────────────────────────────────────────────────
-
-TzPainter::TzPainter(uint32_t *pixels, int bufferWidth, int bufferHeight,
-                     const TzRect &clip, const TzPoint &offset)
-    : m_pixels(pixels)
-    , m_bufferWidth(bufferWidth)
-    , m_bufferHeight(bufferHeight)
-    , m_clip(clip)
-    , m_offset(offset)
+bool TzPainterPrivate::inClip(int px, int py) const
 {
-}
-
-// ── Pixel helpers ─────────────────────────────────────────────────────────
-
-bool TzPainter::inClip(int px, int py) const
-{
-    return px >= (int)m_clip.x
-        && py >= (int)m_clip.y
-        && px <  (int)(m_clip.x + m_clip.width)
-        && py <  (int)(m_clip.y + m_clip.height)
+    return px >= (int)clip.x
+        && py >= (int)clip.y
+        && px <  (int)(clip.x + clip.width)
+        && py <  (int)(clip.y + clip.height)
         && px >= 0
         && py >= 0
-        && px < m_bufferWidth
-        && py < m_bufferHeight;
+        && px < bufferWidth
+        && py < bufferHeight;
 }
 
-uint32_t TzPainter::blendOver(uint32_t dst, uint32_t src)
+uint32_t TzPainterPrivate::blendOver(uint32_t dst, uint32_t src)
 {
     uint32_t sa = (src >> 24) & 0xFF;
-    if (sa == 0xFF)
-        return src;
-    if (sa == 0x00)
-        return dst;
+    if (sa == 0xFF) return src;
+    if (sa == 0x00) return dst;
 
     uint32_t da = (dst >> 24) & 0xFF;
     uint32_t sr = (src >> 16) & 0xFF;
@@ -147,7 +135,7 @@ uint32_t TzPainter::blendOver(uint32_t dst, uint32_t src)
     uint32_t db = (dst      ) & 0xFF;
 
     uint32_t inv = 255 - sa;
-    uint32_t oa = sa + (da * inv) / 255;
+    uint32_t oa  = sa + (da * inv) / 255;
     uint32_t or_ = (sr * sa + dr * inv) / 255;
     uint32_t og  = (sg * sa + dg * inv) / 255;
     uint32_t ob  = (sb * sa + db * inv) / 255;
@@ -155,16 +143,31 @@ uint32_t TzPainter::blendOver(uint32_t dst, uint32_t src)
     return (oa << 24) | (or_ << 16) | (og << 8) | ob;
 }
 
-void TzPainter::setPixel(int px, int py, uint32_t argb)
+void TzPainterPrivate::setPixel(int px, int py, uint32_t argb)
 {
     if (inClip(px, py)) {
-        int bufPy = m_bufferHeight - 1 - py;
-        uint32_t &dst = m_pixels[bufPy * m_bufferWidth + px];
+        int bufPy = bufferHeight - 1 - py;
+        uint32_t &dst = pixels[bufPy * bufferWidth + px];
         dst = blendOver(dst, argb);
     }
 }
 
-// ── Filled rectangle ──────────────────────────────────────────────────────
+TzPainter::TzPainter(uint32_t *pixels, int bufferWidth, int bufferHeight,
+                     const TzRect &clip, const TzPoint &offset)
+    : d_ptr(new TzPainterPrivate)
+{
+    TZ_D(TzPainter);
+    d->q_ptr        = this;
+    d->pixels       = pixels;
+    d->bufferWidth  = bufferWidth;
+    d->bufferHeight = bufferHeight;
+    d->clip         = clip;
+    d->offset       = offset;
+}
+
+TzPainter::~TzPainter()
+{
+}
 
 void TzPainter::fillRect(const TzRect &rect, uint32_t argb)
 {
@@ -173,44 +176,40 @@ void TzPainter::fillRect(const TzRect &rect, uint32_t argb)
 
 void TzPainter::fillRect(double lx, double ly, double lw, double lh, uint32_t argb)
 {
-    int x0 = (int)std::floor(m_offset.x + lx);
-    int y0 = (int)std::floor(m_offset.y + ly);
-    int x1 = (int)std::ceil (m_offset.x + lx + lw);
-    int y1 = (int)std::ceil (m_offset.y + ly + lh);
+    TZ_D(TzPainter);
+    int x0 = (int)std::floor(d->offset.x + lx);
+    int y0 = (int)std::floor(d->offset.y + ly);
+    int x1 = (int)std::ceil(d->offset.x + lx + lw);
+    int y1 = (int)std::ceil(d->offset.y + ly + lh);
 
     for (int py = y0; py < y1; ++py)
         for (int px = x0; px < x1; ++px)
-            setPixel(px, py, argb);
+            d->setPixel(px, py, argb);
 }
-
-// ── Outlined rectangle ────────────────────────────────────────────────────
 
 void TzPainter::drawRect(const TzRect &rect, uint32_t argb, double lineWidth)
 {
     double lw = lineWidth;
-    // Top / bottom edges
-    fillRect(rect.x, rect.y,                  rect.width, lw,        argb);
-    fillRect(rect.x, rect.y + rect.height - lw, rect.width, lw,      argb);
-    // Left / right edges (avoid double-drawing corners)
-    fillRect(rect.x,                rect.y + lw, lw, rect.height - 2*lw, argb);
-    fillRect(rect.x + rect.width - lw, rect.y + lw, lw, rect.height - 2*lw, argb);
+    fillRect(rect.x, rect.y, rect.width, lw, argb);
+    fillRect(rect.x, rect.y + rect.height - lw, rect.width, lw, argb);
+    fillRect(rect.x, rect.y + lw, lw, rect.height - 2 * lw, argb);
+    fillRect(rect.x + rect.width - lw, rect.y + lw, lw, rect.height - 2 * lw, argb);
 }
-
-// ── Line (Bresenham) ──────────────────────────────────────────────────────
 
 void TzPainter::drawLine(const TzPoint &a, const TzPoint &b, uint32_t argb, double /*lineWidth*/)
 {
-    int x0 = (int)std::round(m_offset.x + a.x);
-    int y0 = (int)std::round(m_offset.y + a.y);
-    int x1 = (int)std::round(m_offset.x + b.x);
-    int y1 = (int)std::round(m_offset.y + b.y);
+    TZ_D(TzPainter);
+    int x0 = (int)std::round(d->offset.x + a.x);
+    int y0 = (int)std::round(d->offset.y + a.y);
+    int x1 = (int)std::round(d->offset.x + b.x);
+    int y1 = (int)std::round(d->offset.y + b.y);
 
     int dx = std::abs(x1 - x0), sx = x0 < x1 ? 1 : -1;
     int dy = std::abs(y1 - y0), sy = y0 < y1 ? 1 : -1;
     int err = (dx > dy ? dx : -dy) / 2;
 
     while (true) {
-        setPixel(x0, y0, argb);
+        d->setPixel(x0, y0, argb);
         if (x0 == x1 && y0 == y1) break;
         int e2 = err;
         if (e2 > -dx) { err -= dy; x0 += sx; }
@@ -227,49 +226,46 @@ void TzPainter::drawText(const TzPoint &pos, const std::string &text, uint32_t a
 
 void TzPainter::drawText(double lx, double ly, const std::string &text, uint32_t argb)
 {
-    int cx = (int)std::round(m_offset.x + lx);
-    int cy = (int)std::round(m_offset.y + ly);
+    TZ_D(TzPainter);
+    int cx = (int)std::round(d->offset.x + lx);
+    int cy = (int)std::round(d->offset.y + ly);
 
     for (unsigned char ch : text) {
-        if (ch < 0x20 || ch > 0x7E) {
-            cx += 8;
-            continue;
-        }
+        if (ch < 0x20 || ch > 0x7E) { cx += 8; continue; }
         const uint8_t *glyph = kFont8x8[ch - 0x20];
         for (int row = 0; row < 8; ++row) {
-            // setPixel stores at (bufferHeight-1-py), so row 0 of the glyph
-            // (visual top) must be written at the highest logical y so it
-            // ends up at the highest buffer index and thus visual top.
             uint8_t bits = glyph[row];
             for (int col = 0; col < 8; ++col) {
                 if (bits & (1 << col))
-                    setPixel(cx + col, cy + row, argb);
+                    d->setPixel(cx + col, cy + row, argb);
             }
         }
         cx += 8;
     }
 }
 
-// ── Inspection ────────────────────────────────────────────────────────────
+TzRect TzPainter::clipRect() const
+{
+    TZ_D(const TzPainter);
+    return d->clip;
+}
 
-TzRect  TzPainter::clipRect() const { return m_clip;   }
-TzPoint TzPainter::offset()   const { return m_offset; }
-
-// ── Child painter ─────────────────────────────────────────────────────────
+TzPoint TzPainter::offset() const
+{
+    TZ_D(const TzPainter);
+    return d->offset;
+}
 
 TzPainter TzPainter::childPainter(const TzPoint &childOffset, const TzRect &childClip) const
 {
-    // childOffset and childClip are in the current (parent) widget's local coords.
-    // Convert to window-absolute.
-    TzPoint absOffset = { m_offset.x + childOffset.x, m_offset.y + childOffset.y };
-
-    TzRect absClip = {
-        m_offset.x + childClip.x,
-        m_offset.y + childClip.y,
+    TZ_D(const TzPainter);
+    TzPoint absOffset = { d->offset.x + childOffset.x, d->offset.y + childOffset.y };
+    TzRect  absClip   = {
+        d->offset.x + childClip.x,
+        d->offset.y + childClip.y,
         childClip.width,
         childClip.height
     };
-    absClip = intersected(absClip, m_clip);
-
-    return TzPainter(m_pixels, m_bufferWidth, m_bufferHeight, absClip, absOffset);
+    absClip = absClip.intersected(d->clip);
+    return TzPainter(d->pixels, d->bufferWidth, d->bufferHeight, absClip, absOffset);
 }

@@ -1,13 +1,11 @@
 #include <event-loop/TzGuiApplication>
-#include <event-loop/TzAbstractWindow>
+#include <event-loop/TzWindow>
 #include <event-loop/TzWidget>
 #include <event-loop/TzAnchors>
-#include <event-loop/TzScene>
 #include <event-loop/TzPainter>
 #include <event-loop/TzKeyEvent>
 #include <event-loop/TzMouseEvent>
-#include <event-loop/TzTimer>
-#include <event-loop/TzScopedPointer>
+#include <event-loop/TzRect>
 
 #include <print>
 #include <string>
@@ -353,22 +351,14 @@ int main(int argc, char *argv[])
 {
     TzGuiApplication app(argc, argv);
 
-    auto window = tz::as_scoped_ptr(app.createWindow(800, 500));
-    window->setTitle("event-loop widget demo");
-    window->setCloseCallback([&] { app.quit(); });
-
-    TzScene scene(window.get());
+    TzWindow window(800, 600);
+    window.setTitle("event-loop widget demo");
+    window.setOnClose([&] { app.quit(); });
 
     auto *root = new RootWidget(app);
-    scene.setRoot(root);
-    scene.setFocusedWidget(root);   // root handles keyboard
+    window.setRootWidget(root);
 
-    window->show();
-
-    // Repaint on a 60 Hz timer whenever the scene is dirty
-    auto ticker = tz::as_scoped_ptr(
-        TzTimer::repeat(app.eventDispatcher(), std::chrono::milliseconds(16),
-            [&] { if (scene.isPaintDirty()) scene.doPaint(); }));
+    window.show();
 
     return app.exec();
 }
