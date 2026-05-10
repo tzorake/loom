@@ -1,10 +1,10 @@
-#include <event-loop/tzcoreapplication.hpp>
-#include <event-loop/tzabstractplatformintegration.hpp>
-#include <event-loop/tzabstracteventdispatcher.hpp>
-#include <event-loop/tzeventloop.hpp>
-#include <event-loop/tzsignalhandler.hpp>
-#include <event-loop/tzobject.hpp>
-#include <event-loop/tzevent.hpp>
+#include <loom/tzcoreapplication.hpp>
+#include <loom/tzabstractplatformintegration.hpp>
+#include <loom/tzabstracteventdispatcher.hpp>
+#include <loom/tzeventloop.hpp>
+#include <loom/tzsignalhandler.hpp>
+#include <loom/tzobject.hpp>
+#include <loom/tzevent.hpp>
 
 #include "tzcoreapplication_p.hpp"
 #include "tzobject_p.hpp"

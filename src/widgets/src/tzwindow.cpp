@@ -1,12 +1,12 @@
-#include <event-loop/tzwindow.hpp>
-#include <event-loop/tzsurface.hpp>
-#include <event-loop/tzplatformsurface.hpp>
-#include <event-loop/tzscene.hpp>
-#include <event-loop/tzwidget.hpp>
-#include <event-loop/tztimer.hpp>
-#include <event-loop/tzcoreapplication.hpp>
-#include <event-loop/tzabstractplatformintegration.hpp>
-#include <event-loop/tzabstractwindow.hpp>
+#include <loom/tzwindow.hpp>
+#include <loom/tzsurface.hpp>
+#include <loom/tzplatformsurface.hpp>
+#include <loom/tzscene.hpp>
+#include <loom/tzwidget.hpp>
+#include <loom/tztimer.hpp>
+#include <loom/tzcoreapplication.hpp>
+#include <loom/tzabstractplatformintegration.hpp>
+#include <loom/tzabstractwindow.hpp>
 
 #include "tzwindow_p.hpp"
 

@@ -1,8 +1,8 @@
 #ifndef TZGEOMETRYCHANGEEVENT_HPP
 #define TZGEOMETRYCHANGEEVENT_HPP
 
-#include <event-loop/tzevent.hpp>
-#include <event-loop/tzrect.hpp>
+#include <loom/tzevent.hpp>
+#include <loom/tzrect.hpp>
 
 class TzGeometryChangeEvent : public TzEvent
 {

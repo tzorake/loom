@@ -1,7 +1,7 @@
 #ifndef TZMACOSCONSOLEINPUT_P_HPP
 #define TZMACOSCONSOLEINPUT_P_HPP
 
-#include <event-loop/tzclasshelpermacros.hpp>
+#include <loom/tzclasshelpermacros.hpp>
 #include "tzmacosconsoleinput.hpp"
 
 #include <termios.h>

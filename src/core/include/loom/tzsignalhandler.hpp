@@ -1,7 +1,7 @@
 #ifndef TZSIGNALHANDLER_HPP
 #define TZSIGNALHANDLER_HPP
 
-#include <event-loop/tzclasshelpermacros.hpp>
+#include <loom/tzclasshelpermacros.hpp>
 
 #include <functional>
 #include <memory>

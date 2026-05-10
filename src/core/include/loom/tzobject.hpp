@@ -1,7 +1,7 @@
 #ifndef TZOBJECT_HPP
 #define TZOBJECT_HPP
 
-#include <event-loop/tzclasshelpermacros.hpp>
+#include <loom/tzclasshelpermacros.hpp>
 
 #include <vector>
 

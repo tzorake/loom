@@ -1,8 +1,8 @@
 #ifndef TZKEYBOARDHANDLER_HPP
 #define TZKEYBOARDHANDLER_HPP
 
-#include <event-loop/tzclasshelpermacros.hpp>
-#include <event-loop/tzobject.hpp>
+#include <loom/tzclasshelpermacros.hpp>
+#include <loom/tzobject.hpp>
 
 #include <functional>
 #include <memory>

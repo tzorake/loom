@@ -1,6 +1,6 @@
-#include <event-loop/tzobject.hpp>
-#include <event-loop/tzdeferreddeleteevent.hpp>
-#include <event-loop/tzcoreapplication.hpp>
+#include <loom/tzobject.hpp>
+#include <loom/tzdeferreddeleteevent.hpp>
+#include <loom/tzcoreapplication.hpp>
 
 #include "tzobject_p.hpp"
 

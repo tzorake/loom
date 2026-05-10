@@ -1,5 +1,5 @@
-#include <event-loop/tzsignalhandler.hpp>
-#include <event-loop/tzsocketnotifier.hpp>
+#include <loom/tzsignalhandler.hpp>
+#include <loom/tzsocketnotifier.hpp>
 
 #include "tzsignalhandler_p.hpp"
 

@@ -1,7 +1,7 @@
 #ifndef TZMACOSWINDOW_HPP
 #define TZMACOSWINDOW_HPP
 
-#include <event-loop/tzabstractwindow.hpp>
+#include <loom/tzabstractwindow.hpp>
 
 #include <memory>
 

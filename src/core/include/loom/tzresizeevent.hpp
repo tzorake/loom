@@ -1,7 +1,7 @@
 #ifndef TZRESIZEEVENT_HPP
 #define TZRESIZEEVENT_HPP
 
-#include <event-loop/tzevent.hpp>
+#include <loom/tzevent.hpp>
 
 class TzResizeEvent : public TzEvent
 {

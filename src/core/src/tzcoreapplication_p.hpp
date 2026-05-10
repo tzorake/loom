@@ -1,10 +1,10 @@
 #ifndef TZCOREAPPLICATION_P_HPP
 #define TZCOREAPPLICATION_P_HPP
 
-#include <event-loop/tzclasshelpermacros.hpp>
-#include <event-loop/tzcoreapplication.hpp>
+#include <loom/tzclasshelpermacros.hpp>
+#include <loom/tzcoreapplication.hpp>
 
-#include <event-loop/tzevent.hpp>
+#include <loom/tzevent.hpp>
 
 #include <memory>
 #include <mutex>

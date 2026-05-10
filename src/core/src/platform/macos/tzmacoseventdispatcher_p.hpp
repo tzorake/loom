@@ -1,7 +1,7 @@
 #ifndef TZMACOSEVENTDISPATCHER_P_HPP
 #define TZMACOSEVENTDISPATCHER_P_HPP
 
-#include <event-loop/tzclasshelpermacros.hpp>
+#include <loom/tzclasshelpermacros.hpp>
 #include "tzmacoseventdispatcher.hpp"
 
 #include <CoreFoundation/CoreFoundation.h>

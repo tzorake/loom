@@ -1,7 +1,7 @@
 #ifndef TZPAINTEVENT_HPP
 #define TZPAINTEVENT_HPP
 
-#include <event-loop/tzevent.hpp>
+#include <loom/tzevent.hpp>
 
 class TzPainter;
 

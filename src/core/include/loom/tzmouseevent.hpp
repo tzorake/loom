@@ -1,8 +1,8 @@
 #ifndef TZMOUSEEVENT_HPP
 #define TZMOUSEEVENT_HPP
 
-#include <event-loop/tzevent.hpp>
-#include <event-loop/tzkeyevent.hpp>
+#include <loom/tzevent.hpp>
+#include <loom/tzkeyevent.hpp>
 
 enum class MouseButton
 {

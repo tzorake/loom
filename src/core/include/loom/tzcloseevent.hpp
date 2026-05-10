@@ -1,7 +1,7 @@
 #ifndef TZCLOSEEVENT_HPP
 #define TZCLOSEEVENT_HPP
 
-#include <event-loop/tzevent.hpp>
+#include <loom/tzevent.hpp>
 
 class TzCloseEvent : public TzEvent
 {

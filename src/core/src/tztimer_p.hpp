@@ -1,8 +1,8 @@
 #ifndef TZTIMER_P
 #define TZTIMER_P
 
-#include <event-loop/tzclasshelpermacros.hpp>
-#include <event-loop/tztimer.hpp>
+#include <loom/tzclasshelpermacros.hpp>
+#include <loom/tztimer.hpp>
 
 class TzAbstractEventDispatcher;
 

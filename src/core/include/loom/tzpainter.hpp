@@ -1,7 +1,7 @@
 #ifndef TZPAINTER_HPP
 #define TZPAINTER_HPP
 
-#include <event-loop/tzclasshelpermacros.hpp>
+#include <loom/tzclasshelpermacros.hpp>
 
 #include <cstdint>
 #include <memory>

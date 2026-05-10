@@ -1,15 +1,15 @@
-#include <event-loop/tzscene.hpp>
-#include <event-loop/tzwidget.hpp>
-#include <event-loop/tzsurface.hpp>
-#include <event-loop/tzplatformsurface.hpp>
-#include <event-loop/tzkeyevent.hpp>
-#include <event-loop/tzmouseevent.hpp>
-#include <event-loop/tzfocusevent.hpp>
-#include <event-loop/tzpaintevent.hpp>
-#include <event-loop/tzcoreapplication.hpp>
-#include <event-loop/tzpainter.hpp>
-#include <event-loop/tzrect.hpp>
-#include <event-loop/tzpoint.hpp>
+#include <loom/tzscene.hpp>
+#include <loom/tzwidget.hpp>
+#include <loom/tzsurface.hpp>
+#include <loom/tzplatformsurface.hpp>
+#include <loom/tzkeyevent.hpp>
+#include <loom/tzmouseevent.hpp>
+#include <loom/tzfocusevent.hpp>
+#include <loom/tzpaintevent.hpp>
+#include <loom/tzcoreapplication.hpp>
+#include <loom/tzpainter.hpp>
+#include <loom/tzrect.hpp>
+#include <loom/tzpoint.hpp>
 
 #include "tzscene_p.hpp"
 #include "tzwidget_p.hpp"

@@ -1,8 +1,8 @@
 #ifndef TZOBJECT_P_HPP
 #define TZOBJECT_P_HPP
 
-#include <event-loop/tzclasshelpermacros.hpp>
-#include <event-loop/tzobject.hpp>
+#include <loom/tzclasshelpermacros.hpp>
+#include <loom/tzobject.hpp>
 
 class TzObjectPrivate
 {

@@ -1,8 +1,8 @@
 #ifndef TZSCENE_P_HPP
 #define TZSCENE_P_HPP
 
-#include <event-loop/tzclasshelpermacros.hpp>
-#include <event-loop/tzscene.hpp>
+#include <loom/tzclasshelpermacros.hpp>
+#include <loom/tzscene.hpp>
 
 #include <cstdint>
 #include <vector>

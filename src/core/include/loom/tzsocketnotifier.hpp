@@ -1,7 +1,7 @@
 #ifndef TZSOCKETNOTIFIER_HPP
 #define TZSOCKETNOTIFIER_HPP
 
-#include <event-loop/tzclasshelpermacros.hpp>
+#include <loom/tzclasshelpermacros.hpp>
 
 #include <functional>
 #include <memory>

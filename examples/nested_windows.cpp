@@ -1,12 +1,12 @@
-#include <event-loop/TzGuiApplication>
-#include <event-loop/TzWindow>
-#include <event-loop/TzWidget>
-#include <event-loop/TzAnchors>
-#include <event-loop/TzScene>
-#include <event-loop/TzPainter>
-#include <event-loop/TzKeyEvent>
-#include <event-loop/TzMouseEvent>
-#include <event-loop/TzRect>
+#include <loom/TzGuiApplication>
+#include <loom/TzWindow>
+#include <loom/TzWidget>
+#include <loom/TzAnchors>
+#include <loom/TzScene>
+#include <loom/TzPainter>
+#include <loom/TzKeyEvent>
+#include <loom/TzMouseEvent>
+#include <loom/TzRect>
 
 #include <string>
 #include <functional>

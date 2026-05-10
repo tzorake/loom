@@ -1,7 +1,7 @@
 #ifndef TZSCENE_HPP
 #define TZSCENE_HPP
 
-#include <event-loop/tzclasshelpermacros.hpp>
+#include <loom/tzclasshelpermacros.hpp>
 
 #include <memory>
 

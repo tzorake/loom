@@ -1,4 +1,4 @@
-#include <event-loop/tzkeyevent.hpp>
+#include <loom/tzkeyevent.hpp>
 
 TzKeyEvent::TzKeyEvent(int type, Key key, KeyModifiers modifiers, std::string utf8)
     : TzEvent(type)

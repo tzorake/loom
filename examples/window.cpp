@@ -1,9 +1,9 @@
-#include <event-loop/TzGuiApplication>
-#include <event-loop/TzAbstractWindow>
-#include <event-loop/TzKeyEvent>
-#include <event-loop/TzMouseEvent>
-#include <event-loop/TzTimer>
-#include <event-loop/TzScopedPointer>
+#include <loom/TzGuiApplication>
+#include <loom/TzAbstractWindow>
+#include <loom/TzKeyEvent>
+#include <loom/TzMouseEvent>
+#include <loom/TzTimer>
+#include <loom/TzScopedPointer>
 
 #include <cmath>
 #include <cstdint>

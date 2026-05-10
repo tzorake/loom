@@ -1,10 +1,10 @@
 #ifndef TZWIDGET_P_HPP
 #define TZWIDGET_P_HPP
 
-#include <event-loop/tzclasshelpermacros.hpp>
-#include <event-loop/tzwidget.hpp>
-#include <event-loop/tzrect.hpp>
-#include <event-loop/tzsize.hpp>
+#include <loom/tzclasshelpermacros.hpp>
+#include <loom/tzwidget.hpp>
+#include <loom/tzrect.hpp>
+#include <loom/tzsize.hpp>
 
 #include "tzobject_p.hpp"
 

@@ -1,5 +1,5 @@
 #include "tzmacoswindow.hpp"
-#include <event-loop/tzflags.hpp>
+#include <loom/tzflags.hpp>
 
 #include "tzmacoswindow_p.hpp"
 #include "tzobjcutils.hpp"

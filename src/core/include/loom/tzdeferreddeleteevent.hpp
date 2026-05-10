@@ -1,7 +1,7 @@
 #ifndef TZDEFERREDDELETEEVENT_HPP
 #define TZDEFERREDDELETEEVENT_HPP
 
-#include <event-loop/tzevent.hpp>
+#include <loom/tzevent.hpp>
 
 class TzDeferredDeleteEvent : public TzEvent
 {

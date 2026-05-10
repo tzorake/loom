@@ -1,8 +1,8 @@
 #ifndef TZEVENTLOOP_P
 #define TZEVENTLOOP_P
 
-#include <event-loop/tzclasshelpermacros.hpp>
-#include <event-loop/tzeventloop.hpp>
+#include <loom/tzclasshelpermacros.hpp>
+#include <loom/tzeventloop.hpp>
 
 class TzAbstractEventDispatcher;
 

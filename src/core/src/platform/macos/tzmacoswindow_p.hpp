@@ -1,13 +1,13 @@
 #ifndef TZMACOSWINDOW_P_HPP
 #define TZMACOSWINDOW_P_HPP
 
-#include <event-loop/tzabstractwindow.hpp>
-#include <event-loop/tzevent.hpp>
-#include <event-loop/tzkeyevent.hpp>
-#include <event-loop/tzmouseevent.hpp>
-#include <event-loop/tzcloseevent.hpp>
-#include <event-loop/tzresizeevent.hpp>
-#include <event-loop/tzcoreapplication.hpp>
+#include <loom/tzabstractwindow.hpp>
+#include <loom/tzevent.hpp>
+#include <loom/tzkeyevent.hpp>
+#include <loom/tzmouseevent.hpp>
+#include <loom/tzcloseevent.hpp>
+#include <loom/tzresizeevent.hpp>
+#include <loom/tzcoreapplication.hpp>
 
 #include "tzobjcutils.hpp"
 

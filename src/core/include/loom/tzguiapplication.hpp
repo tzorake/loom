@@ -1,7 +1,7 @@
 #ifndef TZGUIAPPLICATION_HPP
 #define TZGUIAPPLICATION_HPP
 
-#include <event-loop/tzcoreapplication.hpp>
+#include <loom/tzcoreapplication.hpp>
 
 class TzAbstractWindow;
 

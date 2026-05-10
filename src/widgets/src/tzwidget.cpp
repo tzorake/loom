@@ -1,14 +1,14 @@
-#include <event-loop/tzwidget.hpp>
-#include <event-loop/tzanchors.hpp>
-#include <event-loop/tzscene.hpp>
-#include <event-loop/tzgeometrychangeevent.hpp>
-#include <event-loop/tzfocusevent.hpp>
-#include <event-loop/tzpaintevent.hpp>
-#include <event-loop/tzevent.hpp>
-#include <event-loop/tzrect.hpp>
-#include <event-loop/tzpoint.hpp>
-#include <event-loop/tzsize.hpp>
-#include <event-loop/tznumeric.hpp>
+#include <loom/tzwidget.hpp>
+#include <loom/tzanchors.hpp>
+#include <loom/tzscene.hpp>
+#include <loom/tzgeometrychangeevent.hpp>
+#include <loom/tzfocusevent.hpp>
+#include <loom/tzpaintevent.hpp>
+#include <loom/tzevent.hpp>
+#include <loom/tzrect.hpp>
+#include <loom/tzpoint.hpp>
+#include <loom/tzsize.hpp>
+#include <loom/tznumeric.hpp>
 
 #include "tzwidget_p.hpp"
 #include "tzanchors_p.hpp"

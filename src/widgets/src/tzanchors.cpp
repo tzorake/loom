@@ -1,7 +1,7 @@
-#include <event-loop/tzanchors.hpp>
-#include <event-loop/tzwidget.hpp>
-#include <event-loop/tzmargins.hpp>
-#include <event-loop/tzrect.hpp>
+#include <loom/tzanchors.hpp>
+#include <loom/tzwidget.hpp>
+#include <loom/tzmargins.hpp>
+#include <loom/tzrect.hpp>
 
 #include "tzanchors_p.hpp"
 

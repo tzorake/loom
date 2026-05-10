@@ -1,8 +1,8 @@
 #ifndef TZMACOSEVENTDISPATCHER_HPP
 #define TZMACOSEVENTDISPATCHER_HPP
 
-#include <event-loop/tzclasshelpermacros.hpp>
-#include <event-loop/tzabstracteventdispatcher.hpp>
+#include <loom/tzclasshelpermacros.hpp>
+#include <loom/tzabstracteventdispatcher.hpp>
 
 #include <memory>
 

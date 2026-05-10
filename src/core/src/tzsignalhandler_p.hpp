@@ -1,8 +1,8 @@
 #ifndef TZSIGNALHANDLER_P_HPP
 #define TZSIGNALHANDLER_P_HPP
 
-#include <event-loop/tzclasshelpermacros.hpp>
-#include <event-loop/tzsignalhandler.hpp>
+#include <loom/tzclasshelpermacros.hpp>
+#include <loom/tzsignalhandler.hpp>
 
 class TzAbstractEventDispatcher;
 class TzSocketNotifier;

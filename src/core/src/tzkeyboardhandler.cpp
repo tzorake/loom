@@ -1,9 +1,9 @@
-#include <event-loop/tzkeyboardhandler.hpp>
-#include <event-loop/tzabstracteventdispatcher.hpp>
-#include <event-loop/tzabstractconsoleinput.hpp>
-#include <event-loop/tzsocketnotifier.hpp>
-#include <event-loop/tzkeyevent.hpp>
-#include <event-loop/tzcoreapplication.hpp>
+#include <loom/tzkeyboardhandler.hpp>
+#include <loom/tzabstracteventdispatcher.hpp>
+#include <loom/tzabstractconsoleinput.hpp>
+#include <loom/tzsocketnotifier.hpp>
+#include <loom/tzkeyevent.hpp>
+#include <loom/tzcoreapplication.hpp>
 
 #include "tzkeyboardhandler_p.hpp"
 

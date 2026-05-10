@@ -1,8 +1,8 @@
 #ifndef TZSOCKETNOTIFIER_P_HPP
 #define TZSOCKETNOTIFIER_P_HPP
 
-#include <event-loop/tzclasshelpermacros.hpp>
-#include <event-loop/tzsocketnotifier.hpp>
+#include <loom/tzclasshelpermacros.hpp>
+#include <loom/tzsocketnotifier.hpp>
 
 class TzAbstractEventDispatcher;
 

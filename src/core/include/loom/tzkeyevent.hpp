@@ -1,8 +1,8 @@
 #ifndef TZKEYEVENT_HPP
 #define TZKEYEVENT_HPP
 
-#include <event-loop/tzevent.hpp>
-#include <event-loop/tzflags.hpp>
+#include <loom/tzevent.hpp>
+#include <loom/tzflags.hpp>
 
 #include <string>
 

@@ -1,5 +1,5 @@
-#include <event-loop/tzeventloop.hpp>
-#include <event-loop/tzabstracteventdispatcher.hpp>
+#include <loom/tzeventloop.hpp>
+#include <loom/tzabstracteventdispatcher.hpp>
 
 #include "tzeventloop_p.hpp"
 

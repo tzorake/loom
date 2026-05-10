@@ -1,4 +1,4 @@
-#include <event-loop/tzmouseevent.hpp>
+#include <loom/tzmouseevent.hpp>
 
 TzMouseEvent::TzMouseEvent(int type, MouseButton button, double x, double y,
                            KeyModifiers modifiers, double scrollDx, double scrollDy)

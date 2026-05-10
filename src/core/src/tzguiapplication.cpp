@@ -1,6 +1,6 @@
-#include <event-loop/tzguiapplication.hpp>
-#include <event-loop/tzabstractplatformintegration.hpp>
-#include <event-loop/tzabstractwindow.hpp>
+#include <loom/tzguiapplication.hpp>
+#include <loom/tzabstractplatformintegration.hpp>
+#include <loom/tzabstractwindow.hpp>
 
 TzGuiApplication::TzGuiApplication(int argc, char *argv[])
     : TzCoreApplication(argc, argv)

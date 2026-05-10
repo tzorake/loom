@@ -1,8 +1,8 @@
 #ifndef TZWIDGET_HPP
 #define TZWIDGET_HPP
 
-#include <event-loop/tzobject.hpp>
-#include <event-loop/tzclasshelpermacros.hpp>
+#include <loom/tzobject.hpp>
+#include <loom/tzclasshelpermacros.hpp>
 
 class TzAnchors;
 class TzPainter;

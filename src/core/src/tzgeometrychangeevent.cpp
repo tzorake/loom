@@ -1,4 +1,4 @@
-#include <event-loop/tzgeometrychangeevent.hpp>
+#include <loom/tzgeometrychangeevent.hpp>
 
 TzGeometryChangeEvent::TzGeometryChangeEvent(const TzRect &oldGeometry, const TzRect &newGeometry)
     : TzEvent(TzEvent::GeometryChange)

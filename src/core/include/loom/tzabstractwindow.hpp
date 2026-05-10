@@ -1,12 +1,12 @@
 #ifndef TZABSTRACTWINDOW_HPP
 #define TZABSTRACTWINDOW_HPP
 
-#include <event-loop/tzobject.hpp>
-#include <event-loop/tzplatformsurface.hpp>
-#include <event-loop/tzkeyevent.hpp>
-#include <event-loop/tzmouseevent.hpp>
-#include <event-loop/tzcloseevent.hpp>
-#include <event-loop/tzresizeevent.hpp>
+#include <loom/tzobject.hpp>
+#include <loom/tzplatformsurface.hpp>
+#include <loom/tzkeyevent.hpp>
+#include <loom/tzmouseevent.hpp>
+#include <loom/tzcloseevent.hpp>
+#include <loom/tzresizeevent.hpp>
 
 #include <string>
 

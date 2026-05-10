@@ -1,7 +1,7 @@
 #ifndef TZMACOSPLATFORMINTEGRATION_HPP
 #define TZMACOSPLATFORMINTEGRATION_HPP
 
-#include <event-loop/tzabstractplatformintegration.hpp>
+#include <loom/tzabstractplatformintegration.hpp>
 
 class TzMacosPlatformIntegration : public TzAbstractPlatformIntegration
 {

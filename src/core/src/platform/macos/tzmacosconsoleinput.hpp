@@ -1,7 +1,7 @@
 #ifndef TZMACOSCONSOLEINPUT_HPP
 #define TZMACOSCONSOLEINPUT_HPP
 
-#include <event-loop/tzabstractconsoleinput.hpp>
+#include <loom/tzabstractconsoleinput.hpp>
 
 #include <memory>
 #include <string>

@@ -1,8 +1,8 @@
 #ifndef TZKEYBOARDHANDLER_P_HPP
 #define TZKEYBOARDHANDLER_P_HPP
 
-#include <event-loop/tzclasshelpermacros.hpp>
-#include <event-loop/tzkeyboardhandler.hpp>
+#include <loom/tzclasshelpermacros.hpp>
+#include <loom/tzkeyboardhandler.hpp>
 
 class TzAbstractEventDispatcher;
 class TzAbstractConsoleInput;

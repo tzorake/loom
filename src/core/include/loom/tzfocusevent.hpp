@@ -1,7 +1,7 @@
 #ifndef TZFOCUSEVENT_HPP
 #define TZFOCUSEVENT_HPP
 
-#include <event-loop/tzevent.hpp>
+#include <loom/tzevent.hpp>
 
 class TzFocusEvent : public TzEvent
 {

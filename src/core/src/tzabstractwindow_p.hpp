@@ -1,8 +1,8 @@
 #ifndef TZABSTRACTWINDOW_P_HPP
 #define TZABSTRACTWINDOW_P_HPP
 
-#include <event-loop/tzclasshelpermacros.hpp>
-#include <event-loop/tzabstractwindow.hpp>
+#include <loom/tzclasshelpermacros.hpp>
+#include <loom/tzabstractwindow.hpp>
 
 class TzAbstractWindowPrivate
 {

@@ -1,6 +1,6 @@
-#include <event-loop/tzpainter.hpp>
-#include <event-loop/tzrect.hpp>
-#include <event-loop/tzpoint.hpp>
+#include <loom/tzpainter.hpp>
+#include <loom/tzrect.hpp>
+#include <loom/tzpoint.hpp>
 
 #include "tzpainter_p.hpp"
 
