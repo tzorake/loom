@@ -21,8 +21,6 @@ TzWindowsEventDispatcherPrivate::~TzWindowsEventDispatcherPrivate()
     }
 }
 
-// ── Constructor / destructor ──────────────────────────────────────────────────
-
 TzWindowsEventDispatcher::TzWindowsEventDispatcher()
     : d_ptr(new TzWindowsEventDispatcherPrivate)
 {
@@ -36,8 +34,6 @@ TzWindowsEventDispatcher::~TzWindowsEventDispatcher()
     while (!d_ptr->notifyMap.empty())
         unregisterSocketNotifier(d_ptr->notifyMap.begin()->first);
 }
-
-// ── Event loop ────────────────────────────────────────────────────────────────
 
 void TzWindowsEventDispatcher::processEvents()
 {
@@ -133,8 +129,6 @@ void TzWindowsEventDispatcher::setPreWaitCallback(PreWaitCallback callback)
     d_ptr->preWaitCallback = std::move(callback);
 }
 
-// ── Timers ────────────────────────────────────────────────────────────────────
-
 TzWindowsEventDispatcher::TimerHandle TzWindowsEventDispatcher::registerTimer(
     TimerInterval interval, bool singleShot, TimerCallback callback)
 {
@@ -179,8 +173,6 @@ void TzWindowsEventDispatcher::unregisterTimer(TimerHandle handle)
     CloseHandle(it->second->timerHandle);
     d_ptr->timerMap.erase(it);
 }
-
-// ── Socket notifiers ──────────────────────────────────────────────────────────
 
 TzWindowsEventDispatcher::NotifyHandle TzWindowsEventDispatcher::registerSocketNotifier(
     int fd, NotifyCallback callback)

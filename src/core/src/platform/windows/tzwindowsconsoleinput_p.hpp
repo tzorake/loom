@@ -11,9 +11,9 @@ class TzWindowsConsoleInputPrivate
 {
 public:
     HANDLE conHandle{ INVALID_HANDLE_VALUE };
-    DWORD  origMode{ 0 };
-    bool   rawActive{ false };
-    bool   isConsole{ false };
+    DWORD origMode{ 0 };
+    bool rawActive{ false };
+    bool isConsole{ false };
 };
 
 #endif // TZWINDOWSCONSOLEINPUT_P_HPP

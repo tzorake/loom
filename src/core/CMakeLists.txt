@@ -48,6 +48,7 @@ if(APPLE)
         src/platform/macos/tzmacoseventdispatcher.cpp
         src/platform/macos/tzmacosconsoleinput.cpp
         src/platform/macos/tzmacoswindow.cpp
+        src/platform/macos/tzmacossignalpipe.cpp
     )
     target_include_directories(loom-core PRIVATE src/platform/macos)
     target_sources(loom-core-private INTERFACE
@@ -68,6 +69,7 @@ elseif(WIN32)
         src/platform/windows/tzwindowseventdispatcher.cpp
         src/platform/windows/tzwindowsconsoleinput.cpp
         src/platform/windows/tzwindowswindow.cpp
+        src/platform/windows/tzwindowssignalpipe.cpp
     )
     target_include_directories(loom-core PRIVATE src/platform/windows)
     target_sources(loom-core-private INTERFACE
