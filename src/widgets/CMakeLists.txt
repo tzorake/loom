@@ -9,8 +9,8 @@ target_include_directories(loom-widgets
     PRIVATE src
 )
 target_link_libraries(loom-widgets
-    PUBLIC  loom
-    PRIVATE loom-private
+    PUBLIC  loom-core
+    PRIVATE loom-core-private
 )
 
 add_library(loom-widgets-private INTERFACE)

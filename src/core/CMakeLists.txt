@@ -1,4 +1,4 @@
-add_library(loom
+add_library(loom-core
     src/tzabstractplatformintegration.cpp
     src/tzabstracteventdispatcher.cpp
     src/tzabstractconsoleinput.cpp
@@ -23,14 +23,14 @@ add_library(loom
     src/tzrect.cpp
     src/tzsize.cpp
 )
-target_include_directories(loom
+target_include_directories(loom-core
     PUBLIC  include
     PRIVATE src
 )
 
-add_library(loom-private INTERFACE)
-target_include_directories(loom-private INTERFACE src)
-target_sources(loom-private INTERFACE
+add_library(loom-core-private INTERFACE)
+target_include_directories(loom-core-private INTERFACE src)
+target_sources(loom-core-private INTERFACE
     src/tzabstractwindow_p.hpp
     src/tzcoreapplication_p.hpp
     src/tzeventloop_p.hpp
@@ -44,13 +44,13 @@ target_sources(loom-private INTERFACE
 )
 
 if(APPLE)
-    target_sources(loom PRIVATE
+    target_sources(loom-core PRIVATE
         src/platform/macos/tzmacoseventdispatcher.cpp
         src/platform/macos/tzmacosconsoleinput.cpp
         src/platform/macos/tzmacoswindow.cpp
     )
-    target_include_directories(loom PRIVATE src/platform/macos)
-    target_sources(loom-private INTERFACE
+    target_include_directories(loom-core PRIVATE src/platform/macos)
+    target_sources(loom-core-private INTERFACE
         src/platform/macos/tzmacoseventdispatcher.hpp
         src/platform/macos/tzmacoseventdispatcher_p.hpp
         src/platform/macos/tzmacosconsoleinput.hpp
@@ -59,7 +59,7 @@ if(APPLE)
         src/platform/macos/tzmacoswindow_p.hpp
         src/platform/macos/tzobjcutils.hpp
     )
-    target_link_libraries(loom PUBLIC
+    target_link_libraries(loom-core PUBLIC
         "-framework CoreFoundation"
         "-framework CoreGraphics"
     )
