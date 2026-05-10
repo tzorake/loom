@@ -63,4 +63,23 @@ if(APPLE)
         "-framework CoreFoundation"
         "-framework CoreGraphics"
     )
+elseif(WIN32)
+    target_sources(loom-core PRIVATE
+        src/platform/windows/tzwindowseventdispatcher.cpp
+        src/platform/windows/tzwindowsconsoleinput.cpp
+        src/platform/windows/tzwindowswindow.cpp
+    )
+    target_include_directories(loom-core PRIVATE src/platform/windows)
+    target_sources(loom-core-private INTERFACE
+        src/platform/windows/tzwindowseventdispatcher.hpp
+        src/platform/windows/tzwindowseventdispatcher_p.hpp
+        src/platform/windows/tzwindowsconsoleinput.hpp
+        src/platform/windows/tzwindowsconsoleinput_p.hpp
+        src/platform/windows/tzwindowswindow.hpp
+        src/platform/windows/tzwindowswindow_p.hpp
+        src/tzwindowsplatformintegration.hpp
+    )
+    target_link_libraries(loom-core PUBLIC
+        user32 gdi32
+    )
 endif()
