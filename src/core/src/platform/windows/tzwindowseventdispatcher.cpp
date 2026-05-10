@@ -100,13 +100,13 @@ void TzWindowsEventDispatcher::processEvents()
         } else if (result == WAIT_OBJECT_0 + count) {
             // Message queue — dispatch window messages (WM_PAINT, WM_KEY*, etc.).
             MSG msg;
-            while (PeekMessage(&msg, nullptr, 0, 0, PM_REMOVE)) {
+            while (PeekMessageW(&msg, nullptr, 0, 0, PM_REMOVE)) {
                 if (msg.message == WM_QUIT) {
                     d_ptr->interrupted = true;
                     break;
                 }
                 TranslateMessage(&msg);
-                DispatchMessage(&msg);
+                DispatchMessageW(&msg);
             }
         }
         // WAIT_IO_COMPLETION, WAIT_FAILED → fall through to next iteration.

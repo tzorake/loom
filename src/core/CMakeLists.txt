@@ -61,6 +61,7 @@ if(APPLE)
         src/platform/macos/tzobjcutils.hpp
     )
     target_link_libraries(loom-core PUBLIC
+        "-framework Cocoa"
         "-framework CoreFoundation"
         "-framework CoreGraphics"
     )

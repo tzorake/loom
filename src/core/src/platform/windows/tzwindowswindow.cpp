@@ -89,7 +89,7 @@ LRESULT CALLBACK TzWindowsWindowPrivate::wndProc(
     }
 
     if (!d)
-        return DefWindowProc(hwnd, msg, wParam, lParam);
+        return DefWindowProcW(hwnd, msg, wParam, lParam);
 
     switch (msg) {
         case WM_ERASEBKGND:
@@ -141,7 +141,7 @@ LRESULT CALLBACK TzWindowsWindowPrivate::wndProc(
             return 0;
 
         default:
-            return DefWindowProc(hwnd, msg, wParam, lParam);
+            return DefWindowProcW(hwnd, msg, wParam, lParam);
     }
 }
 
@@ -187,11 +187,14 @@ TzWindowsWindowPrivate::~TzWindowsWindowPrivate()
 
 void TzWindowsWindowPrivate::setTitle(const std::string &title)
 {
-    int len = MultiByteToWideChar(CP_UTF8, 0, title.c_str(), -1, nullptr, 0);
-    if (len <= 0) return;
+    int len = MultiByteToWideChar(CP_UTF8, 0, title.data(), static_cast<int>(title.size()), nullptr, 0);
+    if (len <= 0) {
+        SetWindowTextW(hwnd, L"");
+        return;
+    }
     std::wstring wTitle(len, L'\0');
-    MultiByteToWideChar(CP_UTF8, 0, title.c_str(), -1, wTitle.data(), len);
-    SetWindowTextW(hwnd, wTitle.c_str());
+    MultiByteToWideChar(CP_UTF8, 0, title.data(), static_cast<int>(title.size()), wTitle.data(), len);
+    SetWindowTextW(hwnd, wTitle.data());
 }
 
 void TzWindowsWindowPrivate::show()
@@ -228,7 +231,11 @@ void TzWindowsWindowPrivate::onSize(int width, int height)
 {
     windowWidth  = width;
     windowHeight = height;
-    TzCoreApplication::postEvent(owner, new TzResizeEvent(windowWidth, windowHeight));
+    // Use sendEvent (synchronous) so the scene repaints before WM_PAINT fires.
+    // postEvent would delay until the event loop resumes, which never happens
+    // during Windows's live-resize modal loop.
+    TzResizeEvent re(windowWidth, windowHeight);
+    TzCoreApplication::sendEvent(owner, &re);
 }
 
 void TzWindowsWindowPrivate::onPaint()
