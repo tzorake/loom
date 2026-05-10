@@ -1,9 +1,9 @@
 #include <event-loop/tzabstractplatformintegration.hpp>
 
 #ifdef __APPLE__
-#include <event-loop/tzmacoseventdispatcher.hpp>
-#include <event-loop/tzmacosconsoleinput.hpp>
-#include <event-loop/tzmacoswindow.hpp>
+#include "tzmacoseventdispatcher.hpp"
+#include "tzmacosconsoleinput.hpp"
+#include "tzmacoswindow.hpp"
 #include "tzmacosplatformintegration.hpp"
 
 TzAbstractEventDispatcher *TzMacosPlatformIntegration::createEventDispatcher()

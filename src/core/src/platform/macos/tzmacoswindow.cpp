@@ -1,4 +1,4 @@
-#include <event-loop/tzmacoswindow.hpp>
+#include "tzmacoswindow.hpp"
 #include <event-loop/tzflags.hpp>
 
 #include "tzmacoswindow_p.hpp"

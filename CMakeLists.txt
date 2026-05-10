@@ -6,48 +6,7 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 option(EVENT_LOOP_BUILD_EXAMPLES "Build example applications" ON)
 
-add_library(event-loop
-    src/tzabstractplatformintegration.cpp
-    src/tzabstracteventdispatcher.cpp
-    src/tzabstractconsoleinput.cpp
-    src/tzsurface.cpp
-    src/tzplatformsurface.cpp
-    src/tzabstractwindow.cpp
-    src/tzeventloop.cpp
-    src/tztimer.cpp
-    src/tzsocketnotifier.cpp
-    src/tzkeyboardhandler.cpp
-    src/tzsignalhandler.cpp
-    src/tzevent.cpp
-    src/tzkeyevent.cpp
-    src/tzmouseevent.cpp
-    src/tzgeometrychangeevent.cpp
-    src/tzcoreapplication.cpp
-    src/tzguiapplication.cpp
-    src/tzobject.cpp
-    src/tzwidget.cpp
-    src/tzanchors.cpp
-    src/tzpainter.cpp
-    src/tzscene.cpp
-    src/tzwindow.cpp
-    src/tzmargins.cpp
-    src/tzpoint.cpp
-    src/tzrect.cpp
-    src/tzsize.cpp
-)
-target_include_directories(event-loop PUBLIC include)
-
-if(APPLE)
-    target_sources(event-loop PRIVATE
-        src/platform/macos/tzmacoseventdispatcher.cpp
-        src/platform/macos/tzmacosconsoleinput.cpp
-        src/platform/macos/tzmacoswindow.cpp
-    )
-    target_link_libraries(event-loop PUBLIC
-        "-framework CoreFoundation"
-        "-framework CoreGraphics"
-    )
-endif()
+add_subdirectory(src)
 
 if(EVENT_LOOP_BUILD_EXAMPLES)
     add_subdirectory(examples)
