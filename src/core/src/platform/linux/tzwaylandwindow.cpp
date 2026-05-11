@@ -204,16 +204,10 @@ void TzWaylandWindowPrivate::render(const std::vector<uint32_t> &pixels, int wid
         buf.byteSize = needed;
     }
 
-    // Copy pixels into the shared memory region.
-    // The painter stores rows bottom-up; Wayland expects top-down, so flip.
+    // Copy pixels into the shared memory region (top-down, no flip needed).
     {
         std::lock_guard lock(pixelMutex);
-        const size_t rowBytes = static_cast<size_t>(width) * 4;
-        auto *dst = static_cast<uint8_t *>(buf.data);
-        for (int row = 0; row < height; row++) {
-            const uint32_t *src = pixels.data() + static_cast<size_t>(height - 1 - row) * static_cast<size_t>(width);
-            memcpy(dst + static_cast<size_t>(row) * rowBytes, src, rowBytes);
-        }
+        memcpy(buf.data, pixels.data(), needed);
     }
 
     buf.busy = true;

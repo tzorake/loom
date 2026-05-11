@@ -146,8 +146,7 @@ uint32_t TzPainterPrivate::blendOver(uint32_t dst, uint32_t src)
 void TzPainterPrivate::setPixel(int px, int py, uint32_t argb)
 {
     if (inClip(px, py)) {
-        int bufPy = bufferHeight - 1 - py;
-        uint32_t &dst = pixels[bufPy * bufferWidth + px];
+        uint32_t &dst = pixels[py * bufferWidth + px];
         dst = blendOver(dst, argb);
     }
 }
