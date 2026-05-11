@@ -85,4 +85,30 @@ elseif(WIN32)
     target_link_libraries(loom-core PUBLIC
         user32 gdi32
     )
+elseif(UNIX AND NOT APPLE)
+    target_sources(loom-core PRIVATE
+        src/platform/linux/tzwaylandeventdispatcher.cpp
+        src/platform/linux/tzwaylandconsoleinput.cpp
+        src/platform/linux/tzwaylandwindow.cpp
+        src/platform/linux/tzwaylandglobals.cpp
+        src/platform/linux/tzwaylandsignalpipe.cpp
+        src/platform/linux/protocol/xdg-shell-protocol.c
+        src/platform/linux/protocol/xdg-decoration-protocol.c
+    )
+    target_include_directories(loom-core PRIVATE src/platform/linux)
+    target_sources(loom-core-private INTERFACE
+        src/platform/linux/tzwaylandeventdispatcher.hpp
+        src/platform/linux/tzwaylandeventdispatcher_p.hpp
+        src/platform/linux/tzwaylandconsoleinput.hpp
+        src/platform/linux/tzwaylandconsoleinput_p.hpp
+        src/platform/linux/tzwaylandwindow.hpp
+        src/platform/linux/tzwaylandwindow_p.hpp
+        src/platform/linux/tzwaylandglobals.hpp
+        src/tzwaylandplatformintegration.hpp
+    )
+    target_link_libraries(loom-core PUBLIC
+        wayland-client
+        wayland-cursor
+        xkbcommon
+    )
 endif()

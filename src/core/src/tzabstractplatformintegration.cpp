@@ -60,6 +60,50 @@ static TzAbstractPlatformIntegration *createPlatformIntegrationImpl()
 {
     return new TzWindowsPlatformIntegration;
 }
+#elif __linux__
+#include "platform/linux/tzwaylandeventdispatcher.hpp"
+#include "platform/linux/tzwaylandconsoleinput.hpp"
+#include "platform/linux/tzwaylandwindow.hpp"
+#include "platform/linux/tzwaylandglobals.hpp"
+#include "tzwaylandplatformintegration.hpp"
+
+void TzWaylandPlatformIntegration::ensureGlobals()
+{
+    if (m_globalsReady)
+        return;
+    m_globalsReady = true;
+    TzWaylandGlobals::instance(); // connect to display (throws if unavailable)
+    if (m_dispatcher)
+        m_dispatcher->setWaylandDisplay(TzWaylandGlobals::instance().display);
+}
+
+TzAbstractEventDispatcher *TzWaylandPlatformIntegration::createEventDispatcher()
+{
+    auto *d = new TzWaylandEventDispatcher;
+    m_dispatcher = d;
+    return d;
+}
+
+TzAbstractConsoleInput *TzWaylandPlatformIntegration::createConsoleInput()
+{
+    return new TzWaylandConsoleInput;
+}
+
+TzAbstractWindow *TzWaylandPlatformIntegration::createWindow(int width, int height)
+{
+    ensureGlobals();
+    return new TzWaylandWindow(width, height);
+}
+
+std::string TzWaylandPlatformIntegration::name() const
+{
+    return "wayland";
+}
+
+static TzAbstractPlatformIntegration *createPlatformIntegrationImpl()
+{
+    return new TzWaylandPlatformIntegration;
+}
 #else
 #endif
 
