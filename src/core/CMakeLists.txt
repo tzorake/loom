@@ -86,9 +86,25 @@ elseif(WIN32)
         user32 gdi32
     )
 elseif(UNIX AND NOT APPLE)
-    option(LOOM_X11 "Use X11 backend instead of Wayland" OFF)
+    set(LOOM_LINUX_BACKEND "auto" CACHE STRING
+        "Linux display backend: auto (detect from XDG_SESSION_TYPE), wayland, x11")
+    set_property(CACHE LOOM_LINUX_BACKEND PROPERTY STRINGS auto wayland x11)
 
-    if(LOOM_X11)
+    if(LOOM_LINUX_BACKEND STREQUAL "auto")
+        set(_loom_session "$ENV{XDG_SESSION_TYPE}")
+        if(_loom_session STREQUAL "x11")
+            set(_loom_backend "x11")
+        else()
+            set(_loom_backend "wayland")
+        endif()
+        message(STATUS "Loom: auto-detected Linux backend '${_loom_backend}'"
+                       " (XDG_SESSION_TYPE='${_loom_session}')")
+    else()
+        set(_loom_backend "${LOOM_LINUX_BACKEND}")
+        message(STATUS "Loom: using Linux backend '${_loom_backend}' (manually specified)")
+    endif()
+
+    if(_loom_backend STREQUAL "x11")
         target_sources(loom-core PRIVATE
             src/platform/linux/tzx11eventdispatcher.cpp
             src/platform/linux/tzx11consoleinput.cpp
@@ -109,7 +125,7 @@ elseif(UNIX AND NOT APPLE)
         )
         target_compile_definitions(loom-core PUBLIC LOOM_BACKEND_X11)
         target_link_libraries(loom-core PUBLIC X11)
-    else()
+    else() # wayland
         target_sources(loom-core PRIVATE
             src/platform/linux/tzwaylandeventdispatcher.cpp
             src/platform/linux/tzwaylandconsoleinput.cpp
