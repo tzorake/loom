@@ -86,29 +86,54 @@ elseif(WIN32)
         user32 gdi32
     )
 elseif(UNIX AND NOT APPLE)
-    target_sources(loom-core PRIVATE
-        src/platform/linux/tzwaylandeventdispatcher.cpp
-        src/platform/linux/tzwaylandconsoleinput.cpp
-        src/platform/linux/tzwaylandwindow.cpp
-        src/platform/linux/tzwaylandglobals.cpp
-        src/platform/linux/tzwaylandsignalpipe.cpp
-        src/platform/linux/protocol/xdg-shell-protocol.c
-        src/platform/linux/protocol/xdg-decoration-protocol.c
-    )
-    target_include_directories(loom-core PRIVATE src/platform/linux)
-    target_sources(loom-core-private INTERFACE
-        src/platform/linux/tzwaylandeventdispatcher.hpp
-        src/platform/linux/tzwaylandeventdispatcher_p.hpp
-        src/platform/linux/tzwaylandconsoleinput.hpp
-        src/platform/linux/tzwaylandconsoleinput_p.hpp
-        src/platform/linux/tzwaylandwindow.hpp
-        src/platform/linux/tzwaylandwindow_p.hpp
-        src/platform/linux/tzwaylandglobals.hpp
-        src/tzwaylandplatformintegration.hpp
-    )
-    target_link_libraries(loom-core PUBLIC
-        wayland-client
-        wayland-cursor
-        xkbcommon
-    )
+    option(LOOM_X11 "Use X11 backend instead of Wayland" OFF)
+
+    if(LOOM_X11)
+        target_sources(loom-core PRIVATE
+            src/platform/linux/tzx11eventdispatcher.cpp
+            src/platform/linux/tzx11consoleinput.cpp
+            src/platform/linux/tzx11window.cpp
+            src/platform/linux/tzx11globals.cpp
+            src/platform/linux/tzx11signalpipe.cpp
+        )
+        target_include_directories(loom-core PRIVATE src/platform/linux)
+        target_sources(loom-core-private INTERFACE
+            src/platform/linux/tzx11eventdispatcher.hpp
+            src/platform/linux/tzx11eventdispatcher_p.hpp
+            src/platform/linux/tzx11consoleinput.hpp
+            src/platform/linux/tzx11consoleinput_p.hpp
+            src/platform/linux/tzx11window.hpp
+            src/platform/linux/tzx11window_p.hpp
+            src/platform/linux/tzx11globals.hpp
+            src/tzx11platformintegration.hpp
+        )
+        target_compile_definitions(loom-core PUBLIC LOOM_BACKEND_X11)
+        target_link_libraries(loom-core PUBLIC X11)
+    else()
+        target_sources(loom-core PRIVATE
+            src/platform/linux/tzwaylandeventdispatcher.cpp
+            src/platform/linux/tzwaylandconsoleinput.cpp
+            src/platform/linux/tzwaylandwindow.cpp
+            src/platform/linux/tzwaylandglobals.cpp
+            src/platform/linux/tzwaylandsignalpipe.cpp
+            src/platform/linux/protocol/xdg-shell-protocol.c
+            src/platform/linux/protocol/xdg-decoration-protocol.c
+        )
+        target_include_directories(loom-core PRIVATE src/platform/linux)
+        target_sources(loom-core-private INTERFACE
+            src/platform/linux/tzwaylandeventdispatcher.hpp
+            src/platform/linux/tzwaylandeventdispatcher_p.hpp
+            src/platform/linux/tzwaylandconsoleinput.hpp
+            src/platform/linux/tzwaylandconsoleinput_p.hpp
+            src/platform/linux/tzwaylandwindow.hpp
+            src/platform/linux/tzwaylandwindow_p.hpp
+            src/platform/linux/tzwaylandglobals.hpp
+            src/tzwaylandplatformintegration.hpp
+        )
+        target_link_libraries(loom-core PUBLIC
+            wayland-client
+            wayland-cursor
+            xkbcommon
+        )
+    endif()
 endif()

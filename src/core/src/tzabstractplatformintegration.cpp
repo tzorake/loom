@@ -61,6 +61,42 @@ static TzAbstractPlatformIntegration *createPlatformIntegrationImpl()
     return new TzWindowsPlatformIntegration;
 }
 #elif __linux__
+#ifdef LOOM_BACKEND_X11
+#include "platform/linux/tzx11eventdispatcher.hpp"
+#include "platform/linux/tzx11consoleinput.hpp"
+#include "platform/linux/tzx11window.hpp"
+#include "platform/linux/tzx11globals.hpp"
+#include "tzx11platformintegration.hpp"
+
+TzAbstractEventDispatcher *TzX11PlatformIntegration::createEventDispatcher()
+{
+    auto *d = new TzX11EventDispatcher;
+    // Wire up the X11 display fd so the event loop can poll it.
+    d->setX11Fd(TzX11Globals::instance().fd());
+    return d;
+}
+
+TzAbstractConsoleInput *TzX11PlatformIntegration::createConsoleInput()
+{
+    return new TzX11ConsoleInput;
+}
+
+TzAbstractWindow *TzX11PlatformIntegration::createWindow(int width, int height)
+{
+    TzX11Globals::instance(); // ensure display is open (throws if DISPLAY not set)
+    return new TzX11Window(width, height);
+}
+
+std::string TzX11PlatformIntegration::name() const
+{
+    return "x11";
+}
+
+static TzAbstractPlatformIntegration *createPlatformIntegrationImpl()
+{
+    return new TzX11PlatformIntegration;
+}
+#else
 #include "platform/linux/tzwaylandeventdispatcher.hpp"
 #include "platform/linux/tzwaylandconsoleinput.hpp"
 #include "platform/linux/tzwaylandwindow.hpp"
@@ -104,6 +140,7 @@ static TzAbstractPlatformIntegration *createPlatformIntegrationImpl()
 {
     return new TzWaylandPlatformIntegration;
 }
+#endif // LOOM_BACKEND_X11
 #else
 #endif
 
