@@ -138,18 +138,21 @@ void TzWaylandEventDispatcher::processEvents()
                 needsFlush = false;
             }
 
-            if (waylandReadable)
+            if (waylandReadable) {
                 wl_display_read_events(display);
-            else
+                // Dispatch immediately so buffer_release events reach the SHM
+                // buffers before any timer callbacks that may call render().
+                wl_display_dispatch_pending(display);
+            } else {
                 wl_display_cancel_read(display);
+            }
         }
 
         for (int i = 0; i < n; i++) {
             int fd = events[i].data.fd;
 
             if (display && fd == wlFd) {
-                if (waylandReadable)
-                    wl_display_dispatch_pending(display);
+                // Already dispatched above after read_events.
 
             } else if (fd == d_ptr->wakeFd) {
                 uint64_t val;

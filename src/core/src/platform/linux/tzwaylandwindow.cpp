@@ -14,61 +14,30 @@ static void buffer_release(void *data, wl_buffer *)
 
 static const wl_buffer_listener kBufferListener = { buffer_release };
 
-// ── wl_surface.frame callback ─────────────────────────────────────────────────
-//
-// The frame callback fires once after the compositor has presented the
-// current surface frame and is ready for the next one.  We use it to
-// coalesce rapid configure events: no matter how many configure events
-// arrive between two display refreshes, exactly one render happens — always
-// at the latest requested dimensions.
-
-static void frame_done(void *data, wl_callback *cb, uint32_t /*time*/)
-{
-    wl_callback_destroy(cb);
-    auto *d = static_cast<TzWaylandWindowPrivate *>(data);
-    d->frameCallback = nullptr;
-
-    if (!d->pendingRedraw)
-        return;
-    d->pendingRedraw = false;
-
-    // Render synchronously at the latest window dimensions.
-    // sendEvent calls the application's resize/paint handler which
-    // calls render() → wl_surface_commit + flush.
-    TzResizeEvent re(d->windowWidth, d->windowHeight);
-    TzCoreApplication::sendEvent(d->owner, &re);
-}
-
-static const wl_callback_listener kFrameListener = { frame_done };
-
 // ── xdg_surface / xdg_toplevel listeners ─────────────────────────────────────
 
 static void xdg_surface_configure_cb(void *data, xdg_surface *xdg_surf, uint32_t serial)
 {
     auto *d = static_cast<TzWaylandWindowPrivate *>(data);
     xdg_surface_ack_configure(xdg_surf, serial);
+    d->configured = true;
 
     if (d->pendingWidth > 0 && d->pendingHeight > 0) {
-        // Always latch the latest dimensions; if several configures arrive
-        // before the frame callback fires we still render at the newest size.
         d->windowWidth   = d->pendingWidth;
         d->windowHeight  = d->pendingHeight;
         d->pendingWidth  = 0;
         d->pendingHeight = 0;
-        d->pendingRedraw = true;
     }
 
-    // Request a frame callback if one is not already pending.
-    // The callback fires after the compositor presents the current frame,
-    // at which point we render once at the latest dimensions.
-    if (d->pendingRedraw && !d->frameCallback) {
-        d->frameCallback = wl_surface_frame(d->surface);
-        wl_callback_add_listener(d->frameCallback, &kFrameListener, d);
-    }
+    // Send a resize event so the scene re-layouts and the paint timer renders
+    // at the current (possibly new) dimensions.  If the scene is not yet wired
+    // up (window still being constructed) this is a no-op.
+    TzResizeEvent re(d->windowWidth, d->windowHeight);
+    TzCoreApplication::sendEvent(d->owner, &re);
 
-    // Commit immediately so the compositor can advance the interactive resize
-    // state machine without waiting for us to repaint.  The frame callback
-    // will deliver the actual updated pixels on the next VSync.
+    // Commit to advance the compositor state machine.  If render() already
+    // committed a buffer in the sendEvent chain above this is a harmless
+    // redundant commit (no new damage or attach pending).
     wl_surface_commit(d->surface);
     TzWaylandGlobals::instance().flush();
 }
@@ -123,9 +92,6 @@ TzWaylandWindowPrivate::TzWaylandWindowPrivate(int width, int height, TzWaylandW
 
     xdg_toplevel_add_listener(xdgToplevel, &kXdgToplevelListener, this);
 
-    // Request server-side decorations (title bar, close/min/max buttons).
-    // If the compositor doesn't support the protocol, we just get no decorations
-    // (same as before), so this is always safe to attempt.
     if (g.decorationManager) {
         decoration = zxdg_decoration_manager_v1_get_toplevel_decoration(
             g.decorationManager, xdgToplevel);
@@ -144,8 +110,6 @@ TzWaylandWindowPrivate::~TzWaylandWindowPrivate()
     auto &g = TzWaylandGlobals::instance();
     g.unregisterSurface(surface);
 
-    if (frameCallback) { wl_callback_destroy(frameCallback); frameCallback = nullptr; }
-
     buffers[0].destroyPool();
     buffers[1].destroyPool();
 
@@ -162,13 +126,14 @@ void TzWaylandWindowPrivate::setTitle(const std::string &title)
 
 void TzWaylandWindowPrivate::show()
 {
+    visible = true;
     wl_surface_commit(surface);
     TzWaylandGlobals::instance().flush();
 }
 
 void TzWaylandWindowPrivate::hide()
 {
-    // Wayland has no explicit hide; detach the buffer to make the surface invisible.
+    visible = false;
     wl_surface_attach(surface, nullptr, 0, 0);
     wl_surface_commit(surface);
     TzWaylandGlobals::instance().flush();
@@ -176,6 +141,10 @@ void TzWaylandWindowPrivate::hide()
 
 void TzWaylandWindowPrivate::render(const std::vector<uint32_t> &pixels, int width, int height)
 {
+    // Don't render before the initial configure or after hide().
+    if (!configured || !visible)
+        return;
+
     auto &g = TzWaylandGlobals::instance();
 
     // Pick a buffer slot not currently held by the compositor.
@@ -205,14 +174,10 @@ void TzWaylandWindowPrivate::render(const std::vector<uint32_t> &pixels, int wid
     }
 
     // Copy pixels into the shared memory region (top-down, no flip needed).
-    {
-        std::lock_guard lock(pixelMutex);
-        memcpy(buf.data, pixels.data(), needed);
-    }
+    memcpy(buf.data, pixels.data(), needed);
 
     buf.busy = true;
     currentBuffer = slot ^ 1;
-    pendingRedraw = false; // frame is being committed — cancel any queued redraw
 
     wl_surface_attach(surface, buf.wlBuf, 0, 0);
     wl_surface_damage_buffer(surface, 0, 0, width, height);

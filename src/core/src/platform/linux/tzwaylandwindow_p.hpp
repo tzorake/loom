@@ -20,7 +20,6 @@
 #include <unistd.h>
 #include <cstdint>
 #include <memory>
-#include <mutex>
 #include <vector>
 
 struct ShmBuffer {
@@ -119,12 +118,13 @@ public:
     ShmBuffer buffers[2];
     int currentBuffer { 0 };
 
-    // Frame callback — fires once per VSync after the compositor presents the
-    // current frame.  Used to coalesce rapid configure events into one render.
-    wl_callback *frameCallback  { nullptr };
-    bool         pendingRedraw  { false };
+    // True once the compositor has sent and we have acked the initial configure.
+    // Rendering before configure is a protocol error (xdg_surface error 3).
+    bool configured { false };
 
-    std::mutex pixelMutex;
+    // Mirrors the visible state; false after hide() so the paint timer does
+    // not reattach a buffer to a withdrawn surface.
+    bool visible { false };
 };
 
 #endif // TZWAYLANDWINDOW_P_HPP

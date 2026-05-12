@@ -106,7 +106,7 @@ void TzWindow::setRootWidget(TzWidget *root)
 {
     TZ_D(TzWindow);
     d->scene->setRoot(root);
-    if (root) 
+    if (root)
         d->scene->setFocusedWidget(root);
 }
 
