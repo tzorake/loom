@@ -1,19 +1,19 @@
-#ifndef TZWINDOWSEVENTDISPATCHER_HPP
-#define TZWINDOWSEVENTDISPATCHER_HPP
+#ifndef TZWIN32EVENTDISPATCHER_HPP
+#define TZWIN32EVENTDISPATCHER_HPP
 
 #include <loom/tzclasshelpermacros.hpp>
 #include <loom/tzabstracteventdispatcher.hpp>
 
 #include <memory>
 
-class TzWindowsEventDispatcherPrivate;
+class TzWin32EventDispatcherPrivate;
 
-class TzWindowsEventDispatcher : public TzAbstractEventDispatcher
+class TzWin32EventDispatcher : public TzAbstractEventDispatcher
 {
-    TZ_DECLARE_PRIVATE(TzWindowsEventDispatcher)
+    TZ_DECLARE_PRIVATE(TzWin32EventDispatcher)
 public:
-    TzWindowsEventDispatcher();
-    virtual ~TzWindowsEventDispatcher() override;
+    TzWin32EventDispatcher();
+    virtual ~TzWin32EventDispatcher() override;
 
     virtual void processEvents() override;
     virtual void interrupt() override;
@@ -27,7 +27,7 @@ public:
     virtual void unregisterSocketNotifier(NotifyHandle handle) override;
 
 private:
-    std::unique_ptr<TzWindowsEventDispatcherPrivate> d_ptr;
+    std::unique_ptr<TzWin32EventDispatcherPrivate> d_ptr;
 };
 
-#endif // TZWINDOWSEVENTDISPATCHER_HPP
+#endif // TZWIN32EVENTDISPATCHER_HPP

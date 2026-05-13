@@ -1,9 +1,9 @@
-#ifndef TZWINDOWSPLATFORMINTEGRATION_HPP
-#define TZWINDOWSPLATFORMINTEGRATION_HPP
+#ifndef TZWIN32PLATFORMINTEGRATION_HPP
+#define TZWIN32PLATFORMINTEGRATION_HPP
 
 #include <loom/tzabstractplatformintegration.hpp>
 
-class TzWindowsPlatformIntegration : public TzAbstractPlatformIntegration
+class TzWin32PlatformIntegration : public TzAbstractPlatformIntegration
 {
 public:
     virtual TzAbstractEventDispatcher *createEventDispatcher() override;
@@ -12,4 +12,4 @@ public:
     virtual std::string                name() const            override;
 };
 
-#endif // TZWINDOWSPLATFORMINTEGRATION_HPP
+#endif // TZWIN32PLATFORMINTEGRATION_HPP

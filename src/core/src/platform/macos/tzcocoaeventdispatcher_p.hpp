@@ -1,20 +1,20 @@
-#ifndef TZMACOSEVENTDISPATCHER_P_HPP
-#define TZMACOSEVENTDISPATCHER_P_HPP
+#ifndef TZCOCOAEVENTDISPATCHER_P_HPP
+#define TZCOCOAEVENTDISPATCHER_P_HPP
 
 #include <loom/tzclasshelpermacros.hpp>
-#include "tzmacoseventdispatcher.hpp"
+#include "tzcocoaeventdispatcher.hpp"
 
 #include <CoreFoundation/CoreFoundation.h>
 #include <memory>
 #include <unordered_map>
 
-class TzMacosEventDispatcherPrivate
+class TzCocoaEventDispatcherPrivate
 {
-    TZ_DECLARE_PUBLIC(TzMacosEventDispatcher)
+    TZ_DECLARE_PUBLIC(TzCocoaEventDispatcher)
 public:
-    TzMacosEventDispatcherPrivate();
+    TzCocoaEventDispatcherPrivate();
 
-    TzMacosEventDispatcher *q_ptr{ nullptr };
+    TzCocoaEventDispatcher *q_ptr{ nullptr };
 
     CFRunLoopRef runLoop{ nullptr };
     bool interrupted{ false };
@@ -26,7 +26,7 @@ public:
         CFRunLoopTimerRef timer{ nullptr };
         TzAbstractEventDispatcher::TimerCallback callback;
         bool singleShot{ false };
-        TzMacosEventDispatcher *eventDispatcher{ nullptr };
+        TzCocoaEventDispatcher *eventDispatcher{ nullptr };
     };
     using TimerWrapperPtr = std::unique_ptr<TimerWrapper>;
     std::unordered_map<TzAbstractEventDispatcher::TimerHandle, TimerWrapperPtr> timerMap;
@@ -35,10 +35,10 @@ public:
         CFSocketRef        socket{ nullptr };
         CFRunLoopSourceRef source{ nullptr };
         TzAbstractEventDispatcher::NotifyCallback callback;
-        TzMacosEventDispatcher *eventDispatcher{ nullptr };
+        TzCocoaEventDispatcher *eventDispatcher{ nullptr };
     };
     using NotifyWrapperPtr = std::unique_ptr<NotifyWrapper>;
     std::unordered_map<TzAbstractEventDispatcher::NotifyHandle, NotifyWrapperPtr> notifyMap;
 };
 
-#endif // TZMACOSEVENTDISPATCHER_P_HPP
+#endif // TZCOCOAEVENTDISPATCHER_P_HPP

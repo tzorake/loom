@@ -1,9 +1,9 @@
-#ifndef TZMACOSPLATFORMINTEGRATION_HPP
-#define TZMACOSPLATFORMINTEGRATION_HPP
+#ifndef TZCOCOAPLATFORMINTEGRATION_HPP
+#define TZCOCOAPLATFORMINTEGRATION_HPP
 
 #include <loom/tzabstractplatformintegration.hpp>
 
-class TzMacosPlatformIntegration : public TzAbstractPlatformIntegration
+class TzCocoaPlatformIntegration : public TzAbstractPlatformIntegration
 {
 public:
     virtual TzAbstractEventDispatcher *createEventDispatcher() override;
@@ -12,4 +12,4 @@ public:
     virtual std::string name() const override;
 };
 
-#endif // TZMACOSPLATFORMINTEGRATION_HPP
+#endif // TZCOCOAPLATFORMINTEGRATION_HPP

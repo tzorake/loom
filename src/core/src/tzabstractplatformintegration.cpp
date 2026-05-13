@@ -1,64 +1,64 @@
 #include <loom/tzabstractplatformintegration.hpp>
 
 #ifdef __APPLE__
-#include "tzmacoseventdispatcher.hpp"
-#include "tzmacosconsoleinput.hpp"
-#include "tzmacoswindow.hpp"
-#include "tzmacosplatformintegration.hpp"
+#include "tzcocoaeventdispatcher.hpp"
+#include "tzcocoaconsoleinput.hpp"
+#include "tzcocoawindow.hpp"
+#include "tzcocoaplatformintegration.hpp"
 
-TzAbstractEventDispatcher *TzMacosPlatformIntegration::createEventDispatcher()
+TzAbstractEventDispatcher *TzCocoaPlatformIntegration::createEventDispatcher()
 {
-    return new TzMacosEventDispatcher;
+    return new TzCocoaEventDispatcher;
 }
 
-TzAbstractConsoleInput *TzMacosPlatformIntegration::createConsoleInput()
+TzAbstractConsoleInput *TzCocoaPlatformIntegration::createConsoleInput()
 {
-    return new TzMacosConsoleInput;
+    return new TzCocoaConsoleInput;
 }
 
-TzAbstractWindow *TzMacosPlatformIntegration::createWindow(int width, int height)
+TzAbstractWindow *TzCocoaPlatformIntegration::createWindow(int width, int height)
 {
-    return new TzMacosWindow(width, height);
+    return new TzCocoaWindow(width, height);
 }
 
-std::string TzMacosPlatformIntegration::name() const
+std::string TzCocoaPlatformIntegration::name() const
 {
     return "macos";
 }
 
 static TzAbstractPlatformIntegration *createPlatformIntegrationImpl()
 {
-    return new TzMacosPlatformIntegration;
+    return new TzCocoaPlatformIntegration;
 }
 #elif _WIN32
-#include "platform/windows/tzwindowseventdispatcher.hpp"
-#include "platform/windows/tzwindowsconsoleinput.hpp"
-#include "platform/windows/tzwindowswindow.hpp"
-#include "tzwindowsplatformintegration.hpp"
+#include "platform/windows/tzwin32eventdispatcher.hpp"
+#include "platform/windows/tzwin32consoleinput.hpp"
+#include "platform/windows/tzwin32window.hpp"
+#include "tzwin32platformintegration.hpp"
 
-TzAbstractEventDispatcher *TzWindowsPlatformIntegration::createEventDispatcher()
+TzAbstractEventDispatcher *TzWin32PlatformIntegration::createEventDispatcher()
 {
-    return new TzWindowsEventDispatcher;
+    return new TzWin32EventDispatcher;
 }
 
-TzAbstractConsoleInput *TzWindowsPlatformIntegration::createConsoleInput()
+TzAbstractConsoleInput *TzWin32PlatformIntegration::createConsoleInput()
 {
-    return new TzWindowsConsoleInput;
+    return new TzWin32ConsoleInput;
 }
 
-TzAbstractWindow *TzWindowsPlatformIntegration::createWindow(int width, int height)
+TzAbstractWindow *TzWin32PlatformIntegration::createWindow(int width, int height)
 {
-    return new TzWindowsWindow(width, height);
+    return new TzWin32Window(width, height);
 }
 
-std::string TzWindowsPlatformIntegration::name() const
+std::string TzWin32PlatformIntegration::name() const
 {
     return "windows";
 }
 
 static TzAbstractPlatformIntegration *createPlatformIntegrationImpl()
 {
-    return new TzWindowsPlatformIntegration;
+    return new TzWin32PlatformIntegration;
 }
 #elif __linux__
 #ifdef LOOM_BACKEND_X11

@@ -1,5 +1,5 @@
-#include "tzwindowsconsoleinput.hpp"
-#include "tzwindowsconsoleinput_p.hpp"
+#include "tzwin32consoleinput.hpp"
+#include "tzwin32consoleinput_p.hpp"
 
 #include <io.h>
 #include <stdexcept>
@@ -35,26 +35,26 @@ static const char *vkToEscape(WORD vk)
     }
 }
 
-TzWindowsConsoleInput::TzWindowsConsoleInput()
-    : d_ptr(new TzWindowsConsoleInputPrivate)
+TzWin32ConsoleInput::TzWin32ConsoleInput()
+    : d_ptr(new TzWin32ConsoleInputPrivate)
 {
     d_ptr->conHandle = GetStdHandle(STD_INPUT_HANDLE);
     DWORD dummy;
     d_ptr->isConsole = GetConsoleMode(d_ptr->conHandle, &dummy);
 }
 
-TzWindowsConsoleInput::~TzWindowsConsoleInput()
+TzWin32ConsoleInput::~TzWin32ConsoleInput()
 {
     if (d_ptr->rawActive)
         stop();
 }
 
-int TzWindowsConsoleInput::fd() const
+int TzWin32ConsoleInput::fd() const
 {
     return _fileno(stdin);
 }
 
-void TzWindowsConsoleInput::start()
+void TzWin32ConsoleInput::start()
 {
     if (!d_ptr->isConsole)
         return;
@@ -68,7 +68,7 @@ void TzWindowsConsoleInput::start()
     d_ptr->rawActive = true;
 }
 
-void TzWindowsConsoleInput::stop()
+void TzWin32ConsoleInput::stop()
 {
     if (!d_ptr->rawActive)
         return;
@@ -76,7 +76,7 @@ void TzWindowsConsoleInput::stop()
     d_ptr->rawActive = false;
 }
 
-std::string TzWindowsConsoleInput::read()
+std::string TzWin32ConsoleInput::read()
 {
     if (!d_ptr->isConsole)
         return {};

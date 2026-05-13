@@ -1,27 +1,27 @@
-#include "tzmacosconsoleinput.hpp"
+#include "tzcocoaconsoleinput.hpp"
 
-#include "tzmacosconsoleinput_p.hpp"
+#include "tzcocoaconsoleinput_p.hpp"
 
 #include <unistd.h>
 #include <stdexcept>
 
-TzMacosConsoleInput::TzMacosConsoleInput()
-    : d_ptr(new TzMacosConsoleInputPrivate)
+TzCocoaConsoleInput::TzCocoaConsoleInput()
+    : d_ptr(new TzCocoaConsoleInputPrivate)
 {
 }
 
-TzMacosConsoleInput::~TzMacosConsoleInput()
+TzCocoaConsoleInput::~TzCocoaConsoleInput()
 {
     if (d_ptr->rawActive)
         stop();
 }
 
-int TzMacosConsoleInput::fd() const
+int TzCocoaConsoleInput::fd() const
 {
     return STDIN_FILENO;
 }
 
-void TzMacosConsoleInput::start()
+void TzCocoaConsoleInput::start()
 {
     if (tcgetattr(STDIN_FILENO, &d_ptr->origTermios) == -1)
         throw std::runtime_error("tcgetattr failed");
@@ -37,13 +37,13 @@ void TzMacosConsoleInput::start()
     d_ptr->rawActive = true;
 }
 
-void TzMacosConsoleInput::stop()
+void TzCocoaConsoleInput::stop()
 {
     tcsetattr(STDIN_FILENO, TCSAFLUSH, &d_ptr->origTermios);
     d_ptr->rawActive = false;
 }
 
-std::string TzMacosConsoleInput::read()
+std::string TzCocoaConsoleInput::read()
 {
     char buf[16];
     ssize_t n = ::read(STDIN_FILENO, buf, sizeof(buf));

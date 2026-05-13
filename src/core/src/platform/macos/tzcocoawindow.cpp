@@ -1,7 +1,7 @@
-#include "tzmacoswindow.hpp"
+#include "tzcocoawindow.hpp"
 #include <loom/tzflags.hpp>
 
-#include "tzmacoswindow_p.hpp"
+#include "tzcocoawindow_p.hpp"
 #include "tzobjcutils.hpp"
 
 #include <CoreGraphics/CoreGraphics.h>
@@ -49,94 +49,94 @@ static void *getPrivate(ObjcObject self)
 
 static BOOL windowShouldClose_impl(ObjcObject self, objc_selector*, ObjcObject)
 {
-    TzMacosWindowPrivate *d = static_cast<TzMacosWindowPrivate*>(getPrivate(self));
+    TzCocoaWindowPrivate *d = static_cast<TzCocoaWindowPrivate*>(getPrivate(self));
     return (d && d->onWindowShouldClose()) ? YES : NO;
 }
 
 static void drawRect_impl(ObjcObject self, objc_selector*, CGRect rect)
 {
-    TzMacosWindowPrivate *d = static_cast<TzMacosWindowPrivate*>(getPrivate(self));
+    TzCocoaWindowPrivate *d = static_cast<TzCocoaWindowPrivate*>(getPrivate(self));
     if (d) d->onDrawRect(self, rect);
 }
 
 static void windowDidResize_impl(ObjcObject self, objc_selector*, ObjcObject /*notification*/)
 {
-    TzMacosWindowPrivate *d = static_cast<TzMacosWindowPrivate*>(getPrivate(self));
+    TzCocoaWindowPrivate *d = static_cast<TzCocoaWindowPrivate*>(getPrivate(self));
     if (d) d->onWindowDidResize();
 }
 
 // Content view — keyboard
 static void keyDown_impl(ObjcObject self, objc_selector*, ObjcObject nsEvent)
 {
-    TzMacosWindowPrivate *d = static_cast<TzMacosWindowPrivate*>(getPrivate(self));
+    TzCocoaWindowPrivate *d = static_cast<TzCocoaWindowPrivate*>(getPrivate(self));
     if (d) d->onKeyEvent(nsEvent, true);
 }
 
 static void keyUp_impl(ObjcObject self, objc_selector*, ObjcObject nsEvent)
 {
-    TzMacosWindowPrivate *d = static_cast<TzMacosWindowPrivate*>(getPrivate(self));
+    TzCocoaWindowPrivate *d = static_cast<TzCocoaWindowPrivate*>(getPrivate(self));
     if (d) d->onKeyEvent(nsEvent, false);
 }
 
 static void flagsChanged_impl(ObjcObject self, objc_selector*, ObjcObject nsEvent)
 {
     // Treat modifier-only events as press (state is in modifierFlags, not keyCode)
-    TzMacosWindowPrivate *d = static_cast<TzMacosWindowPrivate*>(getPrivate(self));
+    TzCocoaWindowPrivate *d = static_cast<TzCocoaWindowPrivate*>(getPrivate(self));
     if (d) d->onKeyEvent(nsEvent, true);
 }
 
 // Content view — mouse
 static void mouseDown_impl(ObjcObject self, objc_selector*, ObjcObject nsEvent)
 {
-    TzMacosWindowPrivate *d = static_cast<TzMacosWindowPrivate*>(getPrivate(self));
+    TzCocoaWindowPrivate *d = static_cast<TzCocoaWindowPrivate*>(getPrivate(self));
     if (d) d->onMouseEvent(nsEvent, TzEvent::MouseButtonPress, MouseButton::Left);
 }
 
 static void mouseUp_impl(ObjcObject self, objc_selector*, ObjcObject nsEvent)
 {
-    TzMacosWindowPrivate *d = static_cast<TzMacosWindowPrivate*>(getPrivate(self));
+    TzCocoaWindowPrivate *d = static_cast<TzCocoaWindowPrivate*>(getPrivate(self));
     if (d) d->onMouseEvent(nsEvent, TzEvent::MouseButtonRelease, MouseButton::Left);
 }
 
 static void rightMouseDown_impl(ObjcObject self, objc_selector*, ObjcObject nsEvent)
 {
-    TzMacosWindowPrivate *d = static_cast<TzMacosWindowPrivate*>(getPrivate(self));
+    TzCocoaWindowPrivate *d = static_cast<TzCocoaWindowPrivate*>(getPrivate(self));
     if (d) d->onMouseEvent(nsEvent, TzEvent::MouseButtonPress, MouseButton::Right);
 }
 
 static void rightMouseUp_impl(ObjcObject self, objc_selector*, ObjcObject nsEvent)
 {
-    TzMacosWindowPrivate *d = static_cast<TzMacosWindowPrivate*>(getPrivate(self));
+    TzCocoaWindowPrivate *d = static_cast<TzCocoaWindowPrivate*>(getPrivate(self));
     if (d) d->onMouseEvent(nsEvent, TzEvent::MouseButtonRelease, MouseButton::Right);
 }
 
 static void otherMouseDown_impl(ObjcObject self, objc_selector*, ObjcObject nsEvent)
 {
-    TzMacosWindowPrivate *d = static_cast<TzMacosWindowPrivate*>(getPrivate(self));
+    TzCocoaWindowPrivate *d = static_cast<TzCocoaWindowPrivate*>(getPrivate(self));
     if (d) d->onMouseEvent(nsEvent, TzEvent::MouseButtonPress, MouseButton::Middle);
 }
 
 static void otherMouseUp_impl(ObjcObject self, objc_selector*, ObjcObject nsEvent)
 {
-    TzMacosWindowPrivate *d = static_cast<TzMacosWindowPrivate*>(getPrivate(self));
+    TzCocoaWindowPrivate *d = static_cast<TzCocoaWindowPrivate*>(getPrivate(self));
     if (d) d->onMouseEvent(nsEvent, TzEvent::MouseButtonRelease, MouseButton::Middle);
 }
 
 static void mouseMoved_impl(ObjcObject self, objc_selector*, ObjcObject nsEvent)
 {
-    TzMacosWindowPrivate *d = static_cast<TzMacosWindowPrivate*>(getPrivate(self));
+    TzCocoaWindowPrivate *d = static_cast<TzCocoaWindowPrivate*>(getPrivate(self));
     if (d) d->onMouseEvent(nsEvent, TzEvent::MouseMove, MouseButton::None);
 }
 
 static void mouseDragged_impl(ObjcObject self, objc_selector*, ObjcObject nsEvent)
 {
-    TzMacosWindowPrivate *d = static_cast<TzMacosWindowPrivate*>(getPrivate(self));
+    TzCocoaWindowPrivate *d = static_cast<TzCocoaWindowPrivate*>(getPrivate(self));
     if (d) d->onMouseEvent(nsEvent, TzEvent::MouseMove, MouseButton::None);
 }
 
 static void scrollWheel_impl(ObjcObject self, objc_selector*, ObjcObject nsEvent)
 {
-    TzMacosWindowPrivate *d = static_cast<TzMacosWindowPrivate*>(getPrivate(self));
+    TzCocoaWindowPrivate *d = static_cast<TzCocoaWindowPrivate*>(getPrivate(self));
     if (d) d->onMouseEvent(nsEvent, TzEvent::MouseScroll, MouseButton::None);
 }
 
@@ -199,7 +199,7 @@ static void registerObjcClasses()
     });
 }
 
-TzMacosWindowPrivate::TzMacosWindowPrivate(int width, int height, TzAbstractWindow *owner)
+TzCocoaWindowPrivate::TzCocoaWindowPrivate(int width, int height, TzAbstractWindow *owner)
     : owner(owner)
     , windowWidth(width)
     , windowHeight(height)
@@ -253,7 +253,7 @@ TzMacosWindowPrivate::TzMacosWindowPrivate(int width, int height, TzAbstractWind
     (void)existingBounds;
 }
 
-TzMacosWindowPrivate::~TzMacosWindowPrivate()
+TzCocoaWindowPrivate::~TzCocoaWindowPrivate()
 {
     // Clear private pointers so stale callbacks are safe
     object_setInstanceVariable(delegate, kPrivateIvar, nullptr);
@@ -262,26 +262,26 @@ TzMacosWindowPrivate::~TzMacosWindowPrivate()
     sendMessage<void>(window, "close");
 }
 
-void TzMacosWindowPrivate::setTitle(const std::string& title)
+void TzCocoaWindowPrivate::setTitle(const std::string& title)
 {
     ObjcObject nsTitle = sendClassMessage<ObjcObject>(
         getClass("NSString"), "stringWithUTF8String:", title.data());
     sendMessage<void>(window, "setTitle:", nsTitle);
 }
 
-void TzMacosWindowPrivate::show()
+void TzCocoaWindowPrivate::show()
 {
     ObjcObject app = sendClassMessage<ObjcObject>(getClass("NSApplication"), "sharedApplication");
     sendMessage<void>(window, "makeKeyAndOrderFront:", nullptr);
     sendMessage<void>(app, "activateIgnoringOtherApps:", (int)YES);
 }
 
-void TzMacosWindowPrivate::hide()
+void TzCocoaWindowPrivate::hide()
 {
     sendMessage<void>(window, "orderOut:", nullptr);
 }
 
-void TzMacosWindowPrivate::render(const std::vector<uint32_t>& newPixels, int width, int height)
+void TzCocoaWindowPrivate::render(const std::vector<uint32_t>& newPixels, int width, int height)
 {
     {
         std::lock_guard lock(pixelMutex);
@@ -293,14 +293,14 @@ void TzMacosWindowPrivate::render(const std::vector<uint32_t>& newPixels, int wi
     sendMessage<void>(contentView, "setNeedsDisplay:", (int)YES);
 }
 
-bool TzMacosWindowPrivate::onWindowShouldClose()
+bool TzCocoaWindowPrivate::onWindowShouldClose()
 {
     TzCloseEvent event;
     TzCoreApplication::sendEvent(owner, &event);
     return event.isAccepted();
 }
 
-void TzMacosWindowPrivate::onWindowDidResize()
+void TzCocoaWindowPrivate::onWindowDidResize()
 {
     CGRect bounds = sendMessage<CGRect>(contentView, "bounds");
     windowWidth  = (int)bounds.size.width;
@@ -355,7 +355,7 @@ static Key translateKeyCode(unsigned short keyCode)
     }
 }
 
-void TzMacosWindowPrivate::onKeyEvent(ObjcObject nsEvent, bool pressed)
+void TzCocoaWindowPrivate::onKeyEvent(ObjcObject nsEvent, bool pressed)
 {
     NSUInteger flags = sendMessage<NSUInteger>(nsEvent, "modifierFlags");
     unsigned short code = sendMessage<unsigned short>(nsEvent, "keyCode");
@@ -376,7 +376,7 @@ void TzMacosWindowPrivate::onKeyEvent(ObjcObject nsEvent, bool pressed)
         new TzKeyEvent(pressed ? TzEvent::KeyPress : TzEvent::KeyRelease, key, mods, std::move(utf8)));
 }
 
-void TzMacosWindowPrivate::onMouseEvent(ObjcObject nsEvent, TzEvent::Type type, MouseButton button)
+void TzCocoaWindowPrivate::onMouseEvent(ObjcObject nsEvent, TzEvent::Type type, MouseButton button)
 {
     // Convert from window coords to view (flipped: origin top-left)
     CGPoint windowPos = sendMessage<CGPoint>(nsEvent, "locationInWindow");
@@ -397,7 +397,7 @@ void TzMacosWindowPrivate::onMouseEvent(ObjcObject nsEvent, TzEvent::Type type, 
                          scrollDx, scrollDy));
 }
 
-void TzMacosWindowPrivate::onDrawRect(ObjcObject self, CGRect /*rect*/)
+void TzCocoaWindowPrivate::onDrawRect(ObjcObject self, CGRect /*rect*/)
 {
     std::lock_guard lock(pixelMutex);
 
@@ -437,19 +437,19 @@ void TzMacosWindowPrivate::onDrawRect(ObjcObject self, CGRect /*rect*/)
     CGContextRestoreGState(ctx);
 }
 
-TzMacosWindow::TzMacosWindow(int width, int height)
-    : d_ptr(new TzMacosWindowPrivate(width, height, this))
+TzCocoaWindow::TzCocoaWindow(int width, int height)
+    : d_ptr(new TzCocoaWindowPrivate(width, height, this))
 {
 }
 
-TzMacosWindow::~TzMacosWindow() = default;
+TzCocoaWindow::~TzCocoaWindow() = default;
 
-void TzMacosWindow::setTitle(const std::string& title)
+void TzCocoaWindow::setTitle(const std::string& title)
 {
     d_ptr->setTitle(title);
 }
 
-void TzMacosWindow::show()
+void TzCocoaWindow::show()
 {
     d_ptr->show();
     // Fire an initial resize so any attached scene can layout and paint before
@@ -458,12 +458,12 @@ void TzMacosWindow::show()
     TzCoreApplication::sendEvent(this, &re);
 }
 
-void TzMacosWindow::hide()
+void TzCocoaWindow::hide()
 {
     d_ptr->hide();
 }
 
-void TzMacosWindow::render(const std::vector<uint32_t>& pixels, int width, int height)
+void TzCocoaWindow::render(const std::vector<uint32_t>& pixels, int width, int height)
 {
     d_ptr->render(pixels, width, height);
 }

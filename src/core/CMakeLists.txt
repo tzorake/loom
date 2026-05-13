@@ -40,24 +40,24 @@ target_sources(loom-core-private INTERFACE
     src/tzsignalhandler_p.hpp
     src/tzsocketnotifier_p.hpp
     src/tztimer_p.hpp
-    src/tzmacosplatformintegration.hpp
+    src/tzcocoaplatformintegration.hpp
 )
 
 if(APPLE)
     target_sources(loom-core PRIVATE
-        src/platform/macos/tzmacoseventdispatcher.cpp
-        src/platform/macos/tzmacosconsoleinput.cpp
-        src/platform/macos/tzmacoswindow.cpp
+        src/platform/macos/tzcocoaeventdispatcher.cpp
+        src/platform/macos/tzcocoaconsoleinput.cpp
+        src/platform/macos/tzcocoawindow.cpp
         src/platform/macos/tzmacossignalpipe.cpp
     )
     target_include_directories(loom-core PRIVATE src/platform/macos)
     target_sources(loom-core-private INTERFACE
-        src/platform/macos/tzmacoseventdispatcher.hpp
-        src/platform/macos/tzmacoseventdispatcher_p.hpp
-        src/platform/macos/tzmacosconsoleinput.hpp
-        src/platform/macos/tzmacosconsoleinput_p.hpp
-        src/platform/macos/tzmacoswindow.hpp
-        src/platform/macos/tzmacoswindow_p.hpp
+        src/platform/macos/tzcocoaeventdispatcher.hpp
+        src/platform/macos/tzcocoaeventdispatcher_p.hpp
+        src/platform/macos/tzcocoaconsoleinput.hpp
+        src/platform/macos/tzcocoaconsoleinput_p.hpp
+        src/platform/macos/tzcocoawindow.hpp
+        src/platform/macos/tzcocoawindow_p.hpp
         src/platform/macos/tzobjcutils.hpp
     )
     target_link_libraries(loom-core PUBLIC
@@ -67,20 +67,20 @@ if(APPLE)
     )
 elseif(WIN32)
     target_sources(loom-core PRIVATE
-        src/platform/windows/tzwindowseventdispatcher.cpp
-        src/platform/windows/tzwindowsconsoleinput.cpp
-        src/platform/windows/tzwindowswindow.cpp
+        src/platform/windows/tzwin32eventdispatcher.cpp
+        src/platform/windows/tzwin32consoleinput.cpp
+        src/platform/windows/tzwin32window.cpp
         src/platform/windows/tzwindowssignalpipe.cpp
     )
     target_include_directories(loom-core PRIVATE src/platform/windows)
     target_sources(loom-core-private INTERFACE
-        src/platform/windows/tzwindowseventdispatcher.hpp
-        src/platform/windows/tzwindowseventdispatcher_p.hpp
-        src/platform/windows/tzwindowsconsoleinput.hpp
-        src/platform/windows/tzwindowsconsoleinput_p.hpp
-        src/platform/windows/tzwindowswindow.hpp
-        src/platform/windows/tzwindowswindow_p.hpp
-        src/tzwindowsplatformintegration.hpp
+        src/platform/windows/tzwin32eventdispatcher.hpp
+        src/platform/windows/tzwin32eventdispatcher_p.hpp
+        src/platform/windows/tzwin32consoleinput.hpp
+        src/platform/windows/tzwin32consoleinput_p.hpp
+        src/platform/windows/tzwin32window.hpp
+        src/platform/windows/tzwin32window_p.hpp
+        src/tzwin32platformintegration.hpp
     )
     target_link_libraries(loom-core PUBLIC
         user32 gdi32

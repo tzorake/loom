@@ -1,5 +1,5 @@
-#ifndef TZMACOSWINDOW_P_HPP
-#define TZMACOSWINDOW_P_HPP
+#ifndef TZCOCOAWINDOW_P_HPP
+#define TZCOCOAWINDOW_P_HPP
 
 #include <loom/tzabstractwindow.hpp>
 #include <loom/tzevent.hpp>
@@ -17,11 +17,11 @@
 #include <mutex>
 #include <vector>
 
-class TzMacosWindowPrivate
+class TzCocoaWindowPrivate
 {
 public:
-    TzMacosWindowPrivate(int width, int height, TzAbstractWindow *owner);
-    ~TzMacosWindowPrivate();
+    TzCocoaWindowPrivate(int width, int height, TzAbstractWindow *owner);
+    ~TzCocoaWindowPrivate();
 
     void setTitle(const std::string& title);
     void show();
@@ -51,4 +51,4 @@ public:
 
 };
 
-#endif // TZMACOSWINDOW_P_HPP
+#endif // TZCOCOAWINDOW_P_HPP

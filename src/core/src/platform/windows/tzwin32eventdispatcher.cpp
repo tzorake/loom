@@ -1,11 +1,11 @@
-#include "tzwindowseventdispatcher.hpp"
-#include "tzwindowseventdispatcher_p.hpp"
+#include "tzwin32eventdispatcher.hpp"
+#include "tzwin32eventdispatcher_p.hpp"
 
 #include <io.h>
 #include <stdexcept>
 #include <vector>
 
-TzWindowsEventDispatcherPrivate::TzWindowsEventDispatcherPrivate()
+TzWin32EventDispatcherPrivate::TzWin32EventDispatcherPrivate()
 {
     // Manual-reset event: stays set until we explicitly reset it.
     wakeUpEvent = CreateEvent(nullptr, TRUE, FALSE, nullptr);
@@ -13,7 +13,7 @@ TzWindowsEventDispatcherPrivate::TzWindowsEventDispatcherPrivate()
         throw std::runtime_error("CreateEvent (wakeUpEvent) failed");
 }
 
-TzWindowsEventDispatcherPrivate::~TzWindowsEventDispatcherPrivate()
+TzWin32EventDispatcherPrivate::~TzWin32EventDispatcherPrivate()
 {
     if (wakeUpEvent) {
         CloseHandle(wakeUpEvent);
@@ -21,13 +21,13 @@ TzWindowsEventDispatcherPrivate::~TzWindowsEventDispatcherPrivate()
     }
 }
 
-TzWindowsEventDispatcher::TzWindowsEventDispatcher()
-    : d_ptr(new TzWindowsEventDispatcherPrivate)
+TzWin32EventDispatcher::TzWin32EventDispatcher()
+    : d_ptr(new TzWin32EventDispatcherPrivate)
 {
     d_ptr->q_ptr = this;
 }
 
-TzWindowsEventDispatcher::~TzWindowsEventDispatcher()
+TzWin32EventDispatcher::~TzWin32EventDispatcher()
 {
     while (!d_ptr->timerMap.empty())
         unregisterTimer(d_ptr->timerMap.begin()->first);
@@ -35,7 +35,7 @@ TzWindowsEventDispatcher::~TzWindowsEventDispatcher()
         unregisterSocketNotifier(d_ptr->notifyMap.begin()->first);
 }
 
-void TzWindowsEventDispatcher::processEvents()
+void TzWin32EventDispatcher::processEvents()
 {
     d_ptr->interrupted = false;
 
@@ -113,23 +113,23 @@ void TzWindowsEventDispatcher::processEvents()
     }
 }
 
-void TzWindowsEventDispatcher::interrupt()
+void TzWin32EventDispatcher::interrupt()
 {
     d_ptr->interrupted = true;
     SetEvent(d_ptr->wakeUpEvent);
 }
 
-void TzWindowsEventDispatcher::wakeUp()
+void TzWin32EventDispatcher::wakeUp()
 {
     SetEvent(d_ptr->wakeUpEvent);
 }
 
-void TzWindowsEventDispatcher::setPreWaitCallback(PreWaitCallback callback)
+void TzWin32EventDispatcher::setPreWaitCallback(PreWaitCallback callback)
 {
     d_ptr->preWaitCallback = std::move(callback);
 }
 
-TzWindowsEventDispatcher::TimerHandle TzWindowsEventDispatcher::registerTimer(
+TzWin32EventDispatcher::TimerHandle TzWin32EventDispatcher::registerTimer(
     TimerInterval interval, bool singleShot, TimerCallback callback)
 {
     // Synchronisation (auto-reset) waitable timer: resets automatically when
@@ -151,7 +151,7 @@ TzWindowsEventDispatcher::TimerHandle TzWindowsEventDispatcher::registerTimer(
         throw std::runtime_error("SetWaitableTimer failed");
     }
 
-    auto wrapper           = std::make_unique<TzWindowsEventDispatcherPrivate::TimerWrapper>();
+    auto wrapper           = std::make_unique<TzWin32EventDispatcherPrivate::TimerWrapper>();
     wrapper->timerHandle   = hTimer;
     wrapper->callback      = std::move(callback);
     wrapper->singleShot    = singleShot;
@@ -163,7 +163,7 @@ TzWindowsEventDispatcher::TimerHandle TzWindowsEventDispatcher::registerTimer(
     return handle;
 }
 
-void TzWindowsEventDispatcher::unregisterTimer(TimerHandle handle)
+void TzWin32EventDispatcher::unregisterTimer(TimerHandle handle)
 {
     auto it = d_ptr->timerMap.find(handle);
     if (it == d_ptr->timerMap.end())
@@ -174,14 +174,14 @@ void TzWindowsEventDispatcher::unregisterTimer(TimerHandle handle)
     d_ptr->timerMap.erase(it);
 }
 
-TzWindowsEventDispatcher::NotifyHandle TzWindowsEventDispatcher::registerSocketNotifier(
+TzWin32EventDispatcher::NotifyHandle TzWin32EventDispatcher::registerSocketNotifier(
     int fd, NotifyCallback callback)
 {
     HANDLE osHandle = reinterpret_cast<HANDLE>(_get_osfhandle(fd));
     if (osHandle == INVALID_HANDLE_VALUE)
         throw std::runtime_error("_get_osfhandle failed");
 
-    auto wrapper       = std::make_unique<TzWindowsEventDispatcherPrivate::NotifyWrapper>();
+    auto wrapper       = std::make_unique<TzWin32EventDispatcherPrivate::NotifyWrapper>();
     wrapper->rawHandle = osHandle;
     wrapper->fd        = fd;
     wrapper->callback  = std::move(callback);
@@ -233,7 +233,7 @@ TzWindowsEventDispatcher::NotifyHandle TzWindowsEventDispatcher::registerSocketN
     return handle;
 }
 
-void TzWindowsEventDispatcher::unregisterSocketNotifier(NotifyHandle handle)
+void TzWin32EventDispatcher::unregisterSocketNotifier(NotifyHandle handle)
 {
     auto it = d_ptr->notifyMap.find(handle);
     if (it == d_ptr->notifyMap.end())

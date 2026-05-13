@@ -1,17 +1,17 @@
-#ifndef TZWINDOWSWINDOW_HPP
-#define TZWINDOWSWINDOW_HPP
+#ifndef TZWIN32WINDOW_HPP
+#define TZWIN32WINDOW_HPP
 
 #include <loom/tzabstractwindow.hpp>
 
 #include <memory>
 
-class TzWindowsWindowPrivate;
+class TzWin32WindowPrivate;
 
-class TzWindowsWindow : public TzAbstractWindow
+class TzWin32Window : public TzAbstractWindow
 {
 public:
-    TzWindowsWindow(int width, int height);
-    virtual ~TzWindowsWindow() override;
+    TzWin32Window(int width, int height);
+    virtual ~TzWin32Window() override;
 
     virtual void setTitle(const std::string &title) override;
     virtual void show() override;
@@ -20,7 +20,7 @@ public:
     virtual void render(const std::vector<uint32_t> &pixels, int width, int height) override;
 
 private:
-    std::unique_ptr<TzWindowsWindowPrivate> d_ptr;
+    std::unique_ptr<TzWin32WindowPrivate> d_ptr;
 };
 
-#endif // TZWINDOWSWINDOW_HPP
+#endif // TZWIN32WINDOW_HPP

@@ -1,19 +1,19 @@
-#ifndef TZMACOSEVENTDISPATCHER_HPP
-#define TZMACOSEVENTDISPATCHER_HPP
+#ifndef TZCOCOAEVENTDISPATCHER_HPP
+#define TZCOCOAEVENTDISPATCHER_HPP
 
 #include <loom/tzclasshelpermacros.hpp>
 #include <loom/tzabstracteventdispatcher.hpp>
 
 #include <memory>
 
-class TzMacosEventDispatcherPrivate;
+class TzCocoaEventDispatcherPrivate;
 
-class TzMacosEventDispatcher : public TzAbstractEventDispatcher
+class TzCocoaEventDispatcher : public TzAbstractEventDispatcher
 {
-    TZ_DECLARE_PRIVATE(TzMacosEventDispatcher)
+    TZ_DECLARE_PRIVATE(TzCocoaEventDispatcher)
 public:
-    TzMacosEventDispatcher();
-    virtual ~TzMacosEventDispatcher() override;
+    TzCocoaEventDispatcher();
+    virtual ~TzCocoaEventDispatcher() override;
 
     virtual void processEvents() override;
     virtual void interrupt() override;
@@ -27,7 +27,7 @@ public:
     virtual void unregisterSocketNotifier(NotifyHandle handle) override;
 
 private:
-    std::unique_ptr<TzMacosEventDispatcherPrivate> d_ptr;
+    std::unique_ptr<TzCocoaEventDispatcherPrivate> d_ptr;
 };
 
-#endif // TZMACOSEVENTDISPATCHER_HPP
+#endif // TZCOCOAEVENTDISPATCHER_HPP

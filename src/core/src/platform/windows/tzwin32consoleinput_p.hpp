@@ -1,13 +1,13 @@
-#ifndef TZWINDOWSCONSOLEINPUT_P_HPP
-#define TZWINDOWSCONSOLEINPUT_P_HPP
+#ifndef TZWIN32CONSOLEINPUT_P_HPP
+#define TZWIN32CONSOLEINPUT_P_HPP
 
 #include <loom/tzclasshelpermacros.hpp>
-#include "tzwindowsconsoleinput.hpp"
+#include "tzwin32consoleinput.hpp"
 
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
 
-class TzWindowsConsoleInputPrivate
+class TzWin32ConsoleInputPrivate
 {
 public:
     HANDLE conHandle{ INVALID_HANDLE_VALUE };
@@ -16,4 +16,4 @@ public:
     bool isConsole{ false };
 };
 
-#endif // TZWINDOWSCONSOLEINPUT_P_HPP
+#endif // TZWIN32CONSOLEINPUT_P_HPP

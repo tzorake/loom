@@ -1,21 +1,21 @@
-#include "tzmacoseventdispatcher.hpp"
+#include "tzcocoaeventdispatcher.hpp"
 
-#include "tzmacoseventdispatcher_p.hpp"
+#include "tzcocoaeventdispatcher_p.hpp"
 #include "tzobjcutils.hpp"
 
-TzMacosEventDispatcherPrivate::TzMacosEventDispatcherPrivate()
+TzCocoaEventDispatcherPrivate::TzCocoaEventDispatcherPrivate()
     : runLoop(CFRunLoopGetCurrent())
 {
     CFRetain(runLoop);
 }
 
-TzMacosEventDispatcher::TzMacosEventDispatcher()
-    : d_ptr(new TzMacosEventDispatcherPrivate)
+TzCocoaEventDispatcher::TzCocoaEventDispatcher()
+    : d_ptr(new TzCocoaEventDispatcherPrivate)
 {
     d_ptr->q_ptr = this;
 }
 
-TzMacosEventDispatcher::~TzMacosEventDispatcher()
+TzCocoaEventDispatcher::~TzCocoaEventDispatcher()
 {
     while (!d_ptr->timerMap.empty())
         unregisterTimer(d_ptr->timerMap.begin()->first);
@@ -26,7 +26,7 @@ TzMacosEventDispatcher::~TzMacosEventDispatcher()
     CFRelease(d_ptr->runLoop);
 }
 
-void TzMacosEventDispatcher::processEvents()
+void TzCocoaEventDispatcher::processEvents()
 {
     d_ptr->interrupted = false;
 
@@ -40,7 +40,7 @@ void TzMacosEventDispatcher::processEvents()
     }
 }
 
-void TzMacosEventDispatcher::interrupt()
+void TzCocoaEventDispatcher::interrupt()
 {
     d_ptr->interrupted = true;
 
@@ -70,19 +70,19 @@ void TzMacosEventDispatcher::interrupt()
     }
 }
 
-void TzMacosEventDispatcher::wakeUp()
+void TzCocoaEventDispatcher::wakeUp()
 {
     CFRunLoopWakeUp(d_ptr->runLoop);
 }
 
 static void preWaitObserverCallback(CFRunLoopObserverRef, CFRunLoopActivity, void *info)
 {
-    auto *d = static_cast<TzMacosEventDispatcherPrivate *>(info);
+    auto *d = static_cast<TzCocoaEventDispatcherPrivate *>(info);
     if (d->preWaitCallback)
         d->preWaitCallback();
 }
 
-void TzMacosEventDispatcher::setPreWaitCallback(PreWaitCallback callback)
+void TzCocoaEventDispatcher::setPreWaitCallback(PreWaitCallback callback)
 {
     d_ptr->preWaitCallback = std::move(callback);
 
@@ -109,7 +109,7 @@ void TzMacosEventDispatcher::setPreWaitCallback(PreWaitCallback callback)
 
 static void timerCallback(CFRunLoopTimerRef timer, void *info)
 {
-    auto *wrapper = static_cast<TzMacosEventDispatcherPrivate::TimerWrapper *>(info);
+    auto *wrapper = static_cast<TzCocoaEventDispatcherPrivate::TimerWrapper *>(info);
     if (!wrapper || !wrapper->callback)
         return;
 
@@ -119,12 +119,12 @@ static void timerCallback(CFRunLoopTimerRef timer, void *info)
         wrapper->eventDispatcher->unregisterTimer(static_cast<TzAbstractEventDispatcher::TimerHandle>(wrapper));
 }
 
-TzMacosEventDispatcher::TimerHandle TzMacosEventDispatcher::registerTimer(TimerInterval interval, bool singleShot, TimerCallback callback)
+TzCocoaEventDispatcher::TimerHandle TzCocoaEventDispatcher::registerTimer(TimerInterval interval, bool singleShot, TimerCallback callback)
 {
     CFTimeInterval secs = interval.count() / 1000.0;
     CFAbsoluteTime firstFire = CFAbsoluteTimeGetCurrent() + secs;
 
-    auto wrapper = std::make_unique<TzMacosEventDispatcherPrivate::TimerWrapper>();
+    auto wrapper = std::make_unique<TzCocoaEventDispatcherPrivate::TimerWrapper>();
     wrapper->callback = std::move(callback);
     wrapper->singleShot = singleShot;
     wrapper->eventDispatcher = this;
@@ -151,12 +151,12 @@ TzMacosEventDispatcher::TimerHandle TzMacosEventDispatcher::registerTimer(TimerI
     CFRunLoopAddTimer(d_ptr->runLoop, timer, kCFRunLoopCommonModes);
     wrapper->timer = timer;
 
-    TzMacosEventDispatcher::TimerHandle handle = static_cast<TzMacosEventDispatcher::TimerHandle>(wrapper.get());
+    TzCocoaEventDispatcher::TimerHandle handle = static_cast<TzCocoaEventDispatcher::TimerHandle>(wrapper.get());
     d_ptr->timerMap[handle] = std::move(wrapper);
     return handle;
 }
 
-void TzMacosEventDispatcher::unregisterTimer(TimerHandle handle)
+void TzCocoaEventDispatcher::unregisterTimer(TimerHandle handle)
 {
     auto it = d_ptr->timerMap.find(handle);
     if (it == d_ptr->timerMap.end())
@@ -172,7 +172,7 @@ void TzMacosEventDispatcher::unregisterTimer(TimerHandle handle)
 static void notifyCallback(CFSocketRef s, CFSocketCallBackType type, CFDataRef address, const void *data, void *info)
 {
     (void)address; (void)data;
-    auto *wrapper = static_cast<TzMacosEventDispatcherPrivate::NotifyWrapper *>(info);
+    auto *wrapper = static_cast<TzCocoaEventDispatcherPrivate::NotifyWrapper *>(info);
     if (!wrapper || !wrapper->callback)
         return;
 
@@ -182,9 +182,9 @@ static void notifyCallback(CFSocketRef s, CFSocketCallBackType type, CFDataRef a
     }
 }
 
-TzMacosEventDispatcher::NotifyHandle TzMacosEventDispatcher::registerSocketNotifier(int fd, NotifyCallback callback)
+TzCocoaEventDispatcher::NotifyHandle TzCocoaEventDispatcher::registerSocketNotifier(int fd, NotifyCallback callback)
 {
-    auto wrapper = std::make_unique<TzMacosEventDispatcherPrivate::NotifyWrapper>();
+    auto wrapper = std::make_unique<TzCocoaEventDispatcherPrivate::NotifyWrapper>();
     wrapper->callback = std::move(callback);
     wrapper->eventDispatcher = this;
 
@@ -220,7 +220,7 @@ TzMacosEventDispatcher::NotifyHandle TzMacosEventDispatcher::registerSocketNotif
     return handle;
 }
 
-void TzMacosEventDispatcher::unregisterSocketNotifier(NotifyHandle handle)
+void TzCocoaEventDispatcher::unregisterSocketNotifier(NotifyHandle handle)
 {
     auto it = d_ptr->notifyMap.find(handle);
     if (it == d_ptr->notifyMap.end())

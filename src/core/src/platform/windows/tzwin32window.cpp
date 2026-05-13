@@ -1,5 +1,5 @@
-#include "tzwindowswindow.hpp"
-#include "tzwindowswindow_p.hpp"
+#include "tzwin32window.hpp"
+#include "tzwin32window_p.hpp"
 
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
@@ -17,7 +17,7 @@ static void registerWindowClass()
         WNDCLASSEXW wc{};
         wc.cbSize        = sizeof(WNDCLASSEXW);
         wc.style         = CS_HREDRAW | CS_VREDRAW;
-        wc.lpfnWndProc   = TzWindowsWindowPrivate::wndProc;
+        wc.lpfnWndProc   = TzWin32WindowPrivate::wndProc;
         wc.hInstance     = GetModuleHandle(nullptr);
         wc.hCursor       = LoadCursor(nullptr, IDC_ARROW);
         wc.hbrBackground = static_cast<HBRUSH>(GetStockObject(BLACK_BRUSH));
@@ -74,18 +74,18 @@ static KeyModifiers mouseButtonModifiers(WPARAM wParam)
     return mods;
 }
 
-LRESULT CALLBACK TzWindowsWindowPrivate::wndProc(
+LRESULT CALLBACK TzWin32WindowPrivate::wndProc(
     HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 {
-    TzWindowsWindowPrivate *d = nullptr;
+    TzWin32WindowPrivate *d = nullptr;
 
     if (msg == WM_NCCREATE) {
         auto *cs = reinterpret_cast<CREATESTRUCT *>(lParam);
-        d = static_cast<TzWindowsWindowPrivate *>(cs->lpCreateParams);
+        d = static_cast<TzWin32WindowPrivate *>(cs->lpCreateParams);
         SetWindowLongPtr(hwnd, GWLP_USERDATA, reinterpret_cast<LONG_PTR>(d));
         d->hwnd = hwnd;
     } else {
-        d = reinterpret_cast<TzWindowsWindowPrivate *>(GetWindowLongPtr(hwnd, GWLP_USERDATA));
+        d = reinterpret_cast<TzWin32WindowPrivate *>(GetWindowLongPtr(hwnd, GWLP_USERDATA));
     }
 
     if (!d)
@@ -145,7 +145,7 @@ LRESULT CALLBACK TzWindowsWindowPrivate::wndProc(
     }
 }
 
-TzWindowsWindowPrivate::TzWindowsWindowPrivate(int width, int height, TzAbstractWindow *owner)
+TzWin32WindowPrivate::TzWin32WindowPrivate(int width, int height, TzAbstractWindow *owner)
     : owner(owner)
     , windowWidth(width)
     , windowHeight(height)
@@ -177,7 +177,7 @@ TzWindowsWindowPrivate::TzWindowsWindowPrivate(int width, int height, TzAbstract
         throw std::runtime_error("CreateWindowExW failed");
 }
 
-TzWindowsWindowPrivate::~TzWindowsWindowPrivate()
+TzWin32WindowPrivate::~TzWin32WindowPrivate()
 {
     if (hwnd) {
         DestroyWindow(hwnd);
@@ -185,7 +185,7 @@ TzWindowsWindowPrivate::~TzWindowsWindowPrivate()
     }
 }
 
-void TzWindowsWindowPrivate::setTitle(const std::string &title)
+void TzWin32WindowPrivate::setTitle(const std::string &title)
 {
     int len = MultiByteToWideChar(CP_UTF8, 0, title.data(), static_cast<int>(title.size()), nullptr, 0);
     if (len <= 0) {
@@ -197,18 +197,18 @@ void TzWindowsWindowPrivate::setTitle(const std::string &title)
     SetWindowTextW(hwnd, wTitle.data());
 }
 
-void TzWindowsWindowPrivate::show()
+void TzWin32WindowPrivate::show()
 {
     ShowWindow(hwnd, SW_SHOW);
     UpdateWindow(hwnd);
 }
 
-void TzWindowsWindowPrivate::hide()
+void TzWin32WindowPrivate::hide()
 {
     ShowWindow(hwnd, SW_HIDE);
 }
 
-void TzWindowsWindowPrivate::render(const std::vector<uint32_t> &newPixels, int width, int height)
+void TzWin32WindowPrivate::render(const std::vector<uint32_t> &newPixels, int width, int height)
 {
     {
         std::lock_guard lock(pixelMutex);
@@ -219,7 +219,7 @@ void TzWindowsWindowPrivate::render(const std::vector<uint32_t> &newPixels, int 
     InvalidateRect(hwnd, nullptr, FALSE);
 }
 
-void TzWindowsWindowPrivate::onClose()
+void TzWin32WindowPrivate::onClose()
 {
     TzCloseEvent event;
     TzCoreApplication::sendEvent(owner, &event);
@@ -227,7 +227,7 @@ void TzWindowsWindowPrivate::onClose()
         ShowWindow(hwnd, SW_HIDE);
 }
 
-void TzWindowsWindowPrivate::onSize(int width, int height)
+void TzWin32WindowPrivate::onSize(int width, int height)
 {
     windowWidth  = width;
     windowHeight = height;
@@ -238,7 +238,7 @@ void TzWindowsWindowPrivate::onSize(int width, int height)
     TzCoreApplication::sendEvent(owner, &re);
 }
 
-void TzWindowsWindowPrivate::onPaint()
+void TzWin32WindowPrivate::onPaint()
 {
     PAINTSTRUCT ps;
     HDC hdc = BeginPaint(hwnd, &ps);
@@ -272,7 +272,7 @@ void TzWindowsWindowPrivate::onPaint()
     EndPaint(hwnd, &ps);
 }
 
-void TzWindowsWindowPrivate::onKey(WPARAM vk, bool pressed, LPARAM lParam)
+void TzWin32WindowPrivate::onKey(WPARAM vk, bool pressed, LPARAM lParam)
 {
     Key          key  = vkToKey(vk);
     KeyModifiers mods = currentModifiers();
@@ -302,7 +302,7 @@ void TzWindowsWindowPrivate::onKey(WPARAM vk, bool pressed, LPARAM lParam)
             key, mods, std::move(utf8)));
 }
 
-void TzWindowsWindowPrivate::onMouseButton(UINT msg, WPARAM wParam, LPARAM lParam)
+void TzWin32WindowPrivate::onMouseButton(UINT msg, WPARAM wParam, LPARAM lParam)
 {
     double x = static_cast<double>(GET_X_LPARAM(lParam));
     double y = static_cast<double>(GET_Y_LPARAM(lParam));
@@ -324,7 +324,7 @@ void TzWindowsWindowPrivate::onMouseButton(UINT msg, WPARAM wParam, LPARAM lPara
         new TzMouseEvent(type, button, x, y, mouseButtonModifiers(wParam)));
 }
 
-void TzWindowsWindowPrivate::onMouseMove(LPARAM lParam, WPARAM wParam)
+void TzWin32WindowPrivate::onMouseMove(LPARAM lParam, WPARAM wParam)
 {
     double x = static_cast<double>(GET_X_LPARAM(lParam));
     double y = static_cast<double>(GET_Y_LPARAM(lParam));
@@ -333,7 +333,7 @@ void TzWindowsWindowPrivate::onMouseMove(LPARAM lParam, WPARAM wParam)
                          mouseButtonModifiers(wParam)));
 }
 
-void TzWindowsWindowPrivate::onMouseWheel(UINT msg, WPARAM wParam, LPARAM lParam)
+void TzWin32WindowPrivate::onMouseWheel(UINT msg, WPARAM wParam, LPARAM lParam)
 {
     POINT pt = { GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam) };
     ScreenToClient(hwnd, &pt);
@@ -349,33 +349,33 @@ void TzWindowsWindowPrivate::onMouseWheel(UINT msg, WPARAM wParam, LPARAM lParam
                          scrollDx, scrollDy));
 }
 
-// ── TzWindowsWindow public API ────────────────────────────────────────────────
+// ── TzWin32Window public API ────────────────────────────────────────────────
 
-TzWindowsWindow::TzWindowsWindow(int width, int height)
-    : d_ptr(new TzWindowsWindowPrivate(width, height, this))
+TzWin32Window::TzWin32Window(int width, int height)
+    : d_ptr(new TzWin32WindowPrivate(width, height, this))
 {
 }
 
-TzWindowsWindow::~TzWindowsWindow() = default;
+TzWin32Window::~TzWin32Window() = default;
 
-void TzWindowsWindow::setTitle(const std::string &title)
+void TzWin32Window::setTitle(const std::string &title)
 {
     d_ptr->setTitle(title);
 }
 
-void TzWindowsWindow::show()
+void TzWin32Window::show()
 {
     d_ptr->show();
     TzResizeEvent re(d_ptr->windowWidth, d_ptr->windowHeight);
     TzCoreApplication::sendEvent(this, &re);
 }
 
-void TzWindowsWindow::hide()
+void TzWin32Window::hide()
 {
     d_ptr->hide();
 }
 
-void TzWindowsWindow::render(const std::vector<uint32_t> &pixels, int width, int height)
+void TzWin32Window::render(const std::vector<uint32_t> &pixels, int width, int height)
 {
     d_ptr->render(pixels, width, height);
 }

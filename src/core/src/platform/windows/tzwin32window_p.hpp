@@ -1,7 +1,7 @@
-#ifndef TZWINDOWSWINDOW_P_HPP
-#define TZWINDOWSWINDOW_P_HPP
+#ifndef TZWIN32WINDOW_P_HPP
+#define TZWIN32WINDOW_P_HPP
 
-#include "tzwindowswindow.hpp"
+#include "tzwin32window.hpp"
 #include <loom/tzcloseevent.hpp>
 #include <loom/tzkeyevent.hpp>
 #include <loom/tzmouseevent.hpp>
@@ -15,11 +15,11 @@
 #include <mutex>
 #include <vector>
 
-class TzWindowsWindowPrivate
+class TzWin32WindowPrivate
 {
 public:
-    TzWindowsWindowPrivate(int width, int height, TzAbstractWindow *owner);
-    ~TzWindowsWindowPrivate();
+    TzWin32WindowPrivate(int width, int height, TzAbstractWindow *owner);
+    ~TzWin32WindowPrivate();
 
     void setTitle(const std::string &title);
     void show();
@@ -47,4 +47,4 @@ public:
     static LRESULT CALLBACK wndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam);
 };
 
-#endif // TZWINDOWSWINDOW_P_HPP
+#endif // TZWIN32WINDOW_P_HPP

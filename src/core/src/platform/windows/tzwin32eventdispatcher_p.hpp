@@ -1,8 +1,8 @@
-#ifndef TZWINDOWSEVENTDISPATCHER_P_HPP
-#define TZWINDOWSEVENTDISPATCHER_P_HPP
+#ifndef TZWIN32EVENTDISPATCHER_P_HPP
+#define TZWIN32EVENTDISPATCHER_P_HPP
 
 #include <loom/tzclasshelpermacros.hpp>
-#include "tzwindowseventdispatcher.hpp"
+#include "tzwin32eventdispatcher.hpp"
 
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
@@ -12,14 +12,14 @@
 #include <thread>
 #include <unordered_map>
 
-class TzWindowsEventDispatcherPrivate
+class TzWin32EventDispatcherPrivate
 {
-    TZ_DECLARE_PUBLIC(TzWindowsEventDispatcher)
+    TZ_DECLARE_PUBLIC(TzWin32EventDispatcher)
 public:
-    TzWindowsEventDispatcherPrivate();
-    ~TzWindowsEventDispatcherPrivate();
+    TzWin32EventDispatcherPrivate();
+    ~TzWin32EventDispatcherPrivate();
 
-    TzWindowsEventDispatcher *q_ptr{ nullptr };
+    TzWin32EventDispatcher *q_ptr{ nullptr };
 
     HANDLE wakeUpEvent{ nullptr };          // manual-reset event for interrupt/wakeUp
     std::atomic<bool> interrupted{ false };
@@ -32,7 +32,7 @@ public:
         TzAbstractEventDispatcher::TimerCallback callback;
         bool     singleShot{ false };
         LONGLONG interval100ns{ 0 };        // for repeating: re-arm period in 100-ns units
-        TzWindowsEventDispatcher *eventDispatcher{ nullptr };
+        TzWin32EventDispatcher *eventDispatcher{ nullptr };
     };
     using TimerWrapperPtr = std::unique_ptr<TimerWrapper>;
     std::unordered_map<TzAbstractEventDispatcher::TimerHandle, TimerWrapperPtr> timerMap;
@@ -56,4 +56,4 @@ public:
     std::unordered_map<TzAbstractEventDispatcher::NotifyHandle, NotifyWrapperPtr> notifyMap;
 };
 
-#endif // TZWINDOWSEVENTDISPATCHER_P_HPP
+#endif // TZWIN32EVENTDISPATCHER_P_HPP
