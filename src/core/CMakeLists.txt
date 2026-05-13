@@ -71,7 +71,7 @@ elseif(WIN32)
         src/platform/windows/tzwin32eventdispatcher.cpp
         src/platform/windows/tzwin32consoleinput.cpp
         src/platform/windows/tzwin32window.cpp
-        src/platform/windows/tzwindowssignalpipe.cpp
+        src/platform/windows/tzwin32signalpipe.cpp
     )
     target_include_directories(loom-core PRIVATE src/platform/windows)
     target_sources(loom-core-private INTERFACE
