@@ -40,6 +40,7 @@ target_sources(loom-core-private INTERFACE
     src/tzsignalhandler_p.hpp
     src/tzsocketnotifier_p.hpp
     src/tztimer_p.hpp
+    src/tzsignalpipe.hpp
     src/tzcocoaplatformintegration.hpp
 )
 
@@ -48,7 +49,7 @@ if(APPLE)
         src/platform/macos/tzcocoaeventdispatcher.cpp
         src/platform/macos/tzcocoaconsoleinput.cpp
         src/platform/macos/tzcocoawindow.cpp
-        src/platform/macos/tzmacossignalpipe.cpp
+        src/platform/macos/tzcocoasignalpipe.cpp
     )
     target_include_directories(loom-core PRIVATE src/platform/macos)
     target_sources(loom-core-private INTERFACE
