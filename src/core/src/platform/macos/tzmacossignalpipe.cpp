@@ -2,32 +2,31 @@
 
 #include <unistd.h>
 #include <fcntl.h>
+#include <stdexcept>
 
-namespace TzSignalPipe {
-
-int create(int fds[2])
+TzSignalPipe::TzSignalPipe()
 {
-    return ::pipe(fds);
+    if (::pipe(m_fds) == -1)
+        throw std::runtime_error("TzSignalPipe: pipe() failed");
 }
 
-void makeNonBlocking(int fd)
+TzSignalPipe::~TzSignalPipe()
 {
-    fcntl(fd, F_SETFL, O_NONBLOCK);
+    if (m_fds[0] != -1) ::close(m_fds[0]);
+    if (m_fds[1] != -1) ::close(m_fds[1]);
 }
 
-int read(int fd, void *buf, int count)
+int TzSignalPipe::read(void *buf, int count)
 {
-    return static_cast<int>(::read(fd, buf, static_cast<size_t>(count)));
+    return static_cast<int>(::read(m_fds[0], buf, static_cast<size_t>(count)));
 }
 
-int write(int fd, const void *buf, int count)
+int TzSignalPipe::write(const void *buf, int count)
 {
-    return static_cast<int>(::write(fd, buf, static_cast<size_t>(count)));
+    return static_cast<int>(::write(m_fds[1], buf, static_cast<size_t>(count)));
 }
 
-int close(int fd)
+void TzSignalPipe::makeWriteNonBlocking()
 {
-    return ::close(fd);
+    fcntl(m_fds[1], F_SETFL, O_NONBLOCK);
 }
-
-} // namespace TzSignalPipe

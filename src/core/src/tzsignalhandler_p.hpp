@@ -4,6 +4,10 @@
 #include <loom/tzclasshelpermacros.hpp>
 #include <loom/tzsignalhandler.hpp>
 
+#include "tzsignalpipe.hpp"
+
+#include <memory>
+
 class TzAbstractEventDispatcher;
 class TzSocketNotifier;
 
@@ -21,7 +25,7 @@ public:
     std::unique_ptr<TzSocketNotifier> notifier;
 
     int signo{ -1 };
-    int pipeFds[2]{ -1, -1 };
+    std::unique_ptr<TzSignalPipe> pipe;
     bool active{ false };
 };
 

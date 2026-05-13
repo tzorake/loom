@@ -1,32 +1,31 @@
 #include "../../tzsignalpipe.hpp"
 
 #include <io.h>
+#include <stdexcept>
 
-namespace TzSignalPipe {
-
-int create(int fds[2])
+TzSignalPipe::TzSignalPipe()
 {
-    return _pipe(fds, 4096, 0);
+    if (_pipe(m_fds, 4096, 0) == -1)
+        throw std::runtime_error("TzSignalPipe: _pipe() failed");
 }
 
-void makeNonBlocking(int /*fd*/)
+TzSignalPipe::~TzSignalPipe()
+{
+    if (m_fds[0] != -1) _close(m_fds[0]);
+    if (m_fds[1] != -1) _close(m_fds[1]);
+}
+
+int TzSignalPipe::read(void *buf, int count)
+{
+    return _read(m_fds[0], buf, count);
+}
+
+int TzSignalPipe::write(const void *buf, int count)
+{
+    return _write(m_fds[1], buf, count);
+}
+
+void TzSignalPipe::makeWriteNonBlocking()
 {
     // Windows CRT pipes used only for signal delivery; no non-blocking flag needed.
 }
-
-int read(int fd, void *buf, int count)
-{
-    return _read(fd, buf, count);
-}
-
-int write(int fd, const void *buf, int count)
-{
-    return _write(fd, buf, count);
-}
-
-int close(int fd)
-{
-    return _close(fd);
-}
-
-} // namespace TzSignalPipe
