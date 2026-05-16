@@ -154,3 +154,7 @@ elseif(UNIX AND NOT APPLE)
         )
     endif()
 endif()
+
+if(LOOM_BUILD_EXAMPLES)
+    add_subdirectory(examples)
+endif()

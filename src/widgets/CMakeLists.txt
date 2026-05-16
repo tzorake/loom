@@ -25,3 +25,7 @@ target_sources(loom-widgets-private INTERFACE
 if(APPLE)
     target_link_libraries(loom-widgets PUBLIC "-framework Cocoa")
 endif()
+
+if(LOOM_BUILD_EXAMPLES)
+    add_subdirectory(examples)
+endif()
