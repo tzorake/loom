@@ -14,10 +14,10 @@ public:
     TzWaylandConsoleInput();
     virtual ~TzWaylandConsoleInput() override;
 
-    virtual int         fd()   const override;
-    virtual void        start()      override;
-    virtual void        stop()       override;
-    virtual std::string read()       override;
+    virtual int fd() const override;
+    virtual void start() override;
+    virtual void stop() override;
+    virtual std::string read() override;
 
 private:
     std::unique_ptr<TzWaylandConsoleInputPrivate> d_ptr;

@@ -1,9 +1,9 @@
 #ifndef TZWINDOW_HPP
 #define TZWINDOW_HPP
 
+#include <loom/tzclasshelpermacros.hpp>
 #include <loom/tzobject.hpp>
 #include <loom/tzsurface.hpp>
-#include <loom/tzclasshelpermacros.hpp>
 
 #include <functional>
 #include <string>

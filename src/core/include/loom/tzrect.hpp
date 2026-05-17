@@ -12,7 +12,7 @@ struct TzRect
     TzPoint bottomLeft() const;
     TzPoint bottomRight() const;
     TzPoint center() const;
-    TzSize  size() const;
+    TzSize size() const;
 
     bool isValid() const;
     bool isEmpty() const;
@@ -27,10 +27,10 @@ struct TzRect
     bool operator==(const TzRect &o) const;
     bool operator!=(const TzRect &o) const;
 
-    double x{ 0.0 };
-    double y{ 0.0 };
-    double width{ 0.0 };
-    double height{ 0.0 };
+    double x{0.0};
+    double y{0.0};
+    double width{0.0};
+    double height{0.0};
 };
 
 #endif // TZRECT_HPP

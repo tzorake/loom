@@ -11,8 +11,10 @@ TzSignalPipe::TzSignalPipe()
 
 TzSignalPipe::~TzSignalPipe()
 {
-    if (m_fds[0] != -1) _close(m_fds[0]);
-    if (m_fds[1] != -1) _close(m_fds[1]);
+    if (m_fds[0] != -1)
+        _close(m_fds[0]);
+    if (m_fds[1] != -1)
+        _close(m_fds[1]);
 }
 
 int TzSignalPipe::read(void *buf, int count)

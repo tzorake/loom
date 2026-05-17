@@ -1,15 +1,12 @@
-#include <loom/tzguiapplication.hpp>
 #include <loom/tzabstractplatformintegration.hpp>
 #include <loom/tzabstractwindow.hpp>
+#include <loom/tzguiapplication.hpp>
 
 TzGuiApplication::TzGuiApplication(int argc, char *argv[])
     : TzCoreApplication(argc, argv)
-{
-}
+{}
 
-TzGuiApplication::~TzGuiApplication()
-{
-}
+TzGuiApplication::~TzGuiApplication() {}
 
 TzAbstractWindow *TzGuiApplication::createWindow(int width, int height)
 {

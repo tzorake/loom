@@ -6,7 +6,9 @@
 class TzCloseEvent : public TzEvent
 {
 public:
-    TzCloseEvent() : TzEvent(TzEvent::WindowClose) {}
+    TzCloseEvent()
+        : TzEvent(TzEvent::WindowClose)
+    {}
 
     TzCloseEvent *clone() const override { return new TzCloseEvent(*this); }
 };

@@ -24,7 +24,9 @@ public:
     virtual void wakeUp() = 0;
     virtual void setPreWaitCallback(PreWaitCallback callback) = 0;
 
-    virtual TimerHandle registerTimer(TimerInterval interval, bool singleShot, TimerCallback callback) = 0;
+    virtual TimerHandle registerTimer(TimerInterval interval, bool singleShot,
+                                      TimerCallback callback)
+        = 0;
     virtual void unregisterTimer(TimerHandle handle) = 0;
 
     virtual NotifyHandle registerSocketNotifier(int fd, NotifyCallback callback) = 0;

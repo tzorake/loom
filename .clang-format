@@ -1,0 +1,128 @@
+# .clang-format for loom
+#
+# https://clang.llvm.org/docs/ClangFormatStyleOptions.html
+# yaml-language-server: $schema=https://json.schemastore.org/clang-format.json
+---
+Language: Cpp
+Standard: c++20
+
+# ── Indentation ───────────────────────────────────────────────────────────
+IndentWidth: 4
+TabWidth: 4
+UseTab: Never
+AccessModifierOffset: -4
+IndentCaseLabels: false
+IndentWrappedFunctionNames: false
+NamespaceIndentation: None
+ContinuationIndentWidth: 4
+ConstructorInitializerIndentWidth: 4
+
+# ── Line length ───────────────────────────────────────────────────────────
+ColumnLimit: 100
+ReflowComments: false
+
+# ── Braces ────────────────────────────────────────────────────────────────
+# Functions and classes: brace on new line.
+# Control statements (if/for/while): brace on same line.
+BreakBeforeBraces: Custom
+BraceWrapping:
+  AfterClass: true
+  AfterControlStatement: Never
+  AfterEnum: false
+  AfterFunction: true
+  AfterNamespace: false
+  AfterStruct: true
+  AfterUnion: false
+  BeforeCatch: false
+  BeforeElse: false
+  IndentBraces: false
+  SplitEmptyFunction: false
+  SplitEmptyRecord: false
+  SplitEmptyNamespace: false
+InsertBraces: false
+
+# ── Short constructs ──────────────────────────────────────────────────────
+AllowShortBlocksOnASingleLine: Never
+AllowShortCaseLabelsOnASingleLine: false
+AllowShortFunctionsOnASingleLine: Inline  # allow trivial getters in headers
+AllowShortIfStatementsOnASingleLine: Never
+AllowShortLoopsOnASingleLine: false
+
+# ── Parameters / arguments ────────────────────────────────────────────────
+# Align continuation to the opening parenthesis; bin-pack to keep multiple
+# args per line when they fit.
+AlignAfterOpenBracket: Align
+BinPackArguments: true
+BinPackParameters: true
+AllowAllParametersOfDeclarationOnNextLine: true
+
+# ── Operators & expressions ───────────────────────────────────────────────
+# Operators stay at the end of the line (not moved to the start of the next).
+BreakBeforeBinaryOperators: All
+AlignOperands: Align
+BreakBeforeTernaryOperators: true
+
+# ── Pointer / reference alignment ────────────────────────────────────────
+# `Type *ptr` / `Type &ref` — star/ampersand sticks to the variable.
+PointerAlignment: Right
+DerivePointerAlignment: false
+
+# ── Constructor initializers ──────────────────────────────────────────────
+# Leading-comma style:
+#   : m_foo(foo)
+#   , m_bar(bar)
+BreakConstructorInitializers: BeforeComma
+ConstructorInitializerAllOnOneLineOrOnePerLine: false
+
+# ── Return type ───────────────────────────────────────────────────────────
+AlwaysBreakAfterReturnType: None
+AlwaysBreakBeforeMultilineStrings: false
+AlwaysBreakTemplateDeclarations: Yes
+
+# ── Alignment ─────────────────────────────────────────────────────────────
+AlignConsecutiveAssignments: None
+AlignConsecutiveDeclarations: None
+AlignEscapedNewlines: DontAlign
+AlignTrailingComments: true
+
+# ── Includes ──────────────────────────────────────────────────────────────
+# Preserve blank-line groups that separate <loom/...>, "local", and <std>.
+SortIncludes: CaseSensitive
+IncludeCategories:
+  - Regex: '^"'           # "local.hpp" — quoted first
+    Priority: 1
+  - Regex: '^<loom/'      # <loom/...> project headers
+    Priority: 2
+  - Regex: '.*'           # <std> and everything else
+    Priority: 3
+IncludeIsMainRegex: '(_p)?$'       # pairs foo.cpp with foo.hpp / foo_p.hpp
+
+# ── Spaces ────────────────────────────────────────────────────────────────
+SpaceAfterCStyleCast: true
+SpaceAfterTemplateKeyword: false
+SpaceBeforeAssignmentOperators: true
+SpaceBeforeParens: ControlStatements
+SpaceInEmptyParentheses: false
+SpacesBeforeTrailingComments: 1
+SpacesInAngles: Never
+SpacesInContainerLiterals: false
+SpacesInCStyleCastParentheses: false
+SpacesInParentheses: false
+SpacesInSquareBrackets: false
+
+# ── Misc ──────────────────────────────────────────────────────────────────
+BreakStringLiterals: true
+CompactNamespaces: false
+Cpp11BracedListStyle: true
+DisableFormat: false
+FixNamespaceComments: true
+KeepEmptyLinesAtTheStartOfBlocks: false
+MaxEmptyLinesToKeep: 1
+PenaltyBreakAssignment: 88
+PenaltyBreakBeforeFirstCallParameter: 300
+PenaltyBreakComment: 500
+PenaltyBreakFirstLessLess: 400
+PenaltyBreakString: 600
+PenaltyExcessCharacter: 50
+PenaltyReturnTypeOnItsOwnLine: 300
+SortUsingDeclarations: true

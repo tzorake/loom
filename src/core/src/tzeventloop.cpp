@@ -1,12 +1,11 @@
-#include <loom/tzeventloop.hpp>
 #include <loom/tzabstracteventdispatcher.hpp>
+#include <loom/tzeventloop.hpp>
 
 #include "tzeventloop_p.hpp"
 
 TzEventLoopPrivate::TzEventLoopPrivate(TzAbstractEventDispatcher *eventDispatcher)
     : eventDispatcher(eventDispatcher)
-{
-}
+{}
 
 TzEventLoop::TzEventLoop(TzAbstractEventDispatcher *eventDispatcher)
     : d_ptr(new TzEventLoopPrivate(eventDispatcher))
@@ -14,9 +13,7 @@ TzEventLoop::TzEventLoop(TzAbstractEventDispatcher *eventDispatcher)
     d_ptr->q_ptr = this;
 }
 
-TzEventLoop::~TzEventLoop()
-{
-}
+TzEventLoop::~TzEventLoop() {}
 
 void TzEventLoop::exec()
 {

@@ -6,7 +6,9 @@
 class TzDeferredDeleteEvent : public TzEvent
 {
 public:
-    TzDeferredDeleteEvent() : TzEvent(TzEvent::DeferredDelete) {}
+    TzDeferredDeleteEvent()
+        : TzEvent(TzEvent::DeferredDelete)
+    {}
 
     TzDeferredDeleteEvent *clone() const override { return new TzDeferredDeleteEvent(*this); }
 };

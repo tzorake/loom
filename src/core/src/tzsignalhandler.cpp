@@ -15,18 +15,16 @@ static void pipeSignalHandler(int signo)
     if (it == gSignalPipes.end())
         return;
     const char byte = static_cast<char>(signo);
-    (void)it->second->write(&byte, 1);
+    (void) it->second->write(&byte, 1);
 }
 
 TzSignalHandlerPrivate::TzSignalHandlerPrivate(TzAbstractEventDispatcher *eventDispatcher)
     : eventDispatcher(eventDispatcher)
-{
-}
+{}
 
 TzSignalHandler::TzSignalHandler(TzAbstractEventDispatcher *eventDispatcher)
     : d_ptr(new TzSignalHandlerPrivate(eventDispatcher))
-{
-}
+{}
 
 TzSignalHandler::~TzSignalHandler()
 {
@@ -63,7 +61,7 @@ void TzSignalHandler::start()
     d_ptr->notifier->setFd(d_ptr->pipe->readFd());
     d_ptr->notifier->setCallback([this](int) {
         char byte{};
-        (void)d_ptr->pipe->read(&byte, 1);
+        (void) d_ptr->pipe->read(&byte, 1);
         if (d_ptr->callback)
             d_ptr->callback(static_cast<int>(byte));
     });
@@ -85,7 +83,8 @@ void TzSignalHandler::stop()
     d_ptr->active = false;
 }
 
-TzSignalHandler *TzSignalHandler::create(TzAbstractEventDispatcher *eventDispatcher, int signo, SignalCallback callback)
+TzSignalHandler *TzSignalHandler::create(TzAbstractEventDispatcher *eventDispatcher, int signo,
+                                         SignalCallback callback)
 {
     TzSignalHandler *h = new TzSignalHandler(eventDispatcher);
     h->setSignal(signo);

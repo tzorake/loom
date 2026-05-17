@@ -1,16 +1,12 @@
-#include <loom/tzobject.hpp>
-#include <loom/tzdeferreddeleteevent.hpp>
 #include <loom/tzcoreapplication.hpp>
+#include <loom/tzdeferreddeleteevent.hpp>
+#include <loom/tzobject.hpp>
 
 #include "tzobject_p.hpp"
 
-TzObjectPrivate::TzObjectPrivate()
-{
-}
+TzObjectPrivate::TzObjectPrivate() {}
 
-TzObjectPrivate::~TzObjectPrivate()
-{
-}
+TzObjectPrivate::~TzObjectPrivate() {}
 
 void TzObjectPrivate::unlinkFromParent()
 {
@@ -51,8 +47,7 @@ void TzObjectPrivate::appendToParent(TzObject *newParent)
 
 TzObject::TzObject(TzObject *parent)
     : TzObject(*new TzObjectPrivate, parent)
-{
-}
+{}
 
 TzObject::TzObject(TzObjectPrivate &d, TzObject *parent)
     : d_ptr(&d)
@@ -72,9 +67,9 @@ TzObject::~TzObject()
     TzObject *child = d_ptr->firstChild;
     while (child) {
         TzObject *next = child->d_ptr->nextSibling;
-        child->d_ptr->parent          = nullptr;
+        child->d_ptr->parent = nullptr;
         child->d_ptr->previousSibling = nullptr;
-        child->d_ptr->nextSibling     = nullptr;
+        child->d_ptr->nextSibling = nullptr;
         delete child;
         child = next;
     }
@@ -122,7 +117,7 @@ std::vector<TzObject *> TzObject::children() const
 
 bool TzObject::event(TzEvent *event)
 {
-    (void)event;
+    (void) event;
     return false;
 }
 

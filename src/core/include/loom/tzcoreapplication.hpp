@@ -23,7 +23,7 @@ public:
     TzAbstractPlatformIntegration *platformIntegration() const;
     TzAbstractEventDispatcher *eventDispatcher() const;
 
-    int  exec();
+    int exec();
     void quit(int exitCode = 0);
 
     // Async: ownership of event transfers to the queue; delivered before next wait

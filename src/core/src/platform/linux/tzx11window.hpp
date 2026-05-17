@@ -16,8 +16,8 @@ public:
     ~TzX11Window() override;
 
     void setTitle(const std::string &title) override;
-    void show()                             override;
-    void hide()                             override;
+    void show() override;
+    void hide() override;
     void render(const std::vector<uint32_t> &pixels, int width, int height) override;
 
     // Called by TzX11Globals during event dispatch.

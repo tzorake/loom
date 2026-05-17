@@ -1,19 +1,22 @@
-#include <gtest/gtest.h>
 #include <loom/tzeventemitter.hpp>
 #include <loom/tzeventlistener.hpp>
 #include <loom/tzscopedeventlistener.hpp>
+#include <gtest/gtest.h>
+#include <memory>
+#include <sstream>
+#include <stdexcept>
 #include <string>
 #include <vector>
-#include <memory>
-#include <stdexcept>
-#include <sstream>
 
 using namespace std::string_literals;
 
-struct CerrRedirect {
+struct CerrRedirect
+{
     std::stringstream buffer;
-    std::streambuf* old;
-    CerrRedirect() : old(std::cerr.rdbuf(buffer.rdbuf())) {}
+    std::streambuf *old;
+    CerrRedirect()
+        : old(std::cerr.rdbuf(buffer.rdbuf()))
+    {}
     ~CerrRedirect() { std::cerr.rdbuf(old); }
     std::string str() const { return buffer.str(); }
 };
@@ -123,7 +126,7 @@ TEST(TzEventEmitter, ErrorEventWithListenerDoesNotThrow)
 {
     TzEventEmitter emitter;
     bool caught = false;
-    emitter.on("error", [&caught](const std::string& msg) {
+    emitter.on("error", [&caught](const std::string &msg) {
         caught = true;
         EXPECT_EQ(msg, "oops");
     });
@@ -137,12 +140,12 @@ TEST(TzEventEmitter, QueryMethods)
     EXPECT_EQ(emitter.listenerCount("e1"), 0u);
     EXPECT_TRUE(emitter.eventNames().empty());
 
-    auto h1 = emitter.on("e1", []{});
+    auto h1 = emitter.on("e1", [] {});
     EXPECT_EQ(emitter.listenerCount("e1"), 1u);
     EXPECT_EQ(emitter.eventNames().size(), 1u);
     EXPECT_EQ(emitter.eventNames().front(), "e1");
 
-    auto h2 = emitter.on("e2", []{});
+    auto h2 = emitter.on("e2", [] {});
     EXPECT_EQ(emitter.listenerCount("e2"), 1u);
     EXPECT_EQ(emitter.eventNames().size(), 2u);
 
@@ -163,7 +166,7 @@ TEST(TzEventEmitter, TemplateOverloadsVariousArgs)
     EXPECT_EQ(result, 42);
 
     std::string concat;
-    emitter.on("concat", [&concat](int n, const std::string& s, double d) {
+    emitter.on("concat", [&concat](int n, const std::string &s, double d) {
         concat = std::to_string(n) + s + std::to_string(d);
     });
     emitter.emit("concat", 3, std::string("pi~"), 3.14);
@@ -181,7 +184,10 @@ TEST(TzEventEmitter, SelfRemovalDuringEmit)
     int a = 0, b = 0, c = 0;
 
     TzEventListener hA = emitter.on("self", [&] { ++a; });
-    TzEventListener hB = emitter.on("self", [&] { ++b; hB.disconnect(); });
+    TzEventListener hB = emitter.on("self", [&] {
+        ++b;
+        hB.disconnect();
+    });
     TzEventListener hC = emitter.on("self", [&] { ++c; });
 
     emitter.emit("self");
@@ -202,7 +208,10 @@ TEST(TzEventEmitter, RemoveOtherDuringEmit)
     TzEventEmitter emitter;
     int x = 0, y = 0;
     auto hX = emitter.on("evt", [&] { ++x; });
-    auto hY = emitter.on("evt", [&] { ++y; hX.disconnect(); });
+    auto hY = emitter.on("evt", [&] {
+        ++y;
+        hX.disconnect();
+    });
 
     emitter.emit("evt");
     EXPECT_EQ(x, 1);
@@ -261,7 +270,7 @@ TEST(TzEventEmitter, HandleOutlivesEmitter)
     TzEventListener handle;
     {
         TzEventEmitter emitter;
-        handle = emitter.on("e", []{});
+        handle = emitter.on("e", [] {});
         EXPECT_TRUE(handle.isConnected());
         emitter.emit("e");
     }
@@ -276,12 +285,12 @@ TEST(TzEventEmitter, MaxListeners)
 
     CerrRedirect cerrRedirect;
 
-    auto h1 = emitter.on("ev", []{});
-    auto h2 = emitter.on("ev", []{});
+    auto h1 = emitter.on("ev", [] {});
+    auto h2 = emitter.on("ev", [] {});
     std::string output = cerrRedirect.str();
     EXPECT_TRUE(output.empty());
 
-    auto h3 = emitter.on("ev", []{});
+    auto h3 = emitter.on("ev", [] {});
     output = cerrRedirect.str();
     EXPECT_NE(output.find("MaxListenersExceededWarning"), std::string::npos);
     EXPECT_NE(output.find("event 'ev'"), std::string::npos);
@@ -294,9 +303,9 @@ TEST(TzEventEmitter, DefaultMaxListeners)
     TzEventEmitter::setDefaultMaxListeners(2);
     TzEventEmitter emitter;
     CerrRedirect cerrRedirect;
-    auto h1 = emitter.on("ev", []{});
-    auto h2 = emitter.on("ev", []{});
-    auto h3 = emitter.on("ev", []{});
+    auto h1 = emitter.on("ev", [] {});
+    auto h2 = emitter.on("ev", [] {});
+    auto h3 = emitter.on("ev", [] {});
     std::string output = cerrRedirect.str();
     EXPECT_NE(output.find("MaxListenersExceededWarning"), std::string::npos);
     EXPECT_EQ(emitter.listenerCount("ev"), 3u);
@@ -340,8 +349,8 @@ TEST(TzEventEmitter, AddListenerAlias)
 TEST(TzEventEmitter, EventNamesAfterRemoval)
 {
     TzEventEmitter emitter;
-    auto h1 = emitter.on("a", []{});
-    auto h2 = emitter.on("b", []{});
+    auto h1 = emitter.on("a", [] {});
+    auto h2 = emitter.on("b", [] {});
     h1.disconnect();
     auto names = emitter.eventNames();
     EXPECT_EQ(names.size(), 1u);
@@ -354,7 +363,7 @@ TEST(TzEventEmitter, ErrorEventMsgInException)
     try {
         emitter.emit("error", std::string("Boom"));
         FAIL() << "Expected exception";
-    } catch (const std::runtime_error& e) {
+    } catch (const std::runtime_error &e) {
         EXPECT_EQ(std::string(e.what()), "Boom"s);
     }
 }
@@ -378,9 +387,7 @@ TEST(TzEventEmitter, ListenerAcceptsFewerArguments)
     TzEventEmitter emitter;
 
     int receivedInt = 0;
-    emitter.on("data", [&receivedInt](int x) {
-        receivedInt = x;
-    });
+    emitter.on("data", [&receivedInt](int x) { receivedInt = x; });
 
     int receivedInt2 = 0;
     double receivedDouble = 0.0;
@@ -392,7 +399,7 @@ TEST(TzEventEmitter, ListenerAcceptsFewerArguments)
     int receivedInt3 = 0;
     double receivedDouble3 = 0.0;
     std::string receivedString;
-    emitter.on("data", [&](int x, double d, const std::string& s) {
+    emitter.on("data", [&](int x, double d, const std::string &s) {
         receivedInt3 = x;
         receivedDouble3 = d;
         receivedString = s;
@@ -425,18 +432,18 @@ TEST(TzEventEmitter, WrongArgumentType)
 
 TEST(TzEventEmitter, PrivateSignalPattern)
 {
-    class MyService {
-        struct PrivateSignal {};
+    class MyService
+    {
+        struct PrivateSignal
+        {};
+
     public:
-        MyService() {
-            emitter.on("secret", [this](int data, PrivateSignal) {
-                lastSecret = data;
-            });
+        MyService()
+        {
+            emitter.on("secret", [this](int data, PrivateSignal) { lastSecret = data; });
         }
 
-        void publishSecret(int data) {
-            emitter.emit("secret", data, PrivateSignal{});
-        }
+        void publishSecret(int data) { emitter.emit("secret", data, PrivateSignal{}); }
 
         int lastSecret = 0;
         TzEventEmitter emitter;
@@ -445,9 +452,7 @@ TEST(TzEventEmitter, PrivateSignalPattern)
     MyService service;
 
     int externalCounter = 0;
-    service.emitter.on("secret", [&externalCounter](int data) {
-        externalCounter += data;
-    });
+    service.emitter.on("secret", [&externalCounter](int data) { externalCounter += data; });
 
     service.publishSecret(10);
     EXPECT_EQ(service.lastSecret, 10);
@@ -623,9 +628,7 @@ class InheritedEmitter : public TzEventEmitter
 public:
     InheritedEmitter()
     {
-        m_handle = on("internal", [this](int val) {
-            lastInternal = val;
-        });
+        m_handle = on("internal", [this](int val) { lastInternal = val; });
     }
 
     void triggerInternal(int val) { emit("internal", val); }
@@ -640,9 +643,7 @@ TEST(TzEventEmitter, InheritanceBasic)
     InheritedEmitter obj;
     int externalCounter = 0;
 
-    auto h = obj.on("internal", [&externalCounter](int val) {
-        externalCounter += val;
-    });
+    auto h = obj.on("internal", [&externalCounter](int val) { externalCounter += val; });
 
     obj.triggerInternal(5);
     EXPECT_EQ(obj.lastInternal, 5);
@@ -695,9 +696,7 @@ TEST(TzEventEmitter, InheritanceSelfDisconnect)
     public:
         SelfDisconnecting()
         {
-            handle = on("boom", [this] {
-                handle.disconnect();
-            });
+            handle = on("boom", [this] { handle.disconnect(); });
         }
         TzEventListener handle;
     };

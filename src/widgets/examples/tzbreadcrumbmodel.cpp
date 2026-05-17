@@ -1,12 +1,11 @@
 #include "tzbreadcrumbmodel.hpp"
-#include <ranges>
 #include <algorithm>
+#include <ranges>
 
-TzBreadcrumbModel::TzBreadcrumbModel(const TzTreeNodePtr& root)
+TzBreadcrumbModel::TzBreadcrumbModel(const TzTreeNodePtr &root)
     : m_root(root)
     , m_current(root)
-{
-}
+{}
 
 TzTreeNodePtr TzBreadcrumbModel::root() const
 {
@@ -27,7 +26,7 @@ std::vector<TzTreeNodePtr> TzBreadcrumbModel::path() const
     return result;
 }
 
-std::vector<TzTreeNodePtr> TzBreadcrumbModel::siblingsOf(const TzTreeNodePtr& node) const
+std::vector<TzTreeNodePtr> TzBreadcrumbModel::siblingsOf(const TzTreeNodePtr &node) const
 {
     if (!node)
         return {};
@@ -36,10 +35,10 @@ std::vector<TzTreeNodePtr> TzBreadcrumbModel::siblingsOf(const TzTreeNodePtr& no
     if (!parent)
         return {};
 
-    return { parent->children().begin(), parent->children().end() };
+    return {parent->children().begin(), parent->children().end()};
 }
 
-bool TzBreadcrumbModel::navigateTo(const TzTreeNodePtr& node)
+bool TzBreadcrumbModel::navigateTo(const TzTreeNodePtr &node)
 {
     if (!node || !isReachable(node))
         return false;
@@ -64,17 +63,17 @@ void TzBreadcrumbModel::navigateToRoot()
         navigateTo(m_root);
 }
 
-TzEventEmitter& TzBreadcrumbModel::events()
+TzEventEmitter &TzBreadcrumbModel::events()
 {
     return m_events;
 }
 
-const TzEventEmitter& TzBreadcrumbModel::events() const
+const TzEventEmitter &TzBreadcrumbModel::events() const
 {
     return m_events;
 }
 
-bool TzBreadcrumbModel::isReachable(const TzTreeNodePtr& node) const
+bool TzBreadcrumbModel::isReachable(const TzTreeNodePtr &node) const
 {
     for (TzTreeNodePtr n = node; n; n = n->parent()) {
         if (n == m_root)

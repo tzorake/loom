@@ -8,8 +8,8 @@ struct TzSize
     bool operator==(const TzSize &o) const;
     bool operator!=(const TzSize &o) const;
 
-    double width{ 0.0 };
-    double height{ 0.0 };
+    double width{0.0};
+    double height{0.0};
 };
 
 #endif // TZSIZE_HPP

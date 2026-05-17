@@ -41,8 +41,10 @@ public:
     void start();
     void stop();
 
-    static TzTimer *singleShot(TzAbstractEventDispatcher *eventDispatcher, TimerInterval interval, TimerCallback callback);
-    static TzTimer *repeat(TzAbstractEventDispatcher *eventDispatcher, TimerInterval interval, TimerCallback callback);
+    static TzTimer *singleShot(TzAbstractEventDispatcher *eventDispatcher, TimerInterval interval,
+                               TimerCallback callback);
+    static TzTimer *repeat(TzAbstractEventDispatcher *eventDispatcher, TimerInterval interval,
+                           TimerCallback callback);
 
 private:
     std::unique_ptr<TzTimerPrivate> d_ptr;

@@ -18,15 +18,15 @@ public:
     explicit TzSignalHandlerPrivate(TzAbstractEventDispatcher *eventDispatcher);
     ~TzSignalHandlerPrivate() = default;
 
-    TzSignalHandler *q_ptr{ nullptr };
+    TzSignalHandler *q_ptr{nullptr};
 
-    TzAbstractEventDispatcher *eventDispatcher{ nullptr };
+    TzAbstractEventDispatcher *eventDispatcher{nullptr};
     TzSignalHandler::SignalCallback callback;
     std::unique_ptr<TzSocketNotifier> notifier;
 
-    int signo{ -1 };
+    int signo{-1};
     std::unique_ptr<TzSignalPipe> pipe;
-    bool active{ false };
+    bool active{false};
 };
 
 #endif // TZSIGNALHANDLER_P_HPP

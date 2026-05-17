@@ -15,7 +15,8 @@ class TzPainter
 {
     TZ_DECLARE_PRIVATE(TzPainter)
 public:
-    TzPainter(uint32_t *pixels, int bufferWidth, int bufferHeight, const TzRect &clip, const TzPoint &offset);
+    TzPainter(uint32_t *pixels, int bufferWidth, int bufferHeight, const TzRect &clip,
+              const TzPoint &offset);
     ~TzPainter();
 
     void fillRect(const TzRect &rect, uint32_t argb);
@@ -27,7 +28,7 @@ public:
     void drawText(const TzPoint &pos, const std::string &text, uint32_t argb);
     void drawText(double x, double y, const std::string &text, uint32_t argb);
 
-    TzRect  clipRect() const;
+    TzRect clipRect() const;
     TzPoint offset() const;
 
     TzPainter childPainter(const TzPoint &childOffset, const TzRect &childClip) const;

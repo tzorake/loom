@@ -1,13 +1,12 @@
 #include "tzx11consoleinput.hpp"
 #include "tzx11consoleinput_p.hpp"
 
-#include <unistd.h>
 #include <stdexcept>
+#include <unistd.h>
 
 TzX11ConsoleInput::TzX11ConsoleInput()
     : d_ptr(new TzX11ConsoleInputPrivate)
-{
-}
+{}
 
 TzX11ConsoleInput::~TzX11ConsoleInput()
 {

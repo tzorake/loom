@@ -1,12 +1,12 @@
-#include <loom/tzwindow.hpp>
-#include <loom/tzsurface.hpp>
-#include <loom/tzplatformsurface.hpp>
-#include <loom/tzscene.hpp>
-#include <loom/tzwidget.hpp>
-#include <loom/tztimer.hpp>
-#include <loom/tzcoreapplication.hpp>
 #include <loom/tzabstractplatformintegration.hpp>
 #include <loom/tzabstractwindow.hpp>
+#include <loom/tzcoreapplication.hpp>
+#include <loom/tzplatformsurface.hpp>
+#include <loom/tzscene.hpp>
+#include <loom/tzsurface.hpp>
+#include <loom/tztimer.hpp>
+#include <loom/tzwidget.hpp>
+#include <loom/tzwindow.hpp>
 
 #include "tzwindow_p.hpp"
 
@@ -29,13 +29,11 @@ TzWindowPrivate::~TzWindowPrivate()
 
 TzWindow::TzWindow(TzWindow *parent)
     : TzWindow(*new TzWindowPrivate, 400, 300, parent)
-{
-}
+{}
 
 TzWindow::TzWindow(int width, int height, TzWindow *parent)
     : TzWindow(*new TzWindowPrivate, width, height, parent)
-{
-}
+{}
 
 TzWindow::TzWindow(TzWindowPrivate &dd, int width, int height, TzWindow *parent)
     : TzObject(dd, parent)
@@ -43,7 +41,8 @@ TzWindow::TzWindow(TzWindowPrivate &dd, int width, int height, TzWindow *parent)
     TZ_D(TzWindow);
     d->q_ptr = this;
 
-    TzAbstractPlatformIntegration *platformIntegration = TzCoreApplication::instance()->platformIntegration();
+    TzAbstractPlatformIntegration *platformIntegration
+        = TzCoreApplication::instance()->platformIntegration();
     d->platformWindow = platformIntegration->createWindow(width, height);
     d->platformWindow->setSurface(this);
 
@@ -56,19 +55,15 @@ TzWindow::TzWindow(TzWindowPrivate &dd, int width, int height, TzWindow *parent)
             d->onClose();
     });
 
-    d->paintTimer = TzTimer::repeat(
-        TzCoreApplication::instance()->eventDispatcher(),
-        std::chrono::milliseconds(16),
-        [this] {
-            TZ_D(TzWindow);
-            if (d->scene->isPaintDirty())
-                d->scene->doPaint();
-        });
+    d->paintTimer = TzTimer::repeat(TzCoreApplication::instance()->eventDispatcher(),
+                                    std::chrono::milliseconds(16), [this] {
+                                        TZ_D(TzWindow);
+                                        if (d->scene->isPaintDirty())
+                                            d->scene->doPaint();
+                                    });
 }
 
-TzWindow::~TzWindow()
-{
-}
+TzWindow::~TzWindow() {}
 
 void TzWindow::setTitle(const std::string &title)
 {

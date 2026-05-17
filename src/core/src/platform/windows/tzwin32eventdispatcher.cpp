@@ -52,9 +52,9 @@ void TzWin32EventDispatcher::processEvents()
         for (auto &[_, w] : d_ptr->notifyMap)
             handles.push_back(w->handle);
 
-        DWORD count  = static_cast<DWORD>(handles.size());
-        DWORD result = MsgWaitForMultipleObjectsEx(
-            count, handles.data(), INFINITE, QS_ALLINPUT, MWMO_ALERTABLE);
+        DWORD count = static_cast<DWORD>(handles.size());
+        DWORD result = MsgWaitForMultipleObjectsEx(count, handles.data(), INFINITE, QS_ALLINPUT,
+                                                   MWMO_ALERTABLE);
 
         if (result == WAIT_OBJECT_0) {
             // wakeUpEvent — reset and re-check interrupted flag at the loop top.
@@ -65,13 +65,13 @@ void TzWin32EventDispatcher::processEvents()
 
             // Timer? Extract callback before calling (callback may modify timerMap).
             {
-                TimerHandle                           th{};
+                TimerHandle th{};
                 TzAbstractEventDispatcher::TimerCallback cb;
-                bool                                  single = false;
+                bool single = false;
                 for (auto &[h, w] : d_ptr->timerMap) {
                     if (w->timerHandle == signaled) {
-                        th     = h;
-                        cb     = w->callback;
+                        th = h;
+                        cb = w->callback;
                         single = w->singleShot;
                         break;
                     }
@@ -94,7 +94,8 @@ void TzWin32EventDispatcher::processEvents()
                         break;
                     }
                 }
-                if (cb) cb(fd);
+                if (cb)
+                    cb(fd);
             }
 
         } else if (result == WAIT_OBJECT_0 + count) {
@@ -129,8 +130,9 @@ void TzWin32EventDispatcher::setPreWaitCallback(PreWaitCallback callback)
     d_ptr->preWaitCallback = std::move(callback);
 }
 
-TzWin32EventDispatcher::TimerHandle TzWin32EventDispatcher::registerTimer(
-    TimerInterval interval, bool singleShot, TimerCallback callback)
+TzWin32EventDispatcher::TimerHandle TzWin32EventDispatcher::registerTimer(TimerInterval interval,
+                                                                          bool singleShot,
+                                                                          TimerCallback callback)
 {
     // Synchronisation (auto-reset) waitable timer: resets automatically when
     // a waiting thread is released, so it won't keep MsgWaitForMultipleObjectsEx
@@ -140,7 +142,7 @@ TzWin32EventDispatcher::TimerHandle TzWin32EventDispatcher::registerTimer(
         throw std::runtime_error("CreateWaitableTimerW failed");
 
     // Negative = relative time, in 100-nanosecond units.
-    LONGLONG interval100ns = (LONGLONG)interval.count() * 10000LL;
+    LONGLONG interval100ns = (LONGLONG) interval.count() * 10000LL;
     LARGE_INTEGER dueTime;
     dueTime.QuadPart = -interval100ns;
 
@@ -151,10 +153,10 @@ TzWin32EventDispatcher::TimerHandle TzWin32EventDispatcher::registerTimer(
         throw std::runtime_error("SetWaitableTimer failed");
     }
 
-    auto wrapper           = std::make_unique<TzWin32EventDispatcherPrivate::TimerWrapper>();
-    wrapper->timerHandle   = hTimer;
-    wrapper->callback      = std::move(callback);
-    wrapper->singleShot    = singleShot;
+    auto wrapper = std::make_unique<TzWin32EventDispatcherPrivate::TimerWrapper>();
+    wrapper->timerHandle = hTimer;
+    wrapper->callback = std::move(callback);
+    wrapper->singleShot = singleShot;
     wrapper->interval100ns = interval100ns;
     wrapper->eventDispatcher = this;
 
@@ -181,29 +183,29 @@ TzWin32EventDispatcher::NotifyHandle TzWin32EventDispatcher::registerSocketNotif
     if (osHandle == INVALID_HANDLE_VALUE)
         throw std::runtime_error("_get_osfhandle failed");
 
-    auto wrapper       = std::make_unique<TzWin32EventDispatcherPrivate::NotifyWrapper>();
+    auto wrapper = std::make_unique<TzWin32EventDispatcherPrivate::NotifyWrapper>();
     wrapper->rawHandle = osHandle;
-    wrapper->fd        = fd;
-    wrapper->callback  = std::move(callback);
+    wrapper->fd = fd;
+    wrapper->callback = std::move(callback);
 
     // Console input and anonymous pipe handles cannot be used with
     // MsgWaitForMultipleObjectsEx (console handles require ReadConsoleInput;
     // anonymous pipe handles are always in the signaled state).
     // Route both through a monitor thread + auto-reset event.
     DWORD consoleMode;
-    bool  isConsole = GetConsoleMode(osHandle, &consoleMode);
-    DWORD fileType  = GetFileType(osHandle);
-    bool  isPipe    = (fileType == FILE_TYPE_PIPE);
+    bool isConsole = GetConsoleMode(osHandle, &consoleMode);
+    DWORD fileType = GetFileType(osHandle);
+    bool isPipe = (fileType == FILE_TYPE_PIPE);
 
     if (isConsole || isPipe) {
-        wrapper->isConsole   = true;
+        wrapper->isConsole = true;
         wrapper->notifyEvent = CreateEvent(nullptr, FALSE, FALSE, nullptr); // auto-reset
-        wrapper->handle      = wrapper->notifyEvent;
+        wrapper->handle = wrapper->notifyEvent;
         wrapper->threadRunning.store(true, std::memory_order_relaxed);
 
-        HANDLE rawH  = osHandle;
+        HANDLE rawH = osHandle;
         HANDLE notEv = wrapper->notifyEvent;
-        auto  *flag  = &wrapper->threadRunning;
+        auto *flag = &wrapper->threadRunning;
 
         wrapper->monitorThread = std::thread([rawH, notEv, flag, isPipe]() {
             while (flag->load(std::memory_order_relaxed)) {
@@ -212,7 +214,7 @@ TzWin32EventDispatcher::NotifyHandle TzWin32EventDispatcher::registerSocketNotif
                     // to check for available data without consuming it.
                     DWORD available = 0;
                     if (PeekNamedPipe(rawH, nullptr, 0, nullptr, &available, nullptr)
-                            && available > 0) {
+                        && available > 0) {
                         SetEvent(notEv);
                     }
                     Sleep(10);

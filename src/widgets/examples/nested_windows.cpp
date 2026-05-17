@@ -1,28 +1,28 @@
-#include <loom/TzGuiApplication>
-#include <loom/TzWindow>
-#include <loom/TzWidget>
 #include <loom/TzAnchors>
-#include <loom/TzScene>
-#include <loom/TzPainter>
+#include <loom/TzGuiApplication>
 #include <loom/TzKeyEvent>
 #include <loom/TzMouseEvent>
+#include <loom/TzPainter>
 #include <loom/TzRect>
+#include <loom/TzScene>
+#include <loom/TzWidget>
+#include <loom/TzWindow>
 
-#include <string>
 #include <functional>
+#include <string>
 
 // ── Palette ───────────────────────────────────────────────────────────────
 
-static constexpr uint32_t kBg         = 0xFF1E1E2E;
-static constexpr uint32_t kPanel      = 0xFF313244;
-static constexpr uint32_t kBorder     = 0xFF45475A;
-static constexpr uint32_t kText       = 0xFFCDD6F4;
-static constexpr uint32_t kAccent     = 0xFF89B4FA;
-static constexpr uint32_t kBtnNorm    = 0xFF313244;
-static constexpr uint32_t kBtnHover   = 0xFF45475A;
-static constexpr uint32_t kBtnFocus   = 0xFF89B4FA;
-static constexpr uint32_t kBtnText    = 0xFFCDD6F4;
-static constexpr uint32_t kBtnFocTxt  = 0xFF1E1E2E;
+static constexpr uint32_t kBg = 0xFF1E1E2E;
+static constexpr uint32_t kPanel = 0xFF313244;
+static constexpr uint32_t kBorder = 0xFF45475A;
+static constexpr uint32_t kText = 0xFFCDD6F4;
+static constexpr uint32_t kAccent = 0xFF89B4FA;
+static constexpr uint32_t kBtnNorm = 0xFF313244;
+static constexpr uint32_t kBtnHover = 0xFF45475A;
+static constexpr uint32_t kBtnFocus = 0xFF89B4FA;
+static constexpr uint32_t kBtnText = 0xFFCDD6F4;
+static constexpr uint32_t kBtnFocTxt = 0xFF1E1E2E;
 
 // ── Label ─────────────────────────────────────────────────────────────────
 
@@ -30,7 +30,8 @@ class Label : public TzWidget
 {
 public:
     explicit Label(const std::string &text, TzWidget *parent = nullptr)
-        : TzWidget(parent), m_text(text)
+        : TzWidget(parent)
+        , m_text(text)
     {
         updateImplicit();
     }
@@ -50,10 +51,7 @@ protected:
     }
 
 private:
-    void updateImplicit()
-    {
-        setImplicitSize(double(m_text.size() * 8), 16.0);
-    }
+    void updateImplicit() { setImplicitSize(double(m_text.size() * 8), 16.0); }
 
     std::string m_text;
 };
@@ -66,7 +64,8 @@ public:
     using Callback = std::function<void()>;
 
     explicit Button(const std::string &label, TzWidget *parent = nullptr)
-        : TzWidget(parent), m_label(label)
+        : TzWidget(parent)
+        , m_label(label)
     {
         setImplicitSize(140.0, 32.0);
     }
@@ -76,11 +75,11 @@ public:
 protected:
     void paint(TzPainter *p) override
     {
-        uint32_t bg  = hasFocus() ? kBtnFocus : m_hovered ? kBtnHover : kBtnNorm;
-        uint32_t fg  = hasFocus() ? kBtnFocTxt : kBtnText;
+        uint32_t bg = hasFocus() ? kBtnFocus : m_hovered ? kBtnHover : kBtnNorm;
+        uint32_t fg = hasFocus() ? kBtnFocTxt : kBtnText;
         p->fillRect(0.0, 0.0, width(), height(), bg);
-        p->drawRect({ 0.0, 0.0, width(), height() }, kBorder);
-        double tx = (width()  - double(m_label.size() * 8)) / 2.0;
+        p->drawRect({0.0, 0.0, width(), height()}, kBorder);
+        double tx = (width() - double(m_label.size() * 8)) / 2.0;
         double ty = (height() - 8.0) / 2.0;
         p->drawText(tx, ty, m_label, fg);
     }
@@ -88,11 +87,15 @@ protected:
     bool event(TzEvent *e) override
     {
         if (e->type() == TzEvent::MouseButtonPress) {
-            if (m_onClick) m_onClick();
+            if (m_onClick)
+                m_onClick();
             return true;
         }
         if (e->type() == TzEvent::MouseMove) {
-            if (!m_hovered) { m_hovered = true; update(); }
+            if (!m_hovered) {
+                m_hovered = true;
+                update();
+            }
             return true;
         }
         return TzWidget::event(e);
@@ -100,8 +103,8 @@ protected:
 
 private:
     std::string m_label;
-    Callback    m_onClick;
-    bool        m_hovered{ false };
+    Callback m_onClick;
+    bool m_hovered{false};
 };
 
 // ── Dialog window root widget ─────────────────────────────────────────────
@@ -110,14 +113,15 @@ class DialogRoot : public TzWidget
 {
 public:
     explicit DialogRoot(TzWindow *owner)
-        : TzWidget(nullptr), m_owner(owner)
+        : TzWidget(nullptr)
+        , m_owner(owner)
     {
         m_title = new Label("This is a child window!", this);
         m_title->anchors()->centerIn(this);
 
         m_closeBtn = new Button("Close", this);
         m_closeBtn->anchors()->setHCenter(this, TzAnchors::HCenter);
-        m_closeBtn->anchors()->setBottom (this, TzAnchors::Bottom, 16.0);
+        m_closeBtn->anchors()->setBottom(this, TzAnchors::Bottom, 16.0);
         m_closeBtn->setOnClick([this] { m_owner->close(); });
     }
 
@@ -125,7 +129,7 @@ protected:
     void paint(TzPainter *p) override
     {
         p->fillRect(0.0, 0.0, width(), height(), kPanel);
-        p->drawRect({ 0.0, 0.0, width(), height() }, kAccent);
+        p->drawRect({0.0, 0.0, width(), height()}, kAccent);
     }
 
     bool event(TzEvent *e) override
@@ -142,8 +146,8 @@ protected:
 
 private:
     TzWindow *m_owner;
-    Label    *m_title{ nullptr };
-    Button   *m_closeBtn{ nullptr };
+    Label *m_title{nullptr};
+    Button *m_closeBtn{nullptr};
 };
 
 class MainRoot : public TzWidget
@@ -170,10 +174,7 @@ public:
     }
 
 protected:
-    void paint(TzPainter *p) override
-    {
-        p->fillRect(0.0, 0.0, width(), height(), kBg);
-    }
+    void paint(TzPainter *p) override { p->fillRect(0.0, 0.0, width(), height(), kBg); }
 
     bool event(TzEvent *e) override
     {
@@ -200,9 +201,9 @@ private:
 
     TzGuiApplication &m_app;
     TzWindow *m_owner;
-    Label *m_hint{ nullptr };
-    Button *m_openBtn{ nullptr };
-    Button *m_quitBtn{ nullptr };
+    Label *m_hint{nullptr};
+    Button *m_openBtn{nullptr};
+    Button *m_quitBtn{nullptr};
 };
 
 int main(int argc, char *argv[])

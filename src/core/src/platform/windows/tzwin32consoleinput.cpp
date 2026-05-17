@@ -11,27 +11,48 @@
 static const char *vkToEscape(WORD vk)
 {
     switch (vk) {
-        case VK_UP:    return "\x1B[A";
-        case VK_DOWN:  return "\x1B[B";
-        case VK_RIGHT: return "\x1B[C";
-        case VK_LEFT:  return "\x1B[D";
-        case VK_HOME:  return "\x1B[1~";
-        case VK_END:   return "\x1B[4~";
-        case VK_PRIOR: return "\x1B[5~";
-        case VK_NEXT:  return "\x1B[6~";
-        case VK_F1:    return "\x1B[11~";
-        case VK_F2:    return "\x1B[12~";
-        case VK_F3:    return "\x1B[13~";
-        case VK_F4:    return "\x1B[14~";
-        case VK_F5:    return "\x1B[15~";
-        case VK_F6:    return "\x1B[17~";
-        case VK_F7:    return "\x1B[18~";
-        case VK_F8:    return "\x1B[19~";
-        case VK_F9:    return "\x1B[20~";
-        case VK_F10:   return "\x1B[21~";
-        case VK_F11:   return "\x1B[23~";
-        case VK_F12:   return "\x1B[24~";
-        default:       return nullptr;
+    case VK_UP:
+        return "\x1B[A";
+    case VK_DOWN:
+        return "\x1B[B";
+    case VK_RIGHT:
+        return "\x1B[C";
+    case VK_LEFT:
+        return "\x1B[D";
+    case VK_HOME:
+        return "\x1B[1~";
+    case VK_END:
+        return "\x1B[4~";
+    case VK_PRIOR:
+        return "\x1B[5~";
+    case VK_NEXT:
+        return "\x1B[6~";
+    case VK_F1:
+        return "\x1B[11~";
+    case VK_F2:
+        return "\x1B[12~";
+    case VK_F3:
+        return "\x1B[13~";
+    case VK_F4:
+        return "\x1B[14~";
+    case VK_F5:
+        return "\x1B[15~";
+    case VK_F6:
+        return "\x1B[17~";
+    case VK_F7:
+        return "\x1B[18~";
+    case VK_F8:
+        return "\x1B[19~";
+    case VK_F9:
+        return "\x1B[20~";
+    case VK_F10:
+        return "\x1B[21~";
+    case VK_F11:
+        return "\x1B[23~";
+    case VK_F12:
+        return "\x1B[24~";
+    default:
+        return nullptr;
     }
 }
 
@@ -62,7 +83,7 @@ void TzWin32ConsoleInput::start()
     GetConsoleMode(d_ptr->conHandle, &d_ptr->origMode);
 
     DWORD rawMode = d_ptr->origMode
-        & ~(ENABLE_LINE_INPUT | ENABLE_ECHO_INPUT | ENABLE_PROCESSED_INPUT);
+                    & ~(ENABLE_LINE_INPUT | ENABLE_ECHO_INPUT | ENABLE_PROCESSED_INPUT);
     SetConsoleMode(d_ptr->conHandle, rawMode);
 
     d_ptr->rawActive = true;
@@ -95,17 +116,16 @@ std::string TzWin32ConsoleInput::read()
         if (!records[i].Event.KeyEvent.bKeyDown)
             continue;
 
-        WORD  vk    = records[i].Event.KeyEvent.wVirtualKeyCode;
-        WCHAR wch   = records[i].Event.KeyEvent.uChar.UnicodeChar;
+        WORD vk = records[i].Event.KeyEvent.wVirtualKeyCode;
+        WCHAR wch = records[i].Event.KeyEvent.uChar.UnicodeChar;
         DWORD count = records[i].Event.KeyEvent.wRepeatCount;
 
         std::string seq;
 
         // Skip pure modifier key events
-        if (vk == VK_SHIFT || vk == VK_CONTROL || vk == VK_MENU ||
-            vk == VK_LSHIFT || vk == VK_RSHIFT ||
-            vk == VK_LCONTROL || vk == VK_RCONTROL ||
-            vk == VK_LMENU || vk == VK_RMENU)
+        if (vk == VK_SHIFT || vk == VK_CONTROL || vk == VK_MENU || vk == VK_LSHIFT
+            || vk == VK_RSHIFT || vk == VK_LCONTROL || vk == VK_RCONTROL || vk == VK_LMENU
+            || vk == VK_RMENU)
             continue;
 
         if (const char *esc = vkToEscape(vk)) {

@@ -5,10 +5,10 @@
 class TzTreeNodePrivate
 {
 public:
-    TzTreeNodePrivate(const std::string& name, TzTreeNode::Type type);
+    TzTreeNodePrivate(const std::string &name, TzTreeNode::Type type);
 
-    static TzTreeNodePrivate* get(TzTreeNode& q);
-    static const TzTreeNodePrivate* get(const TzTreeNode& q);
+    static TzTreeNodePrivate *get(TzTreeNode &q);
+    static const TzTreeNodePrivate *get(const TzTreeNode &q);
 
     std::string name;
     TzTreeNode::Type type;
@@ -18,33 +18,31 @@ public:
     TzEventEmitter events;
 };
 
-TzTreeNodePrivate::TzTreeNodePrivate(const std::string& name, TzTreeNode::Type type)
+TzTreeNodePrivate::TzTreeNodePrivate(const std::string &name, TzTreeNode::Type type)
     : name(name)
     , type(type)
-{
-}
+{}
 
-TzTreeNodePrivate* TzTreeNodePrivate::get(TzTreeNode& q)
-{
-    return q.d_ptr.get();
-}
-
-const TzTreeNodePrivate* TzTreeNodePrivate::get(const TzTreeNode& q)
+TzTreeNodePrivate *TzTreeNodePrivate::get(TzTreeNode &q)
 {
     return q.d_ptr.get();
 }
 
-TzTreeNodePtr TzTreeNode::create(const std::string& name, Type type)
+const TzTreeNodePrivate *TzTreeNodePrivate::get(const TzTreeNode &q)
+{
+    return q.d_ptr.get();
+}
+
+TzTreeNodePtr TzTreeNode::create(const std::string &name, Type type)
 {
     return std::make_shared<TzTreeNode>(name, type, PrivateToken{});
 }
 
-TzTreeNode::TzTreeNode(const std::string& name, Type type, PrivateToken)
+TzTreeNode::TzTreeNode(const std::string &name, Type type, PrivateToken)
     : d_ptr(new TzTreeNodePrivate(name, type))
-{
-}
+{}
 
-bool TzTreeNode::setName(const std::string& newName)
+bool TzTreeNode::setName(const std::string &newName)
 {
     TZ_D(TzTreeNode);
     if (d->name == newName)
@@ -54,7 +52,7 @@ bool TzTreeNode::setName(const std::string& newName)
     return true;
 }
 
-const std::string& TzTreeNode::name() const
+const std::string &TzTreeNode::name() const
 {
     TZ_D(const TzTreeNode);
     return d->name;
@@ -90,7 +88,7 @@ int TzTreeNode::childCount() const
     return static_cast<int>(d->children.size());
 }
 
-const std::vector<TzTreeNodePtr>& TzTreeNode::children() const
+const std::vector<TzTreeNodePtr> &TzTreeNode::children() const
 {
     TZ_D(const TzTreeNode);
     return d->children;
@@ -104,14 +102,14 @@ TzTreeNodePtr TzTreeNode::childAt(int index) const
     return d->children[static_cast<std::size_t>(index)];
 }
 
-int TzTreeNode::indexOf(const TzTreeNodePtr& child) const
+int TzTreeNode::indexOf(const TzTreeNodePtr &child) const
 {
     TZ_D(const TzTreeNode);
     auto it = std::ranges::find(d->children, child);
     return it != d->children.end() ? static_cast<int>(std::distance(d->children.begin(), it)) : -1;
 }
 
-bool TzTreeNode::addChild(const TzTreeNodePtr& child)
+bool TzTreeNode::addChild(const TzTreeNodePtr &child)
 {
     TZ_D(TzTreeNode);
     if (!child)
@@ -122,7 +120,7 @@ bool TzTreeNode::addChild(const TzTreeNodePtr& child)
     return true;
 }
 
-bool TzTreeNode::insertChild(int index, const TzTreeNodePtr& child)
+bool TzTreeNode::insertChild(int index, const TzTreeNodePtr &child)
 {
     TZ_D(TzTreeNode);
     if (!child || index < 0 || index > static_cast<int>(d->children.size()))
@@ -133,7 +131,7 @@ bool TzTreeNode::insertChild(int index, const TzTreeNodePtr& child)
     return true;
 }
 
-bool TzTreeNode::removeChild(const TzTreeNodePtr& child)
+bool TzTreeNode::removeChild(const TzTreeNodePtr &child)
 {
     TZ_D(TzTreeNode);
     auto it = std::ranges::find(d->children, child);
@@ -146,37 +144,37 @@ bool TzTreeNode::removeChild(const TzTreeNodePtr& child)
     return true;
 }
 
-void TzTreeNode::setData(const std::any& value)
+void TzTreeNode::setData(const std::any &value)
 {
     TZ_D(TzTreeNode);
     d->data = value;
     d->events.emit("dataChanged");
 }
 
-const std::any& TzTreeNode::data() const
+const std::any &TzTreeNode::data() const
 {
     TZ_D(const TzTreeNode);
     return d->data;
 }
 
-TzEventEmitter& TzTreeNode::events()
+TzEventEmitter &TzTreeNode::events()
 {
     TZ_D(TzTreeNode);
     return d->events;
 }
 
-const TzEventEmitter& TzTreeNode::events() const
+const TzEventEmitter &TzTreeNode::events() const
 {
     TZ_D(const TzTreeNode);
     return d->events;
 }
 
-TzTreeNodePtr TzTreeNode::createFolder(const std::string& name)
+TzTreeNodePtr TzTreeNode::createFolder(const std::string &name)
 {
     return TzTreeNode::create(name, TzTreeNode::Folder);
 }
 
-TzTreeNodePtr TzTreeNode::createItem(const std::string& name)
+TzTreeNodePtr TzTreeNode::createItem(const std::string &name)
 {
     return TzTreeNode::create(name, TzTreeNode::Item);
 }

@@ -1,9 +1,9 @@
 #include <loom/tzabstractlistmodel.hpp>
 #include <loom/tzeventemitter.hpp>
+#include <any>
 #include <print>
 #include <string>
 #include <vector>
-#include <any>
 
 class StringListModel : public TzAbstractListModel
 {
@@ -14,12 +14,12 @@ public:
         : m_items(std::move(items))
     {}
 
-    int rowCount(const TzModelIndex& parent = TzModelIndex()) const override
+    int rowCount(const TzModelIndex &parent = TzModelIndex()) const override
     {
         return parent.isValid() ? 0 : static_cast<int>(m_items.size());
     }
 
-    std::any data(const TzModelIndex& index, int role = TzItemDataRole::Display) const override
+    std::any data(const TzModelIndex &index, int role = TzItemDataRole::Display) const override
     {
         if (!index.isValid() || index.row() >= rowCount())
             return {};
@@ -28,7 +28,7 @@ public:
         return {};
     }
 
-    bool setData(const TzModelIndex& index, const std::any& value,
+    bool setData(const TzModelIndex &index, const std::any &value,
                  int role = TzItemDataRole::Edit) override
     {
         if (!index.isValid() || index.row() >= rowCount())
@@ -37,11 +37,11 @@ public:
             return false;
 
         m_items[static_cast<std::size_t>(index.row())] = std::any_cast<std::string>(value);
-        emitDataChanged(index, index, { TzItemDataRole::Display, TzItemDataRole::Edit });
+        emitDataChanged(index, index, {TzItemDataRole::Display, TzItemDataRole::Edit});
         return true;
     }
 
-    bool insertRows(int row, int count, const TzModelIndex& parent = TzModelIndex()) override
+    bool insertRows(int row, int count, const TzModelIndex &parent = TzModelIndex()) override
     {
         if (parent.isValid() || row < 0 || row > rowCount() || count <= 0)
             return false;
@@ -52,26 +52,25 @@ public:
         return true;
     }
 
-    bool removeRows(int row, int count, const TzModelIndex& parent = TzModelIndex()) override
+    bool removeRows(int row, int count, const TzModelIndex &parent = TzModelIndex()) override
     {
         if (parent.isValid() || row < 0 || count <= 0 || row + count > rowCount())
             return false;
 
         beginRemoveRows(parent, row, row + count - 1);
-        m_items.erase(m_items.begin() + row,
-                      m_items.begin() + row + count);
+        m_items.erase(m_items.begin() + row, m_items.begin() + row + count);
         endRemoveRows();
         return true;
     }
 
-    void append(const std::string& value)
+    void append(const std::string &value)
     {
         const int row = rowCount();
         insertRows(row, 1);
         setData(index(row, 0), value);
     }
 
-    void insert(int row, const std::string& value)
+    void insert(int row, const std::string &value)
     {
         insertRows(row, 1);
         setData(index(row, 0), value);
@@ -91,25 +90,25 @@ private:
 
 int main()
 {
-    StringListModel model({ "Alice", "Bob", "Charlie" });
+    StringListModel model({"Alice", "Bob", "Charlie"});
 
-    auto onInserted = model.events().on("rowsInserted",
-        [&](const TzModelIndex& /*parent*/, int first, int last) {
-            for (int r = first; r <= last; ++r)
-                std::println("  [+] row {} = \"{}\"", r, model.at(r));
-        });
+    auto onInserted = model.events().on("rowsInserted", [&](const TzModelIndex & /*parent*/,
+                                                            int first, int last) {
+        for (int r = first; r <= last; ++r)
+            std::println("  [+] row {} = \"{}\"", r, model.at(r));
+    });
 
     auto onRemoved = model.events().on("rowsRemoved",
-        [&](const TzModelIndex& /*parent*/, int first, int last) {
-            std::println("  [-] rows {}..{} removed", first, last);
-        });
+                                       [&](const TzModelIndex & /*parent*/, int first, int last) {
+                                           std::println("  [-] rows {}..{} removed", first, last);
+                                       });
 
-    auto onChanged = model.events().on("dataChanged",
-        [&](const TzModelIndex& topLeft, const TzModelIndex& bottomRight,
-            const std::vector<int>& /*roles*/) {
-            for (int r = topLeft.row(); r <= bottomRight.row(); ++r)
-                std::println("  [~] row {} = \"{}\"", r, model.at(r));
-        });
+    auto onChanged = model.events().on("dataChanged", [&](const TzModelIndex &topLeft,
+                                                          const TzModelIndex &bottomRight,
+                                                          const std::vector<int> & /*roles*/) {
+        for (int r = topLeft.row(); r <= bottomRight.row(); ++r)
+            std::println("  [~] row {} = \"{}\"", r, model.at(r));
+    });
 
     std::println("Initial rows: {}", model.rowCount());
     for (int r = 0; r < model.rowCount(); ++r)

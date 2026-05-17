@@ -13,11 +13,11 @@ public:
     explicit TzSocketNotifierPrivate(TzAbstractEventDispatcher *eventDispatcher);
 
 private:
-    TzSocketNotifier *q_ptr{ nullptr };
+    TzSocketNotifier *q_ptr{nullptr};
 
-    TzAbstractEventDispatcher *eventDispatcher{ nullptr };
-    TzSocketNotifier::NotifyHandle handle{ nullptr };
-    int fd{ -1 };
+    TzAbstractEventDispatcher *eventDispatcher{nullptr};
+    TzSocketNotifier::NotifyHandle handle{nullptr};
+    int fd{-1};
     TzSocketNotifier::NotifyCallback callback;
 };
 

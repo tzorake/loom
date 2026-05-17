@@ -38,12 +38,12 @@ public:
     void fill(TzWidget *target, const TzMargins &margins);
     void centerIn(TzWidget *target);
 
-    bool hasLeft()const;
-    bool hasRight()const;
-    bool hasTop()const;
-    bool hasBottom()const;
-    bool hasHCenter()const;
-    bool hasVCenter()const;
+    bool hasLeft() const;
+    bool hasRight() const;
+    bool hasTop() const;
+    bool hasBottom() const;
+    bool hasHCenter() const;
+    bool hasVCenter() const;
 
     bool resolve();
 

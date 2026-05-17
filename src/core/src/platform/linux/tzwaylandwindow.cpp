@@ -1,8 +1,8 @@
 #include "tzwaylandwindow.hpp"
 #include "tzwaylandwindow_p.hpp"
 
-#include <errno.h>
 #include <cstring>
+#include <errno.h>
 #include <stdexcept>
 
 // ── SHM buffer helpers ────────────────────────────────────────────────────────
@@ -12,7 +12,7 @@ static void buffer_release(void *data, wl_buffer *)
     static_cast<ShmBuffer *>(data)->busy = false;
 }
 
-static const wl_buffer_listener kBufferListener = { buffer_release };
+static const wl_buffer_listener kBufferListener = {buffer_release};
 
 // ── xdg_surface / xdg_toplevel listeners ─────────────────────────────────────
 
@@ -23,9 +23,9 @@ static void xdg_surface_configure_cb(void *data, xdg_surface *xdg_surf, uint32_t
     d->configured = true;
 
     if (d->pendingWidth > 0 && d->pendingHeight > 0) {
-        d->windowWidth   = d->pendingWidth;
-        d->windowHeight  = d->pendingHeight;
-        d->pendingWidth  = 0;
+        d->windowWidth = d->pendingWidth;
+        d->windowHeight = d->pendingHeight;
+        d->pendingWidth = 0;
         d->pendingHeight = 0;
     }
 
@@ -42,14 +42,14 @@ static void xdg_surface_configure_cb(void *data, xdg_surface *xdg_surf, uint32_t
     TzWaylandGlobals::instance().flush();
 }
 
-static const xdg_surface_listener kXdgSurfaceListener = { xdg_surface_configure_cb };
+static const xdg_surface_listener kXdgSurfaceListener = {xdg_surface_configure_cb};
 
-static void xdg_toplevel_configure_cb(void *data, xdg_toplevel *,
-                                      int32_t width, int32_t height, wl_array *)
+static void xdg_toplevel_configure_cb(void *data, xdg_toplevel *, int32_t width, int32_t height,
+                                      wl_array *)
 {
     auto *d = static_cast<TzWaylandWindowPrivate *>(data);
     if (width > 0 && height > 0) {
-        d->pendingWidth  = width;
+        d->pendingWidth = width;
         d->pendingHeight = height;
     }
 }
@@ -63,9 +63,8 @@ static void xdg_toplevel_close_cb(void *data, xdg_toplevel *)
         d->owner->hide();
 }
 
-static const xdg_toplevel_listener kXdgToplevelListener = {
-    xdg_toplevel_configure_cb, xdg_toplevel_close_cb
-};
+static const xdg_toplevel_listener kXdgToplevelListener = {xdg_toplevel_configure_cb,
+                                                           xdg_toplevel_close_cb};
 
 // ── TzWaylandWindowPrivate ────────────────────────────────────────────────────
 
@@ -93,11 +92,11 @@ TzWaylandWindowPrivate::TzWaylandWindowPrivate(int width, int height, TzWaylandW
     xdg_toplevel_add_listener(xdgToplevel, &kXdgToplevelListener, this);
 
     if (g.decorationManager) {
-        decoration = zxdg_decoration_manager_v1_get_toplevel_decoration(
-            g.decorationManager, xdgToplevel);
+        decoration = zxdg_decoration_manager_v1_get_toplevel_decoration(g.decorationManager,
+                                                                        xdgToplevel);
         if (decoration)
-            zxdg_toplevel_decoration_v1_set_mode(
-                decoration, ZXDG_TOPLEVEL_DECORATION_V1_MODE_SERVER_SIDE);
+            zxdg_toplevel_decoration_v1_set_mode(decoration,
+                                                 ZXDG_TOPLEVEL_DECORATION_V1_MODE_SERVER_SIDE);
     }
 
     g.registerSurface(surface, owner);
@@ -113,10 +112,22 @@ TzWaylandWindowPrivate::~TzWaylandWindowPrivate()
     buffers[0].destroyPool();
     buffers[1].destroyPool();
 
-    if (decoration)  { zxdg_toplevel_decoration_v1_destroy(decoration); decoration  = nullptr; }
-    if (xdgToplevel) { xdg_toplevel_destroy(xdgToplevel);               xdgToplevel = nullptr; }
-    if (xdgSurface)  { xdg_surface_destroy(xdgSurface);                 xdgSurface  = nullptr; }
-    if (surface)     { wl_surface_destroy(surface);                      surface     = nullptr; }
+    if (decoration) {
+        zxdg_toplevel_decoration_v1_destroy(decoration);
+        decoration = nullptr;
+    }
+    if (xdgToplevel) {
+        xdg_toplevel_destroy(xdgToplevel);
+        xdgToplevel = nullptr;
+    }
+    if (xdgSurface) {
+        xdg_surface_destroy(xdgSurface);
+        xdgSurface = nullptr;
+    }
+    if (surface) {
+        wl_surface_destroy(surface);
+        surface = nullptr;
+    }
 }
 
 void TzWaylandWindowPrivate::setTitle(const std::string &title)
@@ -165,11 +176,11 @@ void TzWaylandWindowPrivate::render(const std::vector<uint32_t> &pixels, int wid
     // Recreate the wl_buffer object only when dimensions actually change.
     if (buf.width != width || buf.height != height) {
         buf.destroyBuffer();
-        buf.wlBuf = wl_shm_pool_create_buffer(
-            buf.pool, 0, width, height, width * 4, WL_SHM_FORMAT_ARGB8888);
+        buf.wlBuf = wl_shm_pool_create_buffer(buf.pool, 0, width, height, width * 4,
+                                              WL_SHM_FORMAT_ARGB8888);
         wl_buffer_add_listener(buf.wlBuf, &kBufferListener, &buf);
-        buf.width    = width;
-        buf.height   = height;
+        buf.width = width;
+        buf.height = height;
         buf.byteSize = needed;
     }
 
@@ -189,8 +200,7 @@ void TzWaylandWindowPrivate::render(const std::vector<uint32_t> &pixels, int wid
 
 TzWaylandWindow::TzWaylandWindow(int width, int height)
     : d_ptr(new TzWaylandWindowPrivate(width, height, this))
-{
-}
+{}
 
 TzWaylandWindow::~TzWaylandWindow() = default;
 

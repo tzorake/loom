@@ -1,51 +1,64 @@
 #ifndef TZWAYLANDWINDOW_P_HPP
 #define TZWAYLANDWINDOW_P_HPP
 
-#include "tzwaylandwindow.hpp"
 #include "tzwaylandglobals.hpp"
+#include "tzwaylandwindow.hpp"
 
 #include <loom/tzcloseevent.hpp>
+#include <loom/tzcoreapplication.hpp>
 #include <loom/tzkeyevent.hpp>
 #include <loom/tzmouseevent.hpp>
 #include <loom/tzresizeevent.hpp>
-#include <loom/tzcoreapplication.hpp>
 
-#include <wayland-client.h>
-#include "protocol/xdg-shell-client-protocol.h"
 #include "protocol/xdg-decoration-client-protocol.h"
+#include "protocol/xdg-shell-client-protocol.h"
+#include <wayland-client.h>
 
+#include <cstdint>
+#include <fcntl.h>
+#include <memory>
 #include <sys/mman.h>
 #include <sys/syscall.h>
-#include <fcntl.h>
 #include <unistd.h>
-#include <cstdint>
-#include <memory>
 #include <vector>
 
-struct ShmBuffer {
-    int           fd       { -1 };
-    void         *data     { nullptr };
-    size_t        capacity { 0 };   // mmap'd bytes (may be larger than byteSize)
-    size_t        byteSize { 0 };   // bytes for current width*height
-    wl_shm_pool  *pool     { nullptr };
-    wl_buffer    *wlBuf    { nullptr };
-    bool          busy     { false };
-    int           width    { 0 };
-    int           height   { 0 };
+struct ShmBuffer
+{
+    int fd{-1};
+    void *data{nullptr};
+    size_t capacity{0}; // mmap'd bytes (may be larger than byteSize)
+    size_t byteSize{0}; // bytes for current width*height
+    wl_shm_pool *pool{nullptr};
+    wl_buffer *wlBuf{nullptr};
+    bool busy{false};
+    int width{0};
+    int height{0};
 
     ~ShmBuffer() { destroyPool(); }
 
     void destroyBuffer()
     {
-        if (wlBuf) { wl_buffer_destroy(wlBuf); wlBuf = nullptr; }
+        if (wlBuf) {
+            wl_buffer_destroy(wlBuf);
+            wlBuf = nullptr;
+        }
     }
 
     void destroyPool()
     {
         destroyBuffer();
-        if (pool) { wl_shm_pool_destroy(pool); pool = nullptr; }
-        if (data && data != MAP_FAILED) { munmap(data, capacity); data = nullptr; }
-        if (fd >= 0) { close(fd); fd = -1; }
+        if (pool) {
+            wl_shm_pool_destroy(pool);
+            pool = nullptr;
+        }
+        if (data && data != MAP_FAILED) {
+            munmap(data, capacity);
+            data = nullptr;
+        }
+        if (fd >= 0) {
+            close(fd);
+            fd = -1;
+        }
         capacity = 0;
         busy = false;
     }
@@ -57,7 +70,8 @@ struct ShmBuffer {
             return true;
 
         size_t newCap = capacity ? capacity * 2 : needed;
-        if (newCap < needed) newCap = needed;
+        if (newCap < needed)
+            newCap = needed;
 
         if (fd < 0) {
             // First allocation.
@@ -67,19 +81,38 @@ struct ShmBuffer {
             if (fd < 0) {
                 char name[] = "/loom-shm-XXXXXX";
                 fd = shm_open(name, O_RDWR | O_CREAT | O_EXCL, 0600);
-                if (fd >= 0) shm_unlink(name);
+                if (fd >= 0)
+                    shm_unlink(name);
             }
-            if (fd < 0) return false;
-            if (ftruncate(fd, static_cast<off_t>(newCap)) < 0) { close(fd); fd = -1; return false; }
+            if (fd < 0)
+                return false;
+            if (ftruncate(fd, static_cast<off_t>(newCap)) < 0) {
+                close(fd);
+                fd = -1;
+                return false;
+            }
             data = mmap(nullptr, newCap, PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0);
-            if (data == MAP_FAILED) { data = nullptr; close(fd); fd = -1; return false; }
+            if (data == MAP_FAILED) {
+                data = nullptr;
+                close(fd);
+                fd = -1;
+                return false;
+            }
             pool = wl_shm_create_pool(shm, fd, static_cast<int32_t>(newCap));
-            if (!pool) { munmap(data, newCap); data = nullptr; close(fd); fd = -1; return false; }
+            if (!pool) {
+                munmap(data, newCap);
+                data = nullptr;
+                close(fd);
+                fd = -1;
+                return false;
+            }
         } else {
             // Grow existing allocation.
-            if (ftruncate(fd, static_cast<off_t>(newCap)) < 0) return false;
+            if (ftruncate(fd, static_cast<off_t>(newCap)) < 0)
+                return false;
             void *newData = mremap(data, capacity, newCap, MREMAP_MAYMOVE);
-            if (newData == MAP_FAILED) return false;
+            if (newData == MAP_FAILED)
+                return false;
             data = newData;
             wl_shm_pool_resize(pool, static_cast<int32_t>(newCap));
         }
@@ -102,29 +135,29 @@ public:
     void onConfigure(int32_t width, int32_t height);
     void onClose();
 
-    TzWaylandWindow *owner       { nullptr };
+    TzWaylandWindow *owner{nullptr};
 
-    wl_surface                    *surface      { nullptr };
-    xdg_surface                   *xdgSurface   { nullptr };
-    xdg_toplevel                  *xdgToplevel  { nullptr };
-    zxdg_toplevel_decoration_v1   *decoration   { nullptr };
+    wl_surface *surface{nullptr};
+    xdg_surface *xdgSurface{nullptr};
+    xdg_toplevel *xdgToplevel{nullptr};
+    zxdg_toplevel_decoration_v1 *decoration{nullptr};
 
-    int windowWidth  { 0 };
-    int windowHeight { 0 };
-    int pendingWidth { 0 };
-    int pendingHeight{ 0 };
+    int windowWidth{0};
+    int windowHeight{0};
+    int pendingWidth{0};
+    int pendingHeight{0};
 
     // Up to 2 SHM buffers alternated to avoid stalling the compositor.
     ShmBuffer buffers[2];
-    int currentBuffer { 0 };
+    int currentBuffer{0};
 
     // True once the compositor has sent and we have acked the initial configure.
     // Rendering before configure is a protocol error (xdg_surface error 3).
-    bool configured { false };
+    bool configured{false};
 
     // Mirrors the visible state; false after hide() so the paint timer does
     // not reattach a buffer to a withdrawn surface.
-    bool visible { false };
+    bool visible{false};
 };
 
 #endif // TZWAYLANDWINDOW_P_HPP

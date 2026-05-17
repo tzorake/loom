@@ -1,19 +1,19 @@
-#include <loom/TzGuiApplication>
-#include <loom/TzWindow>
-#include <loom/TzWidget>
 #include <loom/TzAnchors>
-#include <loom/TzPainter>
+#include <loom/TzGuiApplication>
 #include <loom/TzKeyEvent>
 #include <loom/TzMouseEvent>
+#include <loom/TzPainter>
 #include <loom/TzRect>
 #include <loom/TzScopedEventListener>
+#include <loom/TzWidget>
+#include <loom/TzWindow>
 
 #include "tzbreadcrumbmodel.hpp"
 #include "tztreenode.hpp"
 
+#include <algorithm>
 #include <string>
 #include <vector>
-#include <algorithm>
 
 static constexpr uint32_t kBg = 0xFF1E1E2E;
 static constexpr uint32_t kSurface = 0xFF313244;
@@ -34,7 +34,7 @@ static constexpr double kCharHeight = 8.0;
 class BreadcrumbBar : public TzWidget
 {
 public:
-    explicit BreadcrumbBar(TzBreadcrumbModel& model, TzWidget* parent = nullptr)
+    explicit BreadcrumbBar(TzBreadcrumbModel &model, TzWidget *parent = nullptr)
         : TzWidget(parent)
         , m_model(model)
     {
@@ -42,14 +42,14 @@ public:
         rebuild();
 
         m_onChanged = m_model.events().on("currentNodeChanged",
-            [this](const TzTreeNodePtr&, const TzTreeNodePtr&) {
-                rebuild();
-                update();
-            });
+                                          [this](const TzTreeNodePtr &, const TzTreeNodePtr &) {
+                                              rebuild();
+                                              update();
+                                          });
     }
 
 protected:
-    void paint(TzPainter* p) override
+    void paint(TzPainter *p) override
     {
         p->fillRect(0.0, 0.0, width(), height(), kSurface);
         p->fillRect(0.0, height() - 1.0, width(), 1.0, kAccent);
@@ -58,7 +58,7 @@ protected:
         const double ty = (height() - kCharHeight) / 2.0;
 
         for (int i = 0; i < static_cast<int>(m_segments.size()); ++i) {
-            const auto& seg = m_segments[i];
+            const auto &seg = m_segments[i];
             bool last = (i == static_cast<int>(m_segments.size()) - 1);
             uint32_t col = last ? kText : kAccent;
 
@@ -75,17 +75,17 @@ protected:
         }
     }
 
-    bool event(TzEvent* e) override
+    bool event(TzEvent *e) override
     {
         if (e->type() == TzEvent::MouseButtonPress) {
-            auto* me = static_cast<TzMouseEvent*>(e);
+            auto *me = static_cast<TzMouseEvent *>(e);
             int idx = segmentAt(me->x());
             if (idx >= 0 && idx < static_cast<int>(m_segments.size()) - 1)
                 m_model.navigateTo(m_segments[static_cast<std::size_t>(idx)].node);
             return true;
         }
         if (e->type() == TzEvent::MouseMove) {
-            auto* me = static_cast<TzMouseEvent*>(e);
+            auto *me = static_cast<TzMouseEvent *>(e);
             int idx = segmentAt(me->x());
             if (idx != m_hoveredSegment) {
                 m_hoveredSegment = idx;
@@ -97,7 +97,8 @@ protected:
     }
 
 private:
-    struct Segment {
+    struct Segment
+    {
         std::string label;
         double width;
         TzTreeNodePtr node;
@@ -108,7 +109,7 @@ private:
     {
         m_segments.clear();
         double x = 12.0;
-        for (auto& node : m_model.path()) {
+        for (auto &node : m_model.path()) {
             Segment s;
             s.label = node->name().empty() ? "/" : node->name();
             s.width = static_cast<double>(s.label.size()) * kCharWidth;
@@ -122,37 +123,37 @@ private:
     int segmentAt(double mx) const
     {
         for (int i = 0; i < static_cast<int>(m_segments.size()); ++i) {
-            const auto& s = m_segments[static_cast<std::size_t>(i)];
+            const auto &s = m_segments[static_cast<std::size_t>(i)];
             if (mx >= s.x && mx < s.x + s.width)
                 return i;
         }
         return -1;
     }
 
-    TzBreadcrumbModel& m_model;
+    TzBreadcrumbModel &m_model;
     std::vector<Segment> m_segments;
-    int m_hoveredSegment{ -1 };
+    int m_hoveredSegment{-1};
     TzScopedEventListener m_onChanged;
 };
 
 class FileListPanel : public TzWidget
 {
 public:
-    explicit FileListPanel(TzBreadcrumbModel& model, TzWidget* parent = nullptr)
+    explicit FileListPanel(TzBreadcrumbModel &model, TzWidget *parent = nullptr)
         : TzWidget(parent)
         , m_model(model)
     {
         reload();
 
         m_onChanged = m_model.events().on("currentNodeChanged",
-            [this](const TzTreeNodePtr&, const TzTreeNodePtr&) {
-                reload();
-                update();
-            });
+                                          [this](const TzTreeNodePtr &, const TzTreeNodePtr &) {
+                                              reload();
+                                              update();
+                                          });
     }
 
 protected:
-    void paint(TzPainter* p) override
+    void paint(TzPainter *p) override
     {
         p->fillRect(0.0, 0.0, width(), height(), kBg);
 
@@ -164,7 +165,7 @@ protected:
         }
 
         for (int i = 0; i < static_cast<int>(m_rows.size()); ++i) {
-            const auto& row = m_rows[static_cast<std::size_t>(i)];
+            const auto &row = m_rows[static_cast<std::size_t>(i)];
             const double ry = static_cast<double>(i) * kRowHeight;
 
             if (i == m_hoveredRow)
@@ -182,7 +183,7 @@ protected:
 
             if (row.isFolder && row.childCount > 0) {
                 std::string hint = std::to_string(row.childCount) + " item"
-                                 + (row.childCount != 1 ? "s" : "");
+                                   + (row.childCount != 1 ? "s" : "");
                 double hx = width() - static_cast<double>(hint.size()) * kCharWidth - 12.0;
                 p->drawText(hx, ty, hint, kTextDim);
             }
@@ -191,10 +192,10 @@ protected:
         }
     }
 
-    bool event(TzEvent* e) override
+    bool event(TzEvent *e) override
     {
         if (e->type() == TzEvent::MouseMove) {
-            auto* me = static_cast<TzMouseEvent*>(e);
+            auto *me = static_cast<TzMouseEvent *>(e);
             int row = rowAt(me->y());
             if (row != m_hoveredRow) {
                 m_hoveredRow = row;
@@ -203,13 +204,13 @@ protected:
             return true;
         }
         if (e->type() == TzEvent::MouseButtonPress) {
-            auto* me = static_cast<TzMouseEvent*>(e);
+            auto *me = static_cast<TzMouseEvent *>(e);
             if (me->button() == MouseButton::Left) {
                 int row = rowAt(me->y());
                 m_selectedRow = row;
                 update();
                 if (row >= 0 && row < static_cast<int>(m_rows.size())) {
-                    const auto& r = m_rows[static_cast<std::size_t>(row)];
+                    const auto &r = m_rows[static_cast<std::size_t>(row)];
                     if (r.isFolder)
                         m_model.navigateTo(r.node);
                 }
@@ -217,20 +218,24 @@ protected:
             }
         }
         if (e->type() == TzEvent::KeyPress) {
-            auto* ke = static_cast<TzKeyEvent*>(e);
+            auto *ke = static_cast<TzKeyEvent *>(e);
             if (ke->key() == Key::Up) {
-                if (m_selectedRow > 0) { --m_selectedRow; update(); }
+                if (m_selectedRow > 0) {
+                    --m_selectedRow;
+                    update();
+                }
                 return true;
             }
             if (ke->key() == Key::Down) {
                 if (m_selectedRow < static_cast<int>(m_rows.size()) - 1) {
-                    ++m_selectedRow; update();
+                    ++m_selectedRow;
+                    update();
                 }
                 return true;
             }
             if (ke->key() == Key::Enter) {
                 if (m_selectedRow >= 0 && m_selectedRow < static_cast<int>(m_rows.size())) {
-                    const auto& r = m_rows[static_cast<std::size_t>(m_selectedRow)];
+                    const auto &r = m_rows[static_cast<std::size_t>(m_selectedRow)];
                     if (r.isFolder)
                         m_model.navigateTo(r.node);
                 }
@@ -245,7 +250,8 @@ protected:
     }
 
 private:
-    struct Row {
+    struct Row
+    {
         std::string name;
         bool isFolder;
         int childCount;
@@ -262,7 +268,7 @@ private:
         if (!current)
             return;
 
-        for (const auto& child : current->children()) {
+        for (const auto &child : current->children()) {
             Row r;
             r.name = child->name();
             r.isFolder = child->isFolder();
@@ -271,30 +277,32 @@ private:
             m_rows.push_back(r);
         }
 
-        std::stable_sort(m_rows.begin(), m_rows.end(), [](const Row& a, const Row& b) {
-            if (a.isFolder != b.isFolder) return a.isFolder > b.isFolder;
+        std::stable_sort(m_rows.begin(), m_rows.end(), [](const Row &a, const Row &b) {
+            if (a.isFolder != b.isFolder)
+                return a.isFolder > b.isFolder;
             return a.name < b.name;
         });
     }
 
     int rowAt(double y) const
     {
-        if (y < 0.0) return -1;
+        if (y < 0.0)
+            return -1;
         int r = static_cast<int>(y / kRowHeight);
         return (r < static_cast<int>(m_rows.size())) ? r : -1;
     }
 
-    TzBreadcrumbModel& m_model;
+    TzBreadcrumbModel &m_model;
     std::vector<Row> m_rows;
-    int m_hoveredRow{ -1 };
-    int m_selectedRow{ -1 };
+    int m_hoveredRow{-1};
+    int m_selectedRow{-1};
     TzScopedEventListener m_onChanged;
 };
 
 class StatusBar : public TzWidget
 {
 public:
-    explicit StatusBar(TzBreadcrumbModel& model, TzWidget* parent = nullptr)
+    explicit StatusBar(TzBreadcrumbModel &model, TzWidget *parent = nullptr)
         : TzWidget(parent)
         , m_model(model)
     {
@@ -302,14 +310,14 @@ public:
         refresh();
 
         m_onChanged = m_model.events().on("currentNodeChanged",
-            [this](const TzTreeNodePtr&, const TzTreeNodePtr&) {
-                refresh();
-                update();
-            });
+                                          [this](const TzTreeNodePtr &, const TzTreeNodePtr &) {
+                                              refresh();
+                                              update();
+                                          });
     }
 
 protected:
-    void paint(TzPainter* p) override
+    void paint(TzPainter *p) override
     {
         p->fillRect(0.0, 0.0, width(), height(), kSurface);
         p->fillRect(0.0, 0.0, width(), 1.0, kBorder);
@@ -321,13 +329,16 @@ private:
     void refresh()
     {
         auto node = m_model.currentNode();
-        if (!node) { m_text = ""; return; }
+        if (!node) {
+            m_text = "";
+            return;
+        }
         int n = node->childCount();
         m_text = std::to_string(n) + " item" + (n != 1 ? "s" : "")
-               + "    Backspace = up   Enter / click = open";
+                 + "    Backspace = up   Enter / click = open";
     }
 
-    TzBreadcrumbModel& m_model;
+    TzBreadcrumbModel &m_model;
     std::string m_text;
     TzScopedEventListener m_onChanged;
 };
@@ -335,40 +346,36 @@ private:
 class BreadcrumbBrowserRoot : public TzWidget
 {
 public:
-    explicit BreadcrumbBrowserRoot(TzGuiApplication& app,
-                                    TzBreadcrumbModel& model)
+    explicit BreadcrumbBrowserRoot(TzGuiApplication &app, TzBreadcrumbModel &model)
         : TzWidget(nullptr)
         , m_app(app)
     {
         m_bar = new BreadcrumbBar(model, this);
-        m_bar->anchors()->setLeft (this, TzAnchors::Left);
+        m_bar->anchors()->setLeft(this, TzAnchors::Left);
         m_bar->anchors()->setRight(this, TzAnchors::Right);
-        m_bar->anchors()->setTop  (this, TzAnchors::Top);
+        m_bar->anchors()->setTop(this, TzAnchors::Top);
 
         m_status = new StatusBar(model, this);
-        m_status->anchors()->setLeft  (this, TzAnchors::Left);
-        m_status->anchors()->setRight (this, TzAnchors::Right);
+        m_status->anchors()->setLeft(this, TzAnchors::Left);
+        m_status->anchors()->setRight(this, TzAnchors::Right);
         m_status->anchors()->setBottom(this, TzAnchors::Bottom);
 
         m_list = new FileListPanel(model, this);
-        m_list->anchors()->setLeft  (this,     TzAnchors::Left);
-        m_list->anchors()->setRight (this,     TzAnchors::Right);
-        m_list->anchors()->setTop   (m_bar,    TzAnchors::Bottom);
+        m_list->anchors()->setLeft(this, TzAnchors::Left);
+        m_list->anchors()->setRight(this, TzAnchors::Right);
+        m_list->anchors()->setTop(m_bar, TzAnchors::Bottom);
         m_list->anchors()->setBottom(m_status, TzAnchors::Top);
 
         m_list->setFocus();
     }
 
 protected:
-    void paint(TzPainter* p) override
-    {
-        p->fillRect(0.0, 0.0, width(), height(), kBg);
-    }
+    void paint(TzPainter *p) override { p->fillRect(0.0, 0.0, width(), height(), kBg); }
 
-    bool event(TzEvent* e) override
+    bool event(TzEvent *e) override
     {
         if (e->type() == TzEvent::KeyPress) {
-            auto* ke = static_cast<TzKeyEvent*>(e);
+            auto *ke = static_cast<TzKeyEvent *>(e);
             if (ke->key() == Key::Escape) {
                 m_app.quit();
                 return true;
@@ -378,17 +385,17 @@ protected:
     }
 
 private:
-    TzGuiApplication& m_app;
-    BreadcrumbBar* m_bar{ nullptr };
-    FileListPanel* m_list{ nullptr };
-    StatusBar* m_status{ nullptr };
+    TzGuiApplication &m_app;
+    BreadcrumbBar *m_bar{nullptr};
+    FileListPanel *m_list{nullptr};
+    StatusBar *m_status{nullptr};
 };
 
 static TzTreeNodePtr buildDemoTree()
 {
     auto root = TzTreeNode::createFolder("/");
 
-    auto src  = TzTreeNode::createFolder("src");
+    auto src = TzTreeNode::createFolder("src");
     auto core = TzTreeNode::createFolder("core");
     core->addChild(TzTreeNode::createItem("tzeventloop.cpp"));
     core->addChild(TzTreeNode::createItem("tzpainter.cpp"));
@@ -412,7 +419,7 @@ static TzTreeNodePtr buildDemoTree()
     return root;
 }
 
-int main(int argc, char* argv[])
+int main(int argc, char *argv[])
 {
     TzGuiApplication app(argc, argv);
 
@@ -423,7 +430,7 @@ int main(int argc, char* argv[])
     window.setTitle("Breadcrumb Browser");
     window.setOnClose([&] { app.quit(); });
 
-    auto* browser = new BreadcrumbBrowserRoot(app, model);
+    auto *browser = new BreadcrumbBrowserRoot(app, model);
     window.setRootWidget(browser);
     window.show();
 

@@ -18,9 +18,9 @@ class TzWindowPrivate : public TzObjectPrivate
 public:
     ~TzWindowPrivate() override;
 
-    TzAbstractWindow *platformWindow{ nullptr };
-    TzScene *scene{ nullptr };
-    TzTimer *paintTimer{ nullptr };
+    TzAbstractWindow *platformWindow{nullptr};
+    TzScene *scene{nullptr};
+    TzTimer *paintTimer{nullptr};
     std::function<void()> onClose;
 };
 

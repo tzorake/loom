@@ -1,14 +1,13 @@
 #include "tzwaylandconsoleinput.hpp"
 #include "tzwaylandconsoleinput_p.hpp"
 
-#include <unistd.h>
-#include <stdexcept>
 #include <cerrno>
+#include <stdexcept>
+#include <unistd.h>
 
 TzWaylandConsoleInput::TzWaylandConsoleInput()
     : d_ptr(new TzWaylandConsoleInputPrivate)
-{
-}
+{}
 
 TzWaylandConsoleInput::~TzWaylandConsoleInput()
 {

@@ -3,17 +3,15 @@
 
 TzAbstractListModel::TzAbstractListModel()
     : TzAbstractItemModel()
-{
-}
+{}
 
-TzAbstractListModel::TzAbstractListModel(TzAbstractItemModelPrivate& dd)
+TzAbstractListModel::TzAbstractListModel(TzAbstractItemModelPrivate &dd)
     : TzAbstractItemModel(dd)
-{
-}
+{}
 
 TzAbstractListModel::~TzAbstractListModel() = default;
 
-TzModelIndex TzAbstractListModel::index(int row, int column, const TzModelIndex& parent) const
+TzModelIndex TzAbstractListModel::index(int row, int column, const TzModelIndex &parent) const
 {
     if (parent.isValid())
         return TzModelIndex();
@@ -22,17 +20,17 @@ TzModelIndex TzAbstractListModel::index(int row, int column, const TzModelIndex&
     return createIndex(row, column);
 }
 
-TzModelIndex TzAbstractListModel::parent(const TzModelIndex& /*child*/) const
+TzModelIndex TzAbstractListModel::parent(const TzModelIndex & /*child*/) const
 {
     return TzModelIndex();
 }
 
-int TzAbstractListModel::columnCount(const TzModelIndex& parent) const
+int TzAbstractListModel::columnCount(const TzModelIndex &parent) const
 {
     return parent.isValid() ? 0 : 1;
 }
 
-bool TzAbstractListModel::hasChildren(const TzModelIndex& parent) const
+bool TzAbstractListModel::hasChildren(const TzModelIndex &parent) const
 {
     if (parent.isValid())
         return false;

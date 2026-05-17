@@ -22,16 +22,17 @@ class TzCoreApplicationPrivate
 public:
     explicit TzCoreApplicationPrivate(TzCoreApplication *q);
 
-    TzCoreApplication *q_ptr{ nullptr };
+    TzCoreApplication *q_ptr{nullptr};
 
     std::unique_ptr<TzAbstractPlatformIntegration> platformIntegration;
     std::unique_ptr<TzAbstractEventDispatcher> eventDispatcher;
     std::unique_ptr<TzEventLoop> eventLoop;
     std::unique_ptr<TzSignalHandler> sigintHandler;
 
-    int exitCode{ 0 };
+    int exitCode{0};
 
-    struct PendingEvent {
+    struct PendingEvent
+    {
         TzObject *receiver;
         std::unique_ptr<TzEvent> event;
     };

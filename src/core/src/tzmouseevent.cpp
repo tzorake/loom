@@ -1,7 +1,7 @@
 #include <loom/tzmouseevent.hpp>
 
-TzMouseEvent::TzMouseEvent(int type, MouseButton button, double x, double y,
-                           KeyModifiers modifiers, double scrollDx, double scrollDy)
+TzMouseEvent::TzMouseEvent(int type, MouseButton button, double x, double y, KeyModifiers modifiers,
+                           double scrollDx, double scrollDy)
     : TzEvent(type)
     , m_button(button)
     , m_x(x)
@@ -9,8 +9,7 @@ TzMouseEvent::TzMouseEvent(int type, MouseButton button, double x, double y,
     , m_scrollDx(scrollDx)
     , m_scrollDy(scrollDy)
     , m_modifiers(modifiers)
-{
-}
+{}
 
 MouseButton TzMouseEvent::button() const
 {

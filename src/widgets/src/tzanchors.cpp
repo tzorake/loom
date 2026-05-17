@@ -1,7 +1,7 @@
 #include <loom/tzanchors.hpp>
-#include <loom/tzwidget.hpp>
 #include <loom/tzmargins.hpp>
 #include <loom/tzrect.hpp>
+#include <loom/tzwidget.hpp>
 
 #include "tzanchors_p.hpp"
 
@@ -13,52 +13,74 @@ TzAnchors::TzAnchors(TzWidget *owner)
     d->owner = owner;
 }
 
-TzAnchors::~TzAnchors()
-{
-}
+TzAnchors::~TzAnchors() {}
 
 void TzAnchors::setLeft(TzWidget *target, Edge edge, double margin)
 {
     TZ_D(TzAnchors);
-    d->left = { target, edge, margin, true };
+    d->left = {target, edge, margin, true};
 }
 
 void TzAnchors::setRight(TzWidget *target, Edge edge, double margin)
 {
     TZ_D(TzAnchors);
-    d->right = { target, edge, margin, true };
+    d->right = {target, edge, margin, true};
 }
 
 void TzAnchors::setTop(TzWidget *target, Edge edge, double margin)
 {
     TZ_D(TzAnchors);
-    d->top = { target, edge, margin, true };
+    d->top = {target, edge, margin, true};
 }
 
 void TzAnchors::setBottom(TzWidget *target, Edge edge, double margin)
 {
     TZ_D(TzAnchors);
-    d->bottom = { target, edge, margin, true };
+    d->bottom = {target, edge, margin, true};
 }
 
 void TzAnchors::setHCenter(TzWidget *target, Edge edge, double margin)
 {
     TZ_D(TzAnchors);
-    d->hcenter = { target, edge, margin, true };
+    d->hcenter = {target, edge, margin, true};
 }
 
 void TzAnchors::setVCenter(TzWidget *target, Edge edge, double margin)
 {
     TZ_D(TzAnchors);
-    d->vcenter = { target, edge, margin, true };
+    d->vcenter = {target, edge, margin, true};
 }
 
-void TzAnchors::clearLeft()    { TZ_D(TzAnchors); d->left    = {}; }
-void TzAnchors::clearRight()   { TZ_D(TzAnchors); d->right   = {}; }
-void TzAnchors::clearTop()     { TZ_D(TzAnchors); d->top     = {}; }
-void TzAnchors::clearBottom()  { TZ_D(TzAnchors); d->bottom  = {}; }
-void TzAnchors::clearHCenter() { TZ_D(TzAnchors); d->hcenter = {}; }
-void TzAnchors::clearVCenter() { TZ_D(TzAnchors); d->vcenter = {}; }
+void TzAnchors::clearLeft()
+{
+    TZ_D(TzAnchors);
+    d->left = {};
+}
+void TzAnchors::clearRight()
+{
+    TZ_D(TzAnchors);
+    d->right = {};
+}
+void TzAnchors::clearTop()
+{
+    TZ_D(TzAnchors);
+    d->top = {};
+}
+void TzAnchors::clearBottom()
+{
+    TZ_D(TzAnchors);
+    d->bottom = {};
+}
+void TzAnchors::clearHCenter()
+{
+    TZ_D(TzAnchors);
+    d->hcenter = {};
+}
+void TzAnchors::clearVCenter()
+{
+    TZ_D(TzAnchors);
+    d->vcenter = {};
+}
 
 void TzAnchors::clearAll()
 {
@@ -74,10 +96,10 @@ void TzAnchors::fill(TzWidget *target, double margin)
 void TzAnchors::fill(TzWidget *target, const TzMargins &margins)
 {
     TZ_D(TzAnchors);
-    d->left = { target, Left, margins.left, true };
-    d->right = { target, Right, margins.right, true };
-    d->top = { target, Top, margins.top, true };
-    d->bottom = { target, Bottom, margins.bottom, true };
+    d->left = {target, Left, margins.left, true};
+    d->right = {target, Right, margins.right, true};
+    d->top = {target, Top, margins.top, true};
+    d->bottom = {target, Bottom, margins.bottom, true};
     d->hcenter = {};
     d->vcenter = {};
 }
@@ -85,8 +107,8 @@ void TzAnchors::fill(TzWidget *target, const TzMargins &margins)
 void TzAnchors::centerIn(TzWidget *target)
 {
     TZ_D(TzAnchors);
-    d->hcenter = { target, HCenter, 0.0, true };
-    d->vcenter = { target, VCenter, 0.0, true };
+    d->hcenter = {target, HCenter, 0.0, true};
+    d->vcenter = {target, VCenter, 0.0, true};
     d->left = d->right = d->top = d->bottom = {};
 }
 
@@ -128,17 +150,22 @@ bool TzAnchors::hasVCenter() const
 
 static double edgeValue(const TzWidget *target, TzAnchors::Edge e, bool targetIsParent)
 {
-    TzRect g = targetIsParent
-        ? TzRect{ 0.0, 0.0, target->width(), target->height() }
-        : target->geometry();
+    TzRect g = targetIsParent ? TzRect{0.0, 0.0, target->width(), target->height()}
+                              : target->geometry();
 
     switch (e) {
-        case TzAnchors::Left:    return g.x;
-        case TzAnchors::Right:   return g.x + g.width;
-        case TzAnchors::Top:     return g.y;
-        case TzAnchors::Bottom:  return g.y + g.height;
-        case TzAnchors::HCenter: return g.x + g.width  / 2.0;
-        case TzAnchors::VCenter: return g.y + g.height / 2.0;
+    case TzAnchors::Left:
+        return g.x;
+    case TzAnchors::Right:
+        return g.x + g.width;
+    case TzAnchors::Top:
+        return g.y;
+    case TzAnchors::Bottom:
+        return g.y + g.height;
+    case TzAnchors::HCenter:
+        return g.x + g.width / 2.0;
+    case TzAnchors::VCenter:
+        return g.y + g.height / 2.0;
     }
     return 0.0;
 }
@@ -146,14 +173,15 @@ static double edgeValue(const TzWidget *target, TzAnchors::Edge e, bool targetIs
 std::optional<TzAnchorsPrivate::Layout> TzAnchorsPrivate::computeLayout() const
 {
     const bool anyH = left.set || right.set || hcenter.set;
-    const bool anyV = top.set  || bottom.set || vcenter.set;
-    if (!anyH && !anyV) return std::nullopt;
+    const bool anyV = top.set || bottom.set || vcenter.set;
+    if (!anyH && !anyV)
+        return std::nullopt;
 
     const double implW = owner->implicitWidth();
     const double implH = owner->implicitHeight();
 
     TzRect cur = owner->geometry();
-    Layout out{ cur.x, cur.y, std::nullopt, std::nullopt };
+    Layout out{cur.x, cur.y, std::nullopt, std::nullopt};
 
     TzWidget *ownerParent = owner->parentWidget();
     auto ev = [&](const TzAnchorLine &line) {
@@ -161,9 +189,9 @@ std::optional<TzAnchorsPrivate::Layout> TzAnchorsPrivate::computeLayout() const
     };
 
     if (left.set && right.set) {
-        double lv = ev(left)  + left.margin;
+        double lv = ev(left) + left.margin;
         double rv = ev(right) - right.margin;
-        out.x     = lv;
+        out.x = lv;
         out.width = rv - lv;
     } else if (left.set) {
         out.x = ev(left) + left.margin;
@@ -174,9 +202,9 @@ std::optional<TzAnchorsPrivate::Layout> TzAnchorsPrivate::computeLayout() const
     }
 
     if (top.set && bottom.set) {
-        double tv  = ev(top)    + top.margin;
-        double bv  = ev(bottom) - bottom.margin;
-        out.y      = tv;
+        double tv = ev(top) + top.margin;
+        double bv = ev(bottom) - bottom.margin;
+        out.y = tv;
         out.height = bv - tv;
     } else if (top.set) {
         out.y = ev(top) + top.margin;

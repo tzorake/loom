@@ -1,17 +1,15 @@
-#include <loom/tzsocketnotifier.hpp>
 #include <loom/tzabstracteventdispatcher.hpp>
+#include <loom/tzsocketnotifier.hpp>
 
 #include "tzsocketnotifier_p.hpp"
 
 TzSocketNotifierPrivate::TzSocketNotifierPrivate(TzAbstractEventDispatcher *eventDispatcher)
     : eventDispatcher(eventDispatcher)
-{
-}
+{}
 
 TzSocketNotifier::TzSocketNotifier(TzAbstractEventDispatcher *eventDispatcher)
     : d_ptr(new TzSocketNotifierPrivate(eventDispatcher))
-{
-}
+{}
 
 TzSocketNotifier::~TzSocketNotifier()
 {

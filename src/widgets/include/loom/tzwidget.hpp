@@ -1,8 +1,8 @@
 #ifndef TZWIDGET_HPP
 #define TZWIDGET_HPP
 
-#include <loom/tzobject.hpp>
 #include <loom/tzclasshelpermacros.hpp>
+#include <loom/tzobject.hpp>
 
 class TzAnchors;
 class TzPainter;
@@ -24,7 +24,7 @@ public:
 
     void setY(double y);
     double y() const;
-    
+
     void setWidth(double width);
     double width() const;
 
@@ -50,7 +50,7 @@ public:
     void setImplicitSize(double w, double h);
     TzSize implicitSize() const;
 
-    double effectiveWidth()  const;
+    double effectiveWidth() const;
     double effectiveHeight() const;
 
     TzAnchors *anchors();

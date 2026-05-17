@@ -1,10 +1,10 @@
 #include <loom/tzabstractplatformintegration.hpp>
 
 #ifdef __APPLE__
-#include "tzcocoaeventdispatcher.hpp"
 #include "tzcocoaconsoleinput.hpp"
-#include "tzcocoawindow.hpp"
+#include "tzcocoaeventdispatcher.hpp"
 #include "tzcocoaplatformintegration.hpp"
+#include "tzcocoawindow.hpp"
 
 TzAbstractEventDispatcher *TzCocoaPlatformIntegration::createEventDispatcher()
 {
@@ -31,8 +31,8 @@ static TzAbstractPlatformIntegration *createPlatformIntegrationImpl()
     return new TzCocoaPlatformIntegration;
 }
 #elif _WIN32
-#include "platform/windows/tzwin32eventdispatcher.hpp"
 #include "platform/windows/tzwin32consoleinput.hpp"
+#include "platform/windows/tzwin32eventdispatcher.hpp"
 #include "platform/windows/tzwin32window.hpp"
 #include "tzwin32platformintegration.hpp"
 
@@ -62,10 +62,10 @@ static TzAbstractPlatformIntegration *createPlatformIntegrationImpl()
 }
 #elif __linux__
 #ifdef LOOM_BACKEND_X11
-#include "platform/linux/tzx11eventdispatcher.hpp"
 #include "platform/linux/tzx11consoleinput.hpp"
-#include "platform/linux/tzx11window.hpp"
+#include "platform/linux/tzx11eventdispatcher.hpp"
 #include "platform/linux/tzx11globals.hpp"
+#include "platform/linux/tzx11window.hpp"
 #include "tzx11platformintegration.hpp"
 
 TzAbstractEventDispatcher *TzX11PlatformIntegration::createEventDispatcher()
@@ -97,10 +97,10 @@ static TzAbstractPlatformIntegration *createPlatformIntegrationImpl()
     return new TzX11PlatformIntegration;
 }
 #else
-#include "platform/linux/tzwaylandeventdispatcher.hpp"
 #include "platform/linux/tzwaylandconsoleinput.hpp"
-#include "platform/linux/tzwaylandwindow.hpp"
+#include "platform/linux/tzwaylandeventdispatcher.hpp"
 #include "platform/linux/tzwaylandglobals.hpp"
+#include "platform/linux/tzwaylandwindow.hpp"
 #include "tzwaylandplatformintegration.hpp"
 
 void TzWaylandPlatformIntegration::ensureGlobals()
@@ -144,9 +144,7 @@ static TzAbstractPlatformIntegration *createPlatformIntegrationImpl()
 #else
 #endif
 
-TzAbstractPlatformIntegration::~TzAbstractPlatformIntegration()
-{
-}
+TzAbstractPlatformIntegration::~TzAbstractPlatformIntegration() {}
 
 TzAbstractPlatformIntegration *createPlatformIntegration()
 {

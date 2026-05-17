@@ -16,7 +16,7 @@ public:
     bool isConnected() const;
     operator bool() const;
 
-    void swap(TzEventListener& other) noexcept;
+    void swap(TzEventListener &other) noexcept;
 
 private:
     friend TzEventEmitter;

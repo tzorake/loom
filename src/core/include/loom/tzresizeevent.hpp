@@ -7,9 +7,12 @@ class TzResizeEvent : public TzEvent
 {
 public:
     TzResizeEvent(int width, int height)
-        : TzEvent(TzEvent::WindowResize), m_width(width), m_height(height) {}
+        : TzEvent(TzEvent::WindowResize)
+        , m_width(width)
+        , m_height(height)
+    {}
 
-    int width()  const { return m_width;  }
+    int width() const { return m_width; }
     int height() const { return m_height; }
 
     TzResizeEvent *clone() const override { return new TzResizeEvent(*this); }

@@ -4,8 +4,7 @@ TzGeometryChangeEvent::TzGeometryChangeEvent(const TzRect &oldGeometry, const Tz
     : TzEvent(TzEvent::GeometryChange)
     , m_oldGeometry(oldGeometry)
     , m_newGeometry(newGeometry)
-{
-}
+{}
 
 const TzRect &TzGeometryChangeEvent::oldGeometry() const
 {

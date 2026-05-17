@@ -2,8 +2,7 @@
 
 TzEvent::TzEvent(int type)
     : m_type(type)
-{
-}
+{}
 
 TzEvent::~TzEvent() = default;
 

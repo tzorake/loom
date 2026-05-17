@@ -1,12 +1,12 @@
 #include "tzwaylandeventdispatcher.hpp"
 #include "tzwaylandeventdispatcher_p.hpp"
 
+#include <errno.h>
+#include <stdexcept>
 #include <sys/epoll.h>
 #include <sys/eventfd.h>
 #include <sys/timerfd.h>
 #include <unistd.h>
-#include <errno.h>
-#include <stdexcept>
 
 TzWaylandEventDispatcherPrivate::TzWaylandEventDispatcherPrivate()
 {
@@ -19,7 +19,7 @@ TzWaylandEventDispatcherPrivate::TzWaylandEventDispatcherPrivate()
         throw std::runtime_error("eventfd failed");
 
     epoll_event ev{};
-    ev.events  = EPOLLIN;
+    ev.events = EPOLLIN;
     ev.data.fd = wakeFd;
     epoll_ctl(epollFd, EPOLL_CTL_ADD, wakeFd, &ev);
     // Wayland display fd is added later via setWaylandDisplay().
@@ -27,8 +27,10 @@ TzWaylandEventDispatcherPrivate::TzWaylandEventDispatcherPrivate()
 
 TzWaylandEventDispatcherPrivate::~TzWaylandEventDispatcherPrivate()
 {
-    if (wakeFd >= 0)  close(wakeFd);
-    if (epollFd >= 0) close(epollFd);
+    if (wakeFd >= 0)
+        close(wakeFd);
+    if (epollFd >= 0)
+        close(epollFd);
 }
 
 // ── TzWaylandEventDispatcher ─────────────────────────────────────────────────
@@ -56,15 +58,15 @@ void TzWaylandEventDispatcher::setWaylandDisplay(wl_display *display)
     d_ptr->waylandFd = wl_display_get_fd(display);
 
     epoll_event ev{};
-    ev.events  = EPOLLIN;
+    ev.events = EPOLLIN;
     ev.data.fd = d_ptr->waylandFd;
     epoll_ctl(d_ptr->epollFd, EPOLL_CTL_ADD, d_ptr->waylandFd, &ev);
 }
 
 void TzWaylandEventDispatcher::processEvents()
 {
-    wl_display *display  = d_ptr->waylandDisplay; // null for console-only apps
-    int         wlFd     = d_ptr->waylandFd;
+    wl_display *display = d_ptr->waylandDisplay; // null for console-only apps
+    int wlFd = d_ptr->waylandFd;
 
     d_ptr->interrupted = false;
     bool needsFlush = false; // true when wl_display_flush returned EAGAIN
@@ -87,7 +89,8 @@ void TzWaylandEventDispatcher::processEvents()
             // Drain any pending events that arrived since we last dispatched.
             while (wl_display_prepare_read(display) != 0) {
                 wl_display_dispatch_pending(display);
-                if (d_ptr->interrupted) break;
+                if (d_ptr->interrupted)
+                    break;
             }
             if (d_ptr->interrupted) {
                 wl_display_cancel_read(display);
@@ -99,7 +102,7 @@ void TzWaylandEventDispatcher::processEvents()
             if (wl_display_flush(display) < 0 && errno == EAGAIN) {
                 if (!needsFlush) {
                     epoll_event mod{};
-                    mod.events  = EPOLLIN | EPOLLOUT;
+                    mod.events = EPOLLIN | EPOLLOUT;
                     mod.data.fd = wlFd;
                     epoll_ctl(d_ptr->epollFd, EPOLL_CTL_MOD, wlFd, &mod);
                     needsFlush = true;
@@ -111,18 +114,20 @@ void TzWaylandEventDispatcher::processEvents()
         int n = epoll_wait(d_ptr->epollFd, events, 64, -1);
 
         if (n < 0) {
-            if (display) wl_display_cancel_read(display);
-            if (errno == EINTR) continue;
+            if (display)
+                wl_display_cancel_read(display);
+            if (errno == EINTR)
+                continue;
             break;
         }
 
         // Inspect the Wayland fd events before touching the read queue.
-        bool waylandReadable  = false;
-        bool waylandWritable  = false;
+        bool waylandReadable = false;
+        bool waylandWritable = false;
         if (display) {
             for (int i = 0; i < n; i++) {
                 if (events[i].data.fd == wlFd) {
-                    waylandReadable = (events[i].events & EPOLLIN)  != 0;
+                    waylandReadable = (events[i].events & EPOLLIN) != 0;
                     waylandWritable = (events[i].events & EPOLLOUT) != 0;
                     break;
                 }
@@ -132,7 +137,7 @@ void TzWaylandEventDispatcher::processEvents()
             if (waylandWritable && needsFlush) {
                 wl_display_flush(display);
                 epoll_event mod{};
-                mod.events  = EPOLLIN;
+                mod.events = EPOLLIN;
                 mod.data.fd = wlFd;
                 epoll_ctl(d_ptr->epollFd, EPOLL_CTL_MOD, wlFd, &mod);
                 needsFlush = false;
@@ -156,25 +161,25 @@ void TzWaylandEventDispatcher::processEvents()
 
             } else if (fd == d_ptr->wakeFd) {
                 uint64_t val;
-                (void)read(d_ptr->wakeFd, &val, sizeof(val));
+                (void) read(d_ptr->wakeFd, &val, sizeof(val));
 
             } else {
                 // Timer?
                 {
-                    TzAbstractEventDispatcher::TimerHandle   th{};
+                    TzAbstractEventDispatcher::TimerHandle th{};
                     TzAbstractEventDispatcher::TimerCallback cb;
                     bool single = false;
                     for (auto &[h, w] : d_ptr->timerMap) {
                         if (w->timerFd == fd) {
-                            th     = h;
-                            cb     = w->callback;
+                            th = h;
+                            cb = w->callback;
                             single = w->singleShot;
                             break;
                         }
                     }
                     if (cb) {
                         uint64_t exp;
-                        (void)read(fd, &exp, sizeof(exp));
+                        (void) read(fd, &exp, sizeof(exp));
                         cb();
                         if (single)
                             unregisterTimer(th);
@@ -186,9 +191,13 @@ void TzWaylandEventDispatcher::processEvents()
                 {
                     TzAbstractEventDispatcher::NotifyCallback cb;
                     for (auto &[_, w] : d_ptr->notifyMap) {
-                        if (w->fd == fd) { cb = w->callback; break; }
+                        if (w->fd == fd) {
+                            cb = w->callback;
+                            break;
+                        }
                     }
-                    if (cb) cb(fd);
+                    if (cb)
+                        cb(fd);
                 }
             }
         }
@@ -199,13 +208,13 @@ void TzWaylandEventDispatcher::interrupt()
 {
     d_ptr->interrupted = true;
     uint64_t val = 1;
-    (void)write(d_ptr->wakeFd, &val, sizeof(val));
+    (void) write(d_ptr->wakeFd, &val, sizeof(val));
 }
 
 void TzWaylandEventDispatcher::wakeUp()
 {
     uint64_t val = 1;
-    (void)write(d_ptr->wakeFd, &val, sizeof(val));
+    (void) write(d_ptr->wakeFd, &val, sizeof(val));
 }
 
 void TzWaylandEventDispatcher::setPreWaitCallback(PreWaitCallback callback)
@@ -220,27 +229,27 @@ TzWaylandEventDispatcher::TimerHandle TzWaylandEventDispatcher::registerTimer(
     if (tfd < 0)
         throw std::runtime_error("timerfd_create failed");
 
-    long secs  = interval.count() / 1000;
+    long secs = interval.count() / 1000;
     long nsecs = (interval.count() % 1000) * 1000000L;
 
     itimerspec spec{};
-    spec.it_value.tv_sec  = secs;
+    spec.it_value.tv_sec = secs;
     spec.it_value.tv_nsec = nsecs;
     if (!singleShot) {
-        spec.it_interval.tv_sec  = secs;
+        spec.it_interval.tv_sec = secs;
         spec.it_interval.tv_nsec = nsecs;
     }
     timerfd_settime(tfd, 0, &spec, nullptr);
 
     epoll_event ev{};
-    ev.events  = EPOLLIN;
+    ev.events = EPOLLIN;
     ev.data.fd = tfd;
     epoll_ctl(d_ptr->epollFd, EPOLL_CTL_ADD, tfd, &ev);
 
-    auto wrapper        = std::make_unique<TzWaylandEventDispatcherPrivate::TimerWrapper>();
-    wrapper->timerFd    = tfd;
+    auto wrapper = std::make_unique<TzWaylandEventDispatcherPrivate::TimerWrapper>();
+    wrapper->timerFd = tfd;
     wrapper->singleShot = singleShot;
-    wrapper->callback   = std::move(callback);
+    wrapper->callback = std::move(callback);
 
     TimerHandle handle = static_cast<TimerHandle>(wrapper.get());
     d_ptr->timerMap[handle] = std::move(wrapper);
@@ -263,12 +272,12 @@ TzWaylandEventDispatcher::NotifyHandle TzWaylandEventDispatcher::registerSocketN
     int fd, NotifyCallback callback)
 {
     epoll_event ev{};
-    ev.events  = EPOLLIN;
+    ev.events = EPOLLIN;
     ev.data.fd = fd;
     epoll_ctl(d_ptr->epollFd, EPOLL_CTL_ADD, fd, &ev);
 
-    auto wrapper      = std::make_unique<TzWaylandEventDispatcherPrivate::NotifyWrapper>();
-    wrapper->fd       = fd;
+    auto wrapper = std::make_unique<TzWaylandEventDispatcherPrivate::NotifyWrapper>();
+    wrapper->fd = fd;
     wrapper->callback = std::move(callback);
 
     NotifyHandle handle = static_cast<NotifyHandle>(wrapper.get());

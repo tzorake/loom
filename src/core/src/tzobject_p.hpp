@@ -11,12 +11,12 @@ public:
     explicit TzObjectPrivate();
     virtual ~TzObjectPrivate();
 
-    TzObject *q_ptr{ nullptr };
-    TzObject *parent{ nullptr };
-    TzObject *firstChild{ nullptr };
-    TzObject *nextSibling{ nullptr };
-    TzObject *previousSibling{ nullptr };
-    bool pendingDelete{ false };
+    TzObject *q_ptr{nullptr};
+    TzObject *parent{nullptr};
+    TzObject *firstChild{nullptr};
+    TzObject *nextSibling{nullptr};
+    TzObject *previousSibling{nullptr};
+    bool pendingDelete{false};
 
     void unlinkFromParent();
     void appendToParent(TzObject *newParent);

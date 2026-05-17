@@ -31,7 +31,7 @@ public:
 
     TzWidget *widgetAt(double x, double y) const;
 
-    int width()  const;
+    int width() const;
     int height() const;
 
 private:

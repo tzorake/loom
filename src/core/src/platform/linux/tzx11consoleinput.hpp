@@ -14,10 +14,10 @@ public:
     TzX11ConsoleInput();
     ~TzX11ConsoleInput() override;
 
-    int         fd()   const override;
-    void        start()      override;
-    void        stop()       override;
-    std::string read()       override;
+    int fd() const override;
+    void start() override;
+    void stop() override;
+    std::string read() override;
 
 private:
     std::unique_ptr<TzX11ConsoleInputPrivate> d_ptr;

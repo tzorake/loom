@@ -10,7 +10,7 @@ class TzX11ConsoleInputPrivate
 public:
     struct termios origTermios;
     struct termios rawTermios;
-    bool rawActive { false };
+    bool rawActive{false};
 };
 
 #endif // TZX11CONSOLEINPUT_P_HPP

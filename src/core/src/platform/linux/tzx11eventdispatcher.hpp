@@ -1,8 +1,8 @@
 #ifndef TZX11EVENTDISPATCHER_HPP
 #define TZX11EVENTDISPATCHER_HPP
 
-#include <loom/tzclasshelpermacros.hpp>
 #include <loom/tzabstracteventdispatcher.hpp>
+#include <loom/tzclasshelpermacros.hpp>
 
 #include <memory>
 
@@ -16,16 +16,16 @@ public:
     ~TzX11EventDispatcher() override;
 
     void processEvents() override;
-    void interrupt()     override;
-    void wakeUp()        override;
+    void interrupt() override;
+    void wakeUp() override;
     void setPreWaitCallback(PreWaitCallback callback) override;
 
-    TimerHandle  registerTimer(TimerInterval interval, bool singleShot,
-                               TimerCallback callback) override;
-    void         unregisterTimer(TimerHandle handle) override;
+    TimerHandle registerTimer(TimerInterval interval, bool singleShot,
+                              TimerCallback callback) override;
+    void unregisterTimer(TimerHandle handle) override;
 
     NotifyHandle registerSocketNotifier(int fd, NotifyCallback callback) override;
-    void         unregisterSocketNotifier(NotifyHandle handle) override;
+    void unregisterSocketNotifier(NotifyHandle handle) override;
 
     // Called by the platform integration once the X11 display is available.
     void setX11Fd(int fd);

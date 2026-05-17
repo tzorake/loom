@@ -13,13 +13,13 @@ public:
     explicit TzTimerPrivate(TzAbstractEventDispatcher *eventDispatcher);
 
 private:
-    TzTimer *q_ptr{ nullptr };
+    TzTimer *q_ptr{nullptr};
 
-    TzAbstractEventDispatcher *eventDispatcher{ nullptr };
-    TzTimer::TimerHandle handle{ nullptr };
-    TzTimer::TimerInterval interval{ 0 };
-    bool singleShot{ false };
-    bool active{ false };
+    TzAbstractEventDispatcher *eventDispatcher{nullptr};
+    TzTimer::TimerHandle handle{nullptr};
+    TzTimer::TimerInterval interval{0};
+    bool singleShot{false};
+    bool active{false};
     TzTimer::TimerCallback callback;
 };
 

@@ -24,7 +24,8 @@ public:
     void start();
     void stop();
 
-    static TzSignalHandler *create(TzAbstractEventDispatcher *eventDispatcher, int signo, SignalCallback callback);
+    static TzSignalHandler *create(TzAbstractEventDispatcher *eventDispatcher, int signo,
+                                   SignalCallback callback);
 
 private:
     std::unique_ptr<TzSignalHandlerPrivate> d_ptr;

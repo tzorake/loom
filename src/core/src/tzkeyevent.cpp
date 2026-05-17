@@ -5,8 +5,7 @@ TzKeyEvent::TzKeyEvent(int type, Key key, KeyModifiers modifiers, std::string ut
     , m_key(key)
     , m_modifiers(modifiers)
     , m_utf8(std::move(utf8))
-{
-}
+{}
 
 Key TzKeyEvent::key() const
 {

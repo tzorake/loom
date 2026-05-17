@@ -19,8 +19,7 @@ public:
     using KeyCallback = std::function<void(TzKeyEvent *)>;
 
     explicit TzKeyboardHandler(TzAbstractEventDispatcher *eventDispatcher,
-                               TzAbstractConsoleInput *consoleInput,
-                               TzObject *parent = nullptr);
+                               TzAbstractConsoleInput *consoleInput, TzObject *parent = nullptr);
     ~TzKeyboardHandler() override;
 
     void setCallback(KeyCallback callback);
@@ -31,8 +30,7 @@ public:
     bool event(TzEvent *event) override;
 
     static TzKeyboardHandler *create(TzAbstractEventDispatcher *eventDispatcher,
-                                     TzAbstractConsoleInput *consoleInput,
-                                     KeyCallback callback,
+                                     TzAbstractConsoleInput *consoleInput, KeyCallback callback,
                                      TzObject *parent = nullptr);
 
 private:

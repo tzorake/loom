@@ -1,8 +1,8 @@
 #include "../../tzsignalpipe.hpp"
 
-#include <unistd.h>
 #include <fcntl.h>
 #include <stdexcept>
+#include <unistd.h>
 
 TzSignalPipe::TzSignalPipe()
 {
@@ -12,8 +12,10 @@ TzSignalPipe::TzSignalPipe()
 
 TzSignalPipe::~TzSignalPipe()
 {
-    if (m_fds[0] != -1) ::close(m_fds[0]);
-    if (m_fds[1] != -1) ::close(m_fds[1]);
+    if (m_fds[0] != -1)
+        ::close(m_fds[0]);
+    if (m_fds[1] != -1)
+        ::close(m_fds[1]);
 }
 
 int TzSignalPipe::read(void *buf, int count)

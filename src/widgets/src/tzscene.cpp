@@ -1,15 +1,15 @@
-#include <loom/tzscene.hpp>
-#include <loom/tzwidget.hpp>
-#include <loom/tzsurface.hpp>
-#include <loom/tzplatformsurface.hpp>
+#include <loom/tzcoreapplication.hpp>
+#include <loom/tzfocusevent.hpp>
 #include <loom/tzkeyevent.hpp>
 #include <loom/tzmouseevent.hpp>
-#include <loom/tzfocusevent.hpp>
-#include <loom/tzpaintevent.hpp>
-#include <loom/tzcoreapplication.hpp>
 #include <loom/tzpainter.hpp>
-#include <loom/tzrect.hpp>
+#include <loom/tzpaintevent.hpp>
+#include <loom/tzplatformsurface.hpp>
 #include <loom/tzpoint.hpp>
+#include <loom/tzrect.hpp>
+#include <loom/tzscene.hpp>
+#include <loom/tzsurface.hpp>
+#include <loom/tzwidget.hpp>
 
 #include "tzscene_p.hpp"
 #include "tzwidget_p.hpp"
@@ -25,7 +25,8 @@ void TzScenePrivate::layoutWidget(TzWidget *w, int passesLeft)
                     changed = true;
             child = child->nextSibling();
         }
-        if (!changed) break;
+        if (!changed)
+            break;
     }
 
     TzObject *child = w->firstChild();
@@ -37,7 +38,7 @@ void TzScenePrivate::layoutWidget(TzWidget *w, int passesLeft)
 }
 
 void TzScenePrivate::paintWidget(TzWidget *w, double parentAbsX, double parentAbsY,
-                                  const TzRect &parentClip)
+                                 const TzRect &parentClip)
 {
     if (!w->isVisible())
         return;
@@ -45,13 +46,13 @@ void TzScenePrivate::paintWidget(TzWidget *w, double parentAbsX, double parentAb
     TzRect geom = w->geometry();
     double absX = parentAbsX + geom.x;
     double absY = parentAbsY + geom.y;
-    TzRect myClip = { absX, absY, geom.width, geom.height };
+    TzRect myClip = {absX, absY, geom.width, geom.height};
     TzRect clip = myClip.intersected(parentClip);
 
     if (clip.isEmpty())
         return;
 
-    TzPoint offset{ absX, absY };
+    TzPoint offset{absX, absY};
     TzPainter painter(pixels.data(), width, height, clip, offset);
     TzPaintEvent pe(&painter);
     TzCoreApplication::sendEvent(w, &pe);
@@ -89,9 +90,8 @@ void TzScenePrivate::unregisterSubtree(TzWidget *w)
     }
 }
 
-TzWidget *TzScenePrivate::widgetAtHelper(TzWidget *w,
-                                          double x, double y,
-                                          double parentAbsX, double parentAbsY) const
+TzWidget *TzScenePrivate::widgetAtHelper(TzWidget *w, double x, double y, double parentAbsX,
+                                         double parentAbsY) const
 {
     if (!w->isVisible())
         return nullptr;
@@ -99,20 +99,25 @@ TzWidget *TzScenePrivate::widgetAtHelper(TzWidget *w,
     TzRect geom = w->geometry();
     double absX = parentAbsX + geom.x;
     double absY = parentAbsY + geom.y;
-    TzRect abs  = { absX, absY, geom.width, geom.height };
+    TzRect abs = {absX, absY, geom.width, geom.height};
 
     if (!abs.contains(x, y))
         return nullptr;
 
     std::vector<TzObject *> children;
     TzObject *child = w->firstChild();
-    while (child) { children.push_back(child); child = child->nextSibling(); }
+    while (child) {
+        children.push_back(child);
+        child = child->nextSibling();
+    }
 
-    for (int i = (int)children.size() - 1; i >= 0; --i) {
+    for (int i = (int) children.size() - 1; i >= 0; --i) {
         TzWidget *cw = dynamic_cast<TzWidget *>(children[i]);
-        if (!cw) continue;
+        if (!cw)
+            continue;
         TzWidget *hit = widgetAtHelper(cw, x, y, absX, absY);
-        if (hit) return hit;
+        if (hit)
+            return hit;
     }
     return w;
 }
@@ -126,7 +131,7 @@ TzScene::TzScene(TzSurface *surface)
 
     d->platformSurface->setResizeCallback([this](int w, int h) {
         TZ_D(TzScene);
-        d->width  = w;
+        d->width = w;
         d->height = h;
         doLayout();
         doPaint();
@@ -138,12 +143,13 @@ TzScene::TzScene(TzSurface *surface)
     });
     d->platformSurface->setMouseCallback([this](TzMouseEvent *e) {
         TzWidget *target = widgetAt(e->x(), e->y());
-        if (!target) return;
+        if (!target)
+            return;
         if (e->type() == TzEvent::MouseButtonPress && target != focusedWidget())
             setFocusedWidget(target);
-        TzPoint local = target->mapFromGlobal({ e->x(), e->y() });
-        TzMouseEvent localEvent(e->type(), e->button(), local.x, local.y,
-                                e->modifiers(), e->scrollDx(), e->scrollDy());
+        TzPoint local = target->mapFromGlobal({e->x(), e->y()});
+        TzMouseEvent localEvent(e->type(), e->button(), local.x, local.y, e->modifiers(),
+                                e->scrollDx(), e->scrollDy());
         TzCoreApplication::sendEvent(target, &localEvent);
     });
 }
@@ -171,13 +177,13 @@ void TzScene::setRoot(TzWidget *root)
 
     if (d->root) {
         d->registerSubtree(d->root);
-        d->root->setImplicitSize((double)d->width, (double)d->height);
+        d->root->setImplicitSize((double) d->width, (double) d->height);
 
         TzWidgetPrivate *rd = static_cast<TzWidgetPrivate *>(d->root->d_ptr);
         rd->resetWidth();
         rd->resetHeight();
 
-        d->root->setGeometry({ 0.0, 0.0, (double)d->width, (double)d->height });
+        d->root->setGeometry({0.0, 0.0, (double) d->width, (double) d->height});
         doLayout();
         markPaintDirty();
     }
@@ -189,8 +195,8 @@ void TzScene::doLayout()
     if (!d->root)
         return;
 
-    d->root->setImplicitSize((double)d->width, (double)d->height);
-    d->root->setGeometry({ 0.0, 0.0, (double)d->width, (double)d->height });
+    d->root->setImplicitSize((double) d->width, (double) d->height);
+    d->root->setGeometry({0.0, 0.0, (double) d->width, (double) d->height});
 
     d->layoutWidget(d->root, 3);
 
@@ -207,9 +213,9 @@ void TzScene::doPaint()
         d->layoutDirty = false;
     }
 
-    d->pixels.assign((size_t)(d->width * d->height), 0xFF000000u);
+    d->pixels.assign((size_t) (d->width * d->height), 0xFF000000u);
 
-    TzRect windowRect = { 0.0, 0.0, (double)d->width, (double)d->height };
+    TzRect windowRect = {0.0, 0.0, (double) d->width, (double) d->height};
     d->paintWidget(d->root, 0.0, 0.0, windowRect);
 
     d->platformSurface->render(d->pixels, d->width, d->height);
@@ -270,7 +276,7 @@ TzWidget *TzScene::widgetAt(double x, double y) const
     return d->widgetAtHelper(d->root, x, y, 0.0, 0.0);
 }
 
-int TzScene::width()  const
+int TzScene::width() const
 {
     TZ_D(const TzScene);
     return d->width;

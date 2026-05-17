@@ -13,9 +13,9 @@ public:
     explicit TzEventLoopPrivate(TzAbstractEventDispatcher *eventDispatcher);
 
 private:
-    TzEventLoop *q_ptr{ nullptr };
+    TzEventLoop *q_ptr{nullptr};
 
-    TzAbstractEventDispatcher *eventDispatcher{ nullptr };
+    TzAbstractEventDispatcher *eventDispatcher{nullptr};
 };
 
 #endif // TZEVENTLOOP_P

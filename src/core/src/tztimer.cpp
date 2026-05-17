@@ -1,18 +1,15 @@
-#include <loom/tztimer.hpp>
 #include <loom/tzabstracteventdispatcher.hpp>
+#include <loom/tztimer.hpp>
 
 #include "tztimer_p.hpp"
 
 TzTimerPrivate::TzTimerPrivate(TzAbstractEventDispatcher *eventDispatcher)
     : eventDispatcher(eventDispatcher)
-{
-}
-
+{}
 
 TzTimer::TzTimer(TzAbstractEventDispatcher *eventDispatcher)
     : d_ptr(new TzTimerPrivate(eventDispatcher))
-{
-}
+{}
 
 TzTimer::~TzTimer()
 {
@@ -58,23 +55,23 @@ void TzTimer::start()
 {
     if (!d_ptr->eventDispatcher)
         throw std::runtime_error("Timer::start() without event dispatcher");
-    
+
     stop();
     if (!d_ptr->callback)
         throw std::runtime_error("Timer::start() without callback");
 
     d_ptr->handle = d_ptr->eventDispatcher->registerTimer(d_ptr->interval, d_ptr->singleShot,
-        [this]() {
-            if (d_ptr->callback)
-                d_ptr->callback();
+                                                          [this]() {
+                                                              if (d_ptr->callback)
+                                                                  d_ptr->callback();
 
-            // If singleShot, the dispatcher’s concrete implementation already
-            // auto-unregisters. We mark ourselves inactive.
-            if (d_ptr->singleShot) {
-                d_ptr->active = false;
-                d_ptr->handle = nullptr;
-            }
-        });
+                                                              // If singleShot, the dispatcher’s concrete implementation already
+                                                              // auto-unregisters. We mark ourselves inactive.
+                                                              if (d_ptr->singleShot) {
+                                                                  d_ptr->active = false;
+                                                                  d_ptr->handle = nullptr;
+                                                              }
+                                                          });
     d_ptr->active = true;
 }
 
@@ -87,9 +84,10 @@ void TzTimer::stop()
     }
 }
 
-TzTimer *TzTimer::singleShot(TzAbstractEventDispatcher *eventDispatcher, TimerInterval interval, TimerCallback callback)
+TzTimer *TzTimer::singleShot(TzAbstractEventDispatcher *eventDispatcher, TimerInterval interval,
+                             TimerCallback callback)
 {
-    TzTimer* t = new TzTimer(eventDispatcher);
+    TzTimer *t = new TzTimer(eventDispatcher);
     t->setSingleShot(true);
     t->setInterval(interval);
     t->setCallback(std::move(callback));
@@ -97,9 +95,10 @@ TzTimer *TzTimer::singleShot(TzAbstractEventDispatcher *eventDispatcher, TimerIn
     return t;
 }
 
-TzTimer *TzTimer::repeat(TzAbstractEventDispatcher *eventDispatcher, TimerInterval interval, TimerCallback callback)
+TzTimer *TzTimer::repeat(TzAbstractEventDispatcher *eventDispatcher, TimerInterval interval,
+                         TimerCallback callback)
 {
-    TzTimer* t = new TzTimer(eventDispatcher);
+    TzTimer *t = new TzTimer(eventDispatcher);
     t->setSingleShot(false);
     t->setInterval(interval);
     t->setCallback(std::move(callback));

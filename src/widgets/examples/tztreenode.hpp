@@ -1,12 +1,12 @@
 #pragma once
-#include <loom/tzscopedeventlistener.hpp>
-#include <loom/tzeventemitter.hpp>
 #include <loom/tzclasshelpermacros.hpp>
+#include <loom/tzeventemitter.hpp>
+#include <loom/tzscopedeventlistener.hpp>
+#include <any>
 #include <memory>
+#include <optional>
 #include <string>
 #include <vector>
-#include <any>
-#include <optional>
 
 class TzTreeNodePrivate;
 class TzTreeNode;
@@ -16,16 +16,18 @@ using TzTreeNodePtr = std::shared_ptr<TzTreeNode>;
 class TzTreeNode : public std::enable_shared_from_this<TzTreeNode>
 {
     TZ_DECLARE_PRIVATE(TzTreeNode)
-    class PrivateToken {};
+    class PrivateToken
+    {};
+
 public:
     enum Type { Item, Folder };
 
-	static TzTreeNodePtr create(const std::string &name, Type type = Type::Item);
+    static TzTreeNodePtr create(const std::string &name, Type type = Type::Item);
 
     TzTreeNode(const std::string &name, Type type, PrivateToken);
 
     bool setName(const std::string &newName);
-    const std::string& name() const;
+    const std::string &name() const;
 
     Type type() const;
     bool isFolder() const;
@@ -43,7 +45,7 @@ public:
     bool removeChild(const TzTreeNodePtr &child);
 
     void setData(const std::any &value);
-	const std::any &data() const;
+    const std::any &data() const;
 
     template<typename T>
     std::optional<T> unwrap() const;
@@ -55,7 +57,7 @@ public:
     static TzTreeNodePtr createItem(const std::string &name);
 
 private:
-	std::unique_ptr<TzTreeNodePrivate> d_ptr;
+    std::unique_ptr<TzTreeNodePrivate> d_ptr;
 };
 
 template<typename T>

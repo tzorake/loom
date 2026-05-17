@@ -1,15 +1,15 @@
 #ifndef TZABSTRACTWINDOW_P_HPP
 #define TZABSTRACTWINDOW_P_HPP
 
-#include <loom/tzclasshelpermacros.hpp>
 #include <loom/tzabstractwindow.hpp>
+#include <loom/tzclasshelpermacros.hpp>
 
 class TzAbstractWindowPrivate
 {
     TZ_DECLARE_PUBLIC(TzAbstractWindow)
 public:
-    TzAbstractWindow *q_ptr{ nullptr };
-    TzSurface *surface{ nullptr };
+    TzAbstractWindow *q_ptr{nullptr};
+    TzSurface *surface{nullptr};
 
     TzPlatformSurface::CloseCallback closeCallback;
     TzPlatformSurface::ResizeCallback resizeCallback;

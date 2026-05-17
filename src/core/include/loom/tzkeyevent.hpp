@@ -6,8 +6,7 @@
 
 #include <string>
 
-enum class Key
-{
+enum class Key {
     Unknown = 0,
     Escape,
     Enter,
@@ -35,11 +34,10 @@ enum class Key
     F12,
 };
 
-enum class KeyModifier
-{
-    None  = 0,
-    Ctrl  = 1 << 0,
-    Alt   = 1 << 1,
+enum class KeyModifier {
+    None = 0,
+    Ctrl = 1 << 0,
+    Alt = 1 << 1,
     Shift = 1 << 2,
 };
 TZ_DECLARE_FLAGS(KeyModifiers, KeyModifier)
@@ -50,16 +48,16 @@ class TzKeyEvent : public TzEvent
 public:
     TzKeyEvent(int type, Key key, KeyModifiers modifiers = KeyModifier::None, std::string utf8 = {});
 
-    Key          key()       const;
+    Key key() const;
     KeyModifiers modifiers() const;
-    std::string  utf8()      const;
+    std::string utf8() const;
 
     TzKeyEvent *clone() const override;
 
 private:
-    Key          m_key;
+    Key m_key;
     KeyModifiers m_modifiers;
-    std::string  m_utf8;
+    std::string m_utf8;
 };
 
 #endif // TZKEYEVENT_HPP

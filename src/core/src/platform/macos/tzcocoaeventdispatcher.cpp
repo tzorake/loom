@@ -52,19 +52,17 @@ void TzCocoaEventDispatcher::interrupt()
         // [NSApp stop:] only takes effect after the next event; post a dummy
         // NSApplicationDefined event (type 15) so the run loop unblocks immediately.
         using NSUInteger = unsigned long;
-        using NSInteger  = long;
+        using NSInteger = long;
         CGPoint zero{};
-        ObjcObject event = reinterpret_cast<ObjcObject(*)(
-            ObjcClass, objc_selector*,
-            NSUInteger, CGPoint, NSUInteger, double,
-            NSInteger, ObjcObject, short, NSInteger, NSInteger)>(objc_msgSend)(
-            getClass("NSEvent"),
-            sel_registerName("otherEventWithType:location:modifierFlags:timestamp:"
-                             "windowNumber:context:subtype:data1:data2:"),
-            (NSUInteger)15, zero, (NSUInteger)0, (double)0.0,
-            (NSInteger)0, nullptr, (short)0, (NSInteger)0, (NSInteger)0
-        );
-        sendMessage<void>(app, "postEvent:atStart:", event, (int)YES);
+        ObjcObject event = reinterpret_cast<ObjcObject (*)(ObjcClass, objc_selector *, NSUInteger,
+                                                           CGPoint, NSUInteger, double, NSInteger,
+                                                           ObjcObject, short, NSInteger, NSInteger)>(
+            objc_msgSend)(getClass("NSEvent"),
+                          sel_registerName("otherEventWithType:location:modifierFlags:timestamp:"
+                                           "windowNumber:context:subtype:data1:data2:"),
+                          (NSUInteger) 15, zero, (NSUInteger) 0, (double) 0.0, (NSInteger) 0,
+                          nullptr, (short) 0, (NSInteger) 0, (NSInteger) 0);
+        sendMessage<void>(app, "postEvent:atStart:", event, (int) YES);
     } else {
         CFRunLoopStop(d_ptr->runLoop);
     }
@@ -89,21 +87,13 @@ void TzCocoaEventDispatcher::setPreWaitCallback(PreWaitCallback callback)
     if (d_ptr->preWaitObserver)
         return;
 
-    CFRunLoopObserverContext ctx{
-        .version = 0,
-        .info = d_ptr.get(),
-        .retain = nullptr,
-        .release = nullptr,
-        .copyDescription = nullptr
-    };
-    d_ptr->preWaitObserver = CFRunLoopObserverCreate(
-        kCFAllocatorDefault,
-        kCFRunLoopBeforeWaiting,
-        true,
-        0,
-        preWaitObserverCallback,
-        &ctx
-    );
+    CFRunLoopObserverContext ctx{.version = 0,
+                                 .info = d_ptr.get(),
+                                 .retain = nullptr,
+                                 .release = nullptr,
+                                 .copyDescription = nullptr};
+    d_ptr->preWaitObserver = CFRunLoopObserverCreate(kCFAllocatorDefault, kCFRunLoopBeforeWaiting,
+                                                     true, 0, preWaitObserverCallback, &ctx);
     CFRunLoopAddObserver(d_ptr->runLoop, d_ptr->preWaitObserver, kCFRunLoopCommonModes);
 }
 
@@ -116,10 +106,13 @@ static void timerCallback(CFRunLoopTimerRef timer, void *info)
     wrapper->callback();
 
     if (wrapper->singleShot)
-        wrapper->eventDispatcher->unregisterTimer(static_cast<TzAbstractEventDispatcher::TimerHandle>(wrapper));
+        wrapper->eventDispatcher->unregisterTimer(
+            static_cast<TzAbstractEventDispatcher::TimerHandle>(wrapper));
 }
 
-TzCocoaEventDispatcher::TimerHandle TzCocoaEventDispatcher::registerTimer(TimerInterval interval, bool singleShot, TimerCallback callback)
+TzCocoaEventDispatcher::TimerHandle TzCocoaEventDispatcher::registerTimer(TimerInterval interval,
+                                                                          bool singleShot,
+                                                                          TimerCallback callback)
 {
     CFTimeInterval secs = interval.count() / 1000.0;
     CFAbsoluteTime firstFire = CFAbsoluteTimeGetCurrent() + secs;
@@ -129,29 +122,22 @@ TzCocoaEventDispatcher::TimerHandle TzCocoaEventDispatcher::registerTimer(TimerI
     wrapper->singleShot = singleShot;
     wrapper->eventDispatcher = this;
 
-    CFRunLoopTimerContext context{
-        .version = 0, 
-        .info = wrapper.get(), 
-        .retain = nullptr, 
-        .release = nullptr, 
-        .copyDescription = nullptr
-    };
-    CFRunLoopTimerRef timer = CFRunLoopTimerCreate(
-        kCFAllocatorDefault,
-        firstFire,
-        singleShot ? 0.0 : secs,
-        0,
-        0,
-        timerCallback,
-        &context
-    );
+    CFRunLoopTimerContext context{.version = 0,
+                                  .info = wrapper.get(),
+                                  .retain = nullptr,
+                                  .release = nullptr,
+                                  .copyDescription = nullptr};
+    CFRunLoopTimerRef timer = CFRunLoopTimerCreate(kCFAllocatorDefault, firstFire,
+                                                   singleShot ? 0.0 : secs, 0, 0, timerCallback,
+                                                   &context);
     if (!timer)
         throw std::runtime_error("CFRunLoopTimerCreate");
 
     CFRunLoopAddTimer(d_ptr->runLoop, timer, kCFRunLoopCommonModes);
     wrapper->timer = timer;
 
-    TzCocoaEventDispatcher::TimerHandle handle = static_cast<TzCocoaEventDispatcher::TimerHandle>(wrapper.get());
+    TzCocoaEventDispatcher::TimerHandle handle = static_cast<TzCocoaEventDispatcher::TimerHandle>(
+        wrapper.get());
     d_ptr->timerMap[handle] = std::move(wrapper);
     return handle;
 }
@@ -161,7 +147,7 @@ void TzCocoaEventDispatcher::unregisterTimer(TimerHandle handle)
     auto it = d_ptr->timerMap.find(handle);
     if (it == d_ptr->timerMap.end())
         return;
-    
+
     if (it->second->timer) {
         CFRunLoopRemoveTimer(d_ptr->runLoop, it->second->timer, kCFRunLoopCommonModes);
         CFRelease(it->second->timer);
@@ -169,9 +155,11 @@ void TzCocoaEventDispatcher::unregisterTimer(TimerHandle handle)
     d_ptr->timerMap.erase(it);
 }
 
-static void notifyCallback(CFSocketRef s, CFSocketCallBackType type, CFDataRef address, const void *data, void *info)
+static void notifyCallback(CFSocketRef s, CFSocketCallBackType type, CFDataRef address,
+                           const void *data, void *info)
 {
-    (void)address; (void)data;
+    (void) address;
+    (void) data;
     auto *wrapper = static_cast<TzCocoaEventDispatcherPrivate::NotifyWrapper *>(info);
     if (!wrapper || !wrapper->callback)
         return;
@@ -182,26 +170,20 @@ static void notifyCallback(CFSocketRef s, CFSocketCallBackType type, CFDataRef a
     }
 }
 
-TzCocoaEventDispatcher::NotifyHandle TzCocoaEventDispatcher::registerSocketNotifier(int fd, NotifyCallback callback)
+TzCocoaEventDispatcher::NotifyHandle TzCocoaEventDispatcher::registerSocketNotifier(
+    int fd, NotifyCallback callback)
 {
     auto wrapper = std::make_unique<TzCocoaEventDispatcherPrivate::NotifyWrapper>();
     wrapper->callback = std::move(callback);
     wrapper->eventDispatcher = this;
 
-    CFSocketContext context{
-        .version = 0,
-        .info = wrapper.get(),
-        .retain = nullptr,
-        .release = nullptr,
-        .copyDescription = nullptr
-    };
-    CFSocketRef socket = CFSocketCreateWithNative(
-        kCFAllocatorDefault,
-        fd,
-        kCFSocketReadCallBack,
-        notifyCallback,
-        &context
-    );
+    CFSocketContext context{.version = 0,
+                            .info = wrapper.get(),
+                            .retain = nullptr,
+                            .release = nullptr,
+                            .copyDescription = nullptr};
+    CFSocketRef socket = CFSocketCreateWithNative(kCFAllocatorDefault, fd, kCFSocketReadCallBack,
+                                                  notifyCallback, &context);
     if (!socket)
         throw std::runtime_error("CFSocketCreateWithNative");
 

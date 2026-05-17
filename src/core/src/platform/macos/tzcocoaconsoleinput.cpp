@@ -2,13 +2,12 @@
 
 #include "tzcocoaconsoleinput_p.hpp"
 
-#include <unistd.h>
 #include <stdexcept>
+#include <unistd.h>
 
 TzCocoaConsoleInput::TzCocoaConsoleInput()
     : d_ptr(new TzCocoaConsoleInputPrivate)
-{
-}
+{}
 
 TzCocoaConsoleInput::~TzCocoaConsoleInput()
 {

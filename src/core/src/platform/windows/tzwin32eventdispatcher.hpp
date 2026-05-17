@@ -1,8 +1,8 @@
 #ifndef TZWIN32EVENTDISPATCHER_HPP
 #define TZWIN32EVENTDISPATCHER_HPP
 
-#include <loom/tzclasshelpermacros.hpp>
 #include <loom/tzabstracteventdispatcher.hpp>
+#include <loom/tzclasshelpermacros.hpp>
 
 #include <memory>
 
@@ -20,7 +20,8 @@ public:
     virtual void wakeUp() override;
     virtual void setPreWaitCallback(PreWaitCallback callback) override;
 
-    virtual TimerHandle registerTimer(TimerInterval interval, bool singleShot, TimerCallback callback) override;
+    virtual TimerHandle registerTimer(TimerInterval interval, bool singleShot,
+                                      TimerCallback callback) override;
     virtual void unregisterTimer(TimerHandle handle) override;
 
     virtual NotifyHandle registerSocketNotifier(int fd, NotifyCallback callback) override;

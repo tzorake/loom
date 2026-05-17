@@ -3,10 +3,10 @@
 
 #include "tzwin32window.hpp"
 #include <loom/tzcloseevent.hpp>
+#include <loom/tzcoreapplication.hpp>
 #include <loom/tzkeyevent.hpp>
 #include <loom/tzmouseevent.hpp>
 #include <loom/tzresizeevent.hpp>
-#include <loom/tzcoreapplication.hpp>
 
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
@@ -34,14 +34,14 @@ public:
     void onMouseMove(LPARAM lParam, WPARAM wParam);
     void onMouseWheel(UINT msg, WPARAM wParam, LPARAM lParam);
 
-    TzAbstractWindow *owner{ nullptr };
-    HWND hwnd{ nullptr };
-    int windowWidth{ 0 };
-    int windowHeight{ 0 };
+    TzAbstractWindow *owner{nullptr};
+    HWND hwnd{nullptr};
+    int windowWidth{0};
+    int windowHeight{0};
 
     std::vector<uint32_t> pixels;
-    int pixelWidth{ 0 };
-    int pixelHeight{ 0 };
+    int pixelWidth{0};
+    int pixelHeight{0};
     std::mutex pixelMutex;
 
     static LRESULT CALLBACK wndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam);

@@ -2,12 +2,12 @@
 #include "tzx11eventdispatcher_p.hpp"
 #include "tzx11globals.hpp"
 
+#include <errno.h>
+#include <stdexcept>
 #include <sys/epoll.h>
 #include <sys/eventfd.h>
 #include <sys/timerfd.h>
 #include <unistd.h>
-#include <errno.h>
-#include <stdexcept>
 
 TzX11EventDispatcherPrivate::TzX11EventDispatcherPrivate()
 {
@@ -20,15 +20,17 @@ TzX11EventDispatcherPrivate::TzX11EventDispatcherPrivate()
         throw std::runtime_error("eventfd failed");
 
     epoll_event ev{};
-    ev.events  = EPOLLIN;
+    ev.events = EPOLLIN;
     ev.data.fd = wakeFd;
     epoll_ctl(epollFd, EPOLL_CTL_ADD, wakeFd, &ev);
 }
 
 TzX11EventDispatcherPrivate::~TzX11EventDispatcherPrivate()
 {
-    if (wakeFd  >= 0) close(wakeFd);
-    if (epollFd >= 0) close(epollFd);
+    if (wakeFd >= 0)
+        close(wakeFd);
+    if (epollFd >= 0)
+        close(epollFd);
 }
 
 // ── TzX11EventDispatcher ──────────────────────────────────────────────────────
@@ -55,7 +57,7 @@ void TzX11EventDispatcher::setX11Fd(int fd)
     d_ptr->x11Fd = fd;
 
     epoll_event ev{};
-    ev.events  = EPOLLIN;
+    ev.events = EPOLLIN;
     ev.data.fd = fd;
     epoll_ctl(d_ptr->epollFd, EPOLL_CTL_ADD, fd, &ev);
 }
@@ -81,7 +83,8 @@ void TzX11EventDispatcher::processEvents()
         int n = epoll_wait(d_ptr->epollFd, events, 64, -1);
 
         if (n < 0) {
-            if (errno == EINTR) continue;
+            if (errno == EINTR)
+                continue;
             break;
         }
 
@@ -93,25 +96,25 @@ void TzX11EventDispatcher::processEvents()
 
             } else if (fd == d_ptr->wakeFd) {
                 uint64_t val;
-                (void)read(d_ptr->wakeFd, &val, sizeof(val));
+                (void) read(d_ptr->wakeFd, &val, sizeof(val));
 
             } else {
                 // Timer?
                 {
-                    TzAbstractEventDispatcher::TimerHandle   th{};
+                    TzAbstractEventDispatcher::TimerHandle th{};
                     TzAbstractEventDispatcher::TimerCallback cb;
                     bool single = false;
                     for (auto &[h, w] : d_ptr->timerMap) {
                         if (w->timerFd == fd) {
-                            th     = h;
-                            cb     = w->callback;
+                            th = h;
+                            cb = w->callback;
                             single = w->singleShot;
                             break;
                         }
                     }
                     if (cb) {
                         uint64_t exp;
-                        (void)read(fd, &exp, sizeof(exp));
+                        (void) read(fd, &exp, sizeof(exp));
                         cb();
                         if (single)
                             unregisterTimer(th);
@@ -123,9 +126,13 @@ void TzX11EventDispatcher::processEvents()
                 {
                     TzAbstractEventDispatcher::NotifyCallback cb;
                     for (auto &[_, w] : d_ptr->notifyMap) {
-                        if (w->fd == fd) { cb = w->callback; break; }
+                        if (w->fd == fd) {
+                            cb = w->callback;
+                            break;
+                        }
                     }
-                    if (cb) cb(fd);
+                    if (cb)
+                        cb(fd);
                 }
             }
         }
@@ -136,13 +143,13 @@ void TzX11EventDispatcher::interrupt()
 {
     d_ptr->interrupted = true;
     uint64_t val = 1;
-    (void)write(d_ptr->wakeFd, &val, sizeof(val));
+    (void) write(d_ptr->wakeFd, &val, sizeof(val));
 }
 
 void TzX11EventDispatcher::wakeUp()
 {
     uint64_t val = 1;
-    (void)write(d_ptr->wakeFd, &val, sizeof(val));
+    (void) write(d_ptr->wakeFd, &val, sizeof(val));
 }
 
 void TzX11EventDispatcher::setPreWaitCallback(PreWaitCallback callback)
@@ -150,34 +157,35 @@ void TzX11EventDispatcher::setPreWaitCallback(PreWaitCallback callback)
     d_ptr->preWaitCallback = std::move(callback);
 }
 
-TzX11EventDispatcher::TimerHandle TzX11EventDispatcher::registerTimer(
-    TimerInterval interval, bool singleShot, TimerCallback callback)
+TzX11EventDispatcher::TimerHandle TzX11EventDispatcher::registerTimer(TimerInterval interval,
+                                                                      bool singleShot,
+                                                                      TimerCallback callback)
 {
     int tfd = timerfd_create(CLOCK_MONOTONIC, TFD_CLOEXEC | TFD_NONBLOCK);
     if (tfd < 0)
         throw std::runtime_error("timerfd_create failed");
 
-    long secs  = interval.count() / 1000;
+    long secs = interval.count() / 1000;
     long nsecs = (interval.count() % 1000) * 1000000L;
 
     itimerspec spec{};
-    spec.it_value.tv_sec  = secs;
+    spec.it_value.tv_sec = secs;
     spec.it_value.tv_nsec = nsecs;
     if (!singleShot) {
-        spec.it_interval.tv_sec  = secs;
+        spec.it_interval.tv_sec = secs;
         spec.it_interval.tv_nsec = nsecs;
     }
     timerfd_settime(tfd, 0, &spec, nullptr);
 
     epoll_event ev{};
-    ev.events  = EPOLLIN;
+    ev.events = EPOLLIN;
     ev.data.fd = tfd;
     epoll_ctl(d_ptr->epollFd, EPOLL_CTL_ADD, tfd, &ev);
 
-    auto wrapper        = std::make_unique<TzX11EventDispatcherPrivate::TimerWrapper>();
-    wrapper->timerFd    = tfd;
+    auto wrapper = std::make_unique<TzX11EventDispatcherPrivate::TimerWrapper>();
+    wrapper->timerFd = tfd;
     wrapper->singleShot = singleShot;
-    wrapper->callback   = std::move(callback);
+    wrapper->callback = std::move(callback);
 
     TimerHandle handle = static_cast<TimerHandle>(wrapper.get());
     d_ptr->timerMap[handle] = std::move(wrapper);
@@ -200,12 +208,12 @@ TzX11EventDispatcher::NotifyHandle TzX11EventDispatcher::registerSocketNotifier(
     int fd, NotifyCallback callback)
 {
     epoll_event ev{};
-    ev.events  = EPOLLIN;
+    ev.events = EPOLLIN;
     ev.data.fd = fd;
     epoll_ctl(d_ptr->epollFd, EPOLL_CTL_ADD, fd, &ev);
 
-    auto wrapper      = std::make_unique<TzX11EventDispatcherPrivate::NotifyWrapper>();
-    wrapper->fd       = fd;
+    auto wrapper = std::make_unique<TzX11EventDispatcherPrivate::NotifyWrapper>();
+    wrapper->fd = fd;
     wrapper->callback = std::move(callback);
 
     NotifyHandle handle = static_cast<NotifyHandle>(wrapper.get());

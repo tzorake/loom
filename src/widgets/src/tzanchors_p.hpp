@@ -1,30 +1,32 @@
 #ifndef TZANCHORS_P_HPP
 #define TZANCHORS_P_HPP
 
-#include <loom/tzclasshelpermacros.hpp>
 #include <loom/tzanchors.hpp>
+#include <loom/tzclasshelpermacros.hpp>
 
 #include <optional>
 
 class TzWidget;
 
-struct TzAnchorLine {
-    TzWidget *target{ nullptr };
+struct TzAnchorLine
+{
+    TzWidget *target{nullptr};
     TzAnchors::Edge edge{};
-    double margin{ 0.0 };
-    bool set{ false };
+    double margin{0.0};
+    bool set{false};
 };
 
 class TzAnchorsPrivate
 {
     TZ_DECLARE_PUBLIC(TzAnchors)
 public:
-    TzAnchors *q_ptr{ nullptr };
-    TzWidget *owner{ nullptr };
+    TzAnchors *q_ptr{nullptr};
+    TzWidget *owner{nullptr};
 
     TzAnchorLine left, right, top, bottom, hcenter, vcenter;
 
-    struct Layout {
+    struct Layout
+    {
         double x;
         double y;
         std::optional<double> width;

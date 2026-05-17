@@ -1,11 +1,11 @@
 #ifndef TZABSTRACTWINDOW_HPP
 #define TZABSTRACTWINDOW_HPP
 
-#include <loom/tzobject.hpp>
-#include <loom/tzplatformsurface.hpp>
+#include <loom/tzcloseevent.hpp>
 #include <loom/tzkeyevent.hpp>
 #include <loom/tzmouseevent.hpp>
-#include <loom/tzcloseevent.hpp>
+#include <loom/tzobject.hpp>
+#include <loom/tzplatformsurface.hpp>
 #include <loom/tzresizeevent.hpp>
 
 #include <string>
@@ -24,12 +24,12 @@ public:
 
     // ── TzPlatformSurface ─────────────────────────────────────────────────
     TzSurface *surface() const override;
-    void       setSurface(TzSurface *surface) override;
+    void setSurface(TzSurface *surface) override;
 
-    void setCloseCallback (CloseCallback  cb) override;
+    void setCloseCallback(CloseCallback cb) override;
     void setResizeCallback(ResizeCallback cb) override;
-    void setKeyCallback   (KeyCallback    cb) override;
-    void setMouseCallback (MouseCallback  cb) override;
+    void setKeyCallback(KeyCallback cb) override;
+    void setMouseCallback(MouseCallback cb) override;
 
     // render() remains pure virtual — implemented by platform subclass
 

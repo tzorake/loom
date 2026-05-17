@@ -20,8 +20,8 @@ public:
     void setParent(TzObject *parent);
     TzObject *parent() const;
 
-    TzObject *firstChild()      const;
-    TzObject *nextSibling()     const;
+    TzObject *firstChild() const;
+    TzObject *nextSibling() const;
     TzObject *previousSibling() const;
 
     std::vector<TzObject *> children() const;

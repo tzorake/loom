@@ -6,25 +6,21 @@
 // ── TzX11WindowPrivate ────────────────────────────────────────────────────────
 
 TzX11WindowPrivate::TzX11WindowPrivate(int width, int height, TzX11Window *owner)
-    : owner(owner), windowWidth(width), windowHeight(height)
+    : owner(owner)
+    , windowWidth(width)
+    , windowHeight(height)
 {
     auto &g = TzX11Globals::instance();
     display = g.display;
 
     XSetWindowAttributes attrs{};
     attrs.background_pixel = BlackPixel(display, g.screen);
-    attrs.event_mask = (ExposureMask     |
-                        KeyPressMask     | KeyReleaseMask   |
-                        ButtonPressMask  | ButtonReleaseMask |
-                        PointerMotionMask| StructureNotifyMask);
+    attrs.event_mask = (ExposureMask | KeyPressMask | KeyReleaseMask | ButtonPressMask
+                        | ButtonReleaseMask | PointerMotionMask | StructureNotifyMask);
 
-    window = XCreateWindow(
-        display, g.rootWin,
-        0, 0,
-        static_cast<unsigned>(width), static_cast<unsigned>(height),
-        0,
-        g.depth, InputOutput, g.visual,
-        CWBackPixel | CWEventMask, &attrs);
+    window = XCreateWindow(display, g.rootWin, 0, 0, static_cast<unsigned>(width),
+                           static_cast<unsigned>(height), 0, g.depth, InputOutput, g.visual,
+                           CWBackPixel | CWEventMask, &attrs);
 
     if (!window)
         throw std::runtime_error("XCreateWindow failed");
@@ -42,8 +38,14 @@ TzX11WindowPrivate::TzX11WindowPrivate(int width, int height, TzX11Window *owner
 TzX11WindowPrivate::~TzX11WindowPrivate()
 {
     TzX11Globals::instance().unregisterWindow(window);
-    if (gc)     { XFreeGC(display, gc);     gc     = nullptr; }
-    if (window) { XDestroyWindow(display, window); window = 0; }
+    if (gc) {
+        XFreeGC(display, gc);
+        gc = nullptr;
+    }
+    if (window) {
+        XDestroyWindow(display, window);
+        window = 0;
+    }
     XFlush(display);
 }
 
@@ -51,8 +53,7 @@ void TzX11WindowPrivate::setTitle(const std::string &title)
 {
     auto &g = TzX11Globals::instance();
     XStoreName(display, window, title.c_str());
-    XChangeProperty(display, window,
-                    g.netWmName, g.utf8String, 8, PropModeReplace,
+    XChangeProperty(display, window, g.netWmName, g.utf8String, 8, PropModeReplace,
                     reinterpret_cast<const unsigned char *>(title.c_str()),
                     static_cast<int>(title.size()));
     XFlush(display);
@@ -74,7 +75,8 @@ void TzX11WindowPrivate::hide()
 
 void TzX11WindowPrivate::render(const std::vector<uint32_t> &pixels, int width, int height)
 {
-    if (!visible) return;
+    if (!visible)
+        return;
 
     auto &g = TzX11Globals::instance();
 
@@ -82,7 +84,7 @@ void TzX11WindowPrivate::render(const std::vector<uint32_t> &pixels, int width, 
     if (pixelBuf.size() < needed)
         pixelBuf.resize(needed);
     std::memcpy(pixelBuf.data(), pixels.data(), needed);
-    lastRenderWidth  = width;
+    lastRenderWidth = width;
     lastRenderHeight = height;
 
     blitCache();
@@ -97,20 +99,15 @@ void TzX11WindowPrivate::blitCache()
 
     // XCreateImage wraps our buffer without copying; XPutImage sends it to the
     // X server synchronously, so the buffer remains valid throughout the call.
-    XImage *img = XCreateImage(
-        g.display, g.visual,
-        static_cast<unsigned>(g.depth), ZPixmap, 0,
-        pixelBuf.data(),
-        static_cast<unsigned>(lastRenderWidth),
-        static_cast<unsigned>(lastRenderHeight),
-        32, lastRenderWidth * 4);
-    if (!img) return;
+    XImage *img = XCreateImage(g.display, g.visual, static_cast<unsigned>(g.depth), ZPixmap, 0,
+                               pixelBuf.data(), static_cast<unsigned>(lastRenderWidth),
+                               static_cast<unsigned>(lastRenderHeight), 32, lastRenderWidth * 4);
+    if (!img)
+        return;
 
     img->byte_order = LSBFirst;
 
-    XPutImage(g.display, window, gc, img,
-              0, 0, 0, 0,
-              static_cast<unsigned>(lastRenderWidth),
+    XPutImage(g.display, window, gc, img, 0, 0, 0, 0, static_cast<unsigned>(lastRenderWidth),
               static_cast<unsigned>(lastRenderHeight));
 
     // Prevent XDestroyImage from freeing our buffer.
@@ -124,8 +121,7 @@ void TzX11WindowPrivate::blitCache()
 
 TzX11Window::TzX11Window(int width, int height)
     : d_ptr(new TzX11WindowPrivate(width, height, this))
-{
-}
+{}
 
 TzX11Window::~TzX11Window() = default;
 
@@ -156,7 +152,7 @@ void TzX11Window::onConfigure(int width, int height)
 {
     if (width == d_ptr->windowWidth && height == d_ptr->windowHeight)
         return;
-    d_ptr->windowWidth  = width;
+    d_ptr->windowWidth = width;
     d_ptr->windowHeight = height;
     TzResizeEvent re(width, height);
     TzCoreApplication::sendEvent(this, &re);

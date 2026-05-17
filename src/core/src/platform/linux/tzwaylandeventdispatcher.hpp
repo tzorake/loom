@@ -1,11 +1,11 @@
 #ifndef TZWAYLANDEVENTDISPATCHER_HPP
 #define TZWAYLANDEVENTDISPATCHER_HPP
 
-#include <loom/tzclasshelpermacros.hpp>
 #include <loom/tzabstracteventdispatcher.hpp>
+#include <loom/tzclasshelpermacros.hpp>
 
-#include <wayland-client.h>
 #include <memory>
+#include <wayland-client.h>
 
 class TzWaylandEventDispatcherPrivate;
 
