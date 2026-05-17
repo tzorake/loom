@@ -1,6 +1,6 @@
 #pragma once
-#include <loom/tzscopedeventlistener.h>
-#include <loom/tzeventemitter.h>
+#include <loom/tzscopedeventlistener.hpp>
+#include <loom/tzeventemitter.hpp>
 #include <loom/tzclasshelpermacros.hpp>
 #include <memory>
 #include <string>

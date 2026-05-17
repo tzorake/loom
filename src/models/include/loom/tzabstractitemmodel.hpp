@@ -1,6 +1,6 @@
 #pragma once
 #include <loom/tzclasshelpermacros.hpp>
-#include <loom/tzeventemitter.h>
+#include <loom/tzeventemitter.hpp>
 #include <any>
 #include <string>
 #include <vector>

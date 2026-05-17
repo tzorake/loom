@@ -1,7 +1,7 @@
-#include <models/tztreemodel.h>
-#include <tztreemodel_p.h>
-#include <tzabstractitemmodel_p.h>
-#include <models/tztreenode.h>
+#include "tztreemodel.hpp"
+#include "tztreemodel_p.h"
+#include <tzabstractitemmodel_p.hpp>
+#include "tztreenode.hpp"
 
 TzTreeModelPrivate::TzTreeModelPrivate()
 	: root(TzTreeNode::createFolder(""))

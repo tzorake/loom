@@ -1,5 +1,6 @@
-#include <models/tztreenode.h>
-#include <models/tzeventemitter.h>
+#include "tztreenode.hpp"
+#include <loom/tzeventemitter.hpp>
+#include <ranges>
 
 class TzTreeNodePrivate
 {

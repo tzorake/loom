@@ -28,6 +28,7 @@
 
 add_library(loom-models
     src/tzabstractitemmodel.cpp
+    src/tzabstractlistmodel.cpp
 )
 target_include_directories(loom-models
     PUBLIC  include

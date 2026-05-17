@@ -1,7 +1,7 @@
 #pragma once
-#include <models/tztreemodel.h>
-#include <tzabstractitemmodel_p.h>
-#include <models/tzscopedeventlistener.h>
+#include "tztreemodel.hpp"
+#include <tzabstractitemmodel_p.hpp>
+#include <loom/tzscopedeventlistener.hpp>
 
 class TzTreeModelPrivate : public TzAbstractItemModelPrivate
 {
