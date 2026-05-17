@@ -22,6 +22,7 @@ add_library(loom-core
     src/tzpoint.cpp
     src/tzrect.cpp
     src/tzsize.cpp
+    src/tzeventemitter.cpp
 )
 target_include_directories(loom-core
     PUBLIC  include
@@ -41,7 +42,7 @@ target_sources(loom-core-private INTERFACE
     src/tzsocketnotifier_p.hpp
     src/tztimer_p.hpp
     src/tzsignalpipe.hpp
-    src/tzcocoaplatformintegration.hpp
+    src/tzeventemitter_p.hpp
 )
 
 if(APPLE)
@@ -60,6 +61,7 @@ if(APPLE)
         src/platform/macos/tzcocoawindow.hpp
         src/platform/macos/tzcocoawindow_p.hpp
         src/platform/macos/tzobjcutils.hpp
+        src/tzcocoaplatformintegration.hpp
     )
     target_link_libraries(loom-core PUBLIC
         "-framework Cocoa"
@@ -158,3 +160,8 @@ endif()
 if(LOOM_BUILD_EXAMPLES)
     add_subdirectory(examples)
 endif()
+
+if(LOOM_BUILD_TESTS)
+    add_subdirectory(tests)
+endif()
+

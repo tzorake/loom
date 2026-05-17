@@ -1,5 +1,5 @@
-#include <models/tzabstractitemmodel.h>
-#include <tzabstractitemmodel_p.h>
+#include <loom/tzabstractitemmodel.hpp>
+#include <tzabstractitemmodel_p.hpp>
 #include <stdexcept>
 #include <algorithm>
 #include <iostream>

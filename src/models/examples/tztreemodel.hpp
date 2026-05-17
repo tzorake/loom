@@ -1,8 +1,8 @@
 #pragma once
-#include <models/tzabstractitemmodel.h>
-#include <models/tzscopedeventlistener.h>
-#include <models/tzclasshelpermacros.hpp>
-#include <models/tztreenode.h>
+#include <loom/tzabstractitemmodel.h>
+#include <loom/tzscopedeventlistener.h>
+#include <loom/tzclasshelpermacros.hpp>
+#include <loom/tztreenode.h>
 
 class TzTreeModelPrivate;
 

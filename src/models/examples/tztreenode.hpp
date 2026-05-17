@@ -1,7 +1,7 @@
 #pragma once
-#include <models/tzscopedeventlistener.h>
-#include <models/tzeventemitter.h>
-#include <models/tzclasshelpermacros.hpp>
+#include <loom/tzscopedeventlistener.h>
+#include <loom/tzeventemitter.h>
+#include <loom/tzclasshelpermacros.hpp>
 #include <memory>
 #include <string>
 #include <vector>

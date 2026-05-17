@@ -1,5 +1,5 @@
 #pragma once
-#include <models/tzeventlistener.h>
+#include <loom/tzeventlistener.hpp>
 
 class TzScopedEventListener final
 {

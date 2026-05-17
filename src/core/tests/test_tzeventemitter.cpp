@@ -1,7 +1,7 @@
 #include <gtest/gtest.h>
-#include <models/tzeventemitter.h>
-#include <models/tzeventlistener.h>
-#include <models/tzscopedeventlistener.h>
+#include <loom/tzeventemitter.hpp>
+#include <loom/tzeventlistener.hpp>
+#include <loom/tzscopedeventlistener.hpp>
 #include <string>
 #include <vector>
 #include <memory>
@@ -18,7 +18,7 @@ struct CerrRedirect {
     std::string str() const { return buffer.str(); }
 };
 
-TEST(EventEmitter, BasicEmit)
+TEST(TzEventEmitter, BasicEmit)
 {
     TzEventEmitter emitter;
     int counter = 0;
@@ -31,7 +31,7 @@ TEST(EventEmitter, BasicEmit)
     EXPECT_EQ(counter, 2);
 }
 
-TEST(EventEmitter, OnceFiresOnlyOnce)
+TEST(TzEventEmitter, OnceFiresOnlyOnce)
 {
     TzEventEmitter emitter;
     int count = 0;
@@ -43,7 +43,7 @@ TEST(EventEmitter, OnceFiresOnlyOnce)
     EXPECT_EQ(count, 1);
 }
 
-TEST(EventEmitter, OnceHandleDisconnectsAfterEmit)
+TEST(TzEventEmitter, OnceHandleDisconnectsAfterEmit)
 {
     TzEventEmitter emitter;
     bool fired = false;
@@ -54,7 +54,7 @@ TEST(EventEmitter, OnceHandleDisconnectsAfterEmit)
     EXPECT_FALSE(h.isConnected());
 }
 
-TEST(EventEmitter, RemoveListenerByHandle)
+TEST(TzEventEmitter, RemoveListenerByHandle)
 {
     TzEventEmitter emitter;
     int value = 0;
@@ -70,7 +70,7 @@ TEST(EventEmitter, RemoveListenerByHandle)
     EXPECT_EQ(value, 0);
 }
 
-TEST(EventEmitter, RemoveListenerViaEmitter)
+TEST(TzEventEmitter, RemoveListenerViaEmitter)
 {
     TzEventEmitter emitter;
     int calls = 0;
@@ -84,7 +84,7 @@ TEST(EventEmitter, RemoveListenerViaEmitter)
     EXPECT_EQ(calls, 1);
 }
 
-TEST(EventEmitter, RemoveAllListenersSpecificEvent)
+TEST(TzEventEmitter, RemoveAllListenersSpecificEvent)
 {
     TzEventEmitter emitter;
     int a = 0, b = 0;
@@ -98,7 +98,7 @@ TEST(EventEmitter, RemoveAllListenersSpecificEvent)
     EXPECT_EQ(b, 1);
 }
 
-TEST(EventEmitter, RemoveAllListenersAllEvents)
+TEST(TzEventEmitter, RemoveAllListenersAllEvents)
 {
     TzEventEmitter emitter;
     int a = 0, b = 0;
@@ -113,13 +113,13 @@ TEST(EventEmitter, RemoveAllListenersAllEvents)
     EXPECT_TRUE(emitter.eventNames().empty());
 }
 
-TEST(EventEmitter, ErrorEventThrowsWithoutListener)
+TEST(TzEventEmitter, ErrorEventThrowsWithoutListener)
 {
     TzEventEmitter emitter;
     EXPECT_THROW(emitter.emit("error", std::string("something wrong")), std::runtime_error);
 }
 
-TEST(EventEmitter, ErrorEventWithListenerDoesNotThrow)
+TEST(TzEventEmitter, ErrorEventWithListenerDoesNotThrow)
 {
     TzEventEmitter emitter;
     bool caught = false;
@@ -131,7 +131,7 @@ TEST(EventEmitter, ErrorEventWithListenerDoesNotThrow)
     EXPECT_TRUE(caught);
 }
 
-TEST(EventEmitter, QueryMethods)
+TEST(TzEventEmitter, QueryMethods)
 {
     TzEventEmitter emitter;
     EXPECT_EQ(emitter.listenerCount("e1"), 0u);
@@ -153,7 +153,7 @@ TEST(EventEmitter, QueryMethods)
     EXPECT_EQ(names.size(), 1u);
 }
 
-TEST(EventEmitter, TemplateOverloadsVariousArgs)
+TEST(TzEventEmitter, TemplateOverloadsVariousArgs)
 {
     TzEventEmitter emitter;
 
@@ -175,7 +175,7 @@ TEST(EventEmitter, TemplateOverloadsVariousArgs)
     EXPECT_EQ(calls, 1);
 }
 
-TEST(EventEmitter, SelfRemovalDuringEmit)
+TEST(TzEventEmitter, SelfRemovalDuringEmit)
 {
     TzEventEmitter emitter;
     int a = 0, b = 0, c = 0;
@@ -197,7 +197,7 @@ TEST(EventEmitter, SelfRemovalDuringEmit)
     EXPECT_EQ(c, 1);
 }
 
-TEST(EventEmitter, RemoveOtherDuringEmit)
+TEST(TzEventEmitter, RemoveOtherDuringEmit)
 {
     TzEventEmitter emitter;
     int x = 0, y = 0;
@@ -214,7 +214,7 @@ TEST(EventEmitter, RemoveOtherDuringEmit)
     EXPECT_EQ(y, 1);
 }
 
-TEST(EventEmitter, ListenerOrder)
+TEST(TzEventEmitter, ListenerOrder)
 {
     TzEventEmitter emitter;
     std::vector<int> order;
@@ -230,7 +230,7 @@ TEST(EventEmitter, ListenerOrder)
     EXPECT_EQ(order[2], 3);
 }
 
-TEST(EventEmitter, AddListenerDuringEmit)
+TEST(TzEventEmitter, AddListenerDuringEmit)
 {
     TzEventEmitter emitter;
     int count = 0;
@@ -245,7 +245,7 @@ TEST(EventEmitter, AddListenerDuringEmit)
     EXPECT_EQ(count, 3);
 }
 
-TEST(EventEmitter, OnceSelfRemove)
+TEST(TzEventEmitter, OnceSelfRemove)
 {
     TzEventEmitter emitter;
     int called = 0;
@@ -256,7 +256,7 @@ TEST(EventEmitter, OnceSelfRemove)
     EXPECT_EQ(called, 1);
 }
 
-TEST(EventEmitter, HandleOutlivesEmitter)
+TEST(TzEventEmitter, HandleOutlivesEmitter)
 {
     TzEventListener handle;
     {
@@ -269,7 +269,7 @@ TEST(EventEmitter, HandleOutlivesEmitter)
     EXPECT_NO_THROW(handle.disconnect());
 }
 
-TEST(EventEmitter, MaxListeners)
+TEST(TzEventEmitter, MaxListeners)
 {
     TzEventEmitter emitter;
     emitter.setMaxListeners(2);
@@ -289,7 +289,7 @@ TEST(EventEmitter, MaxListeners)
     EXPECT_EQ(emitter.listenerCount("ev"), 3u);
 }
 
-TEST(EventEmitter, DefaultMaxListeners)
+TEST(TzEventEmitter, DefaultMaxListeners)
 {
     TzEventEmitter::setDefaultMaxListeners(2);
     TzEventEmitter emitter;
@@ -303,7 +303,7 @@ TEST(EventEmitter, DefaultMaxListeners)
     TzEventEmitter::setDefaultMaxListeners(10);
 }
 
-TEST(EventEmitter, IdenticalLambdasAreSeparate)
+TEST(TzEventEmitter, IdenticalLambdasAreSeparate)
 {
     TzEventEmitter emitter;
     int counter = 0;
@@ -321,13 +321,13 @@ TEST(EventEmitter, IdenticalLambdasAreSeparate)
     EXPECT_EQ(counter, 3);
 }
 
-TEST(EventEmitter, EmitNoListenersNoExcept)
+TEST(TzEventEmitter, EmitNoListenersNoExcept)
 {
     TzEventEmitter emitter;
     EXPECT_NO_THROW(emitter.emit("some_event", 42));
 }
 
-TEST(EventEmitter, AddListenerAlias)
+TEST(TzEventEmitter, AddListenerAlias)
 {
     TzEventEmitter emitter;
     int a = 0;
@@ -337,7 +337,7 @@ TEST(EventEmitter, AddListenerAlias)
     h.disconnect();
 }
 
-TEST(EventEmitter, EventNamesAfterRemoval)
+TEST(TzEventEmitter, EventNamesAfterRemoval)
 {
     TzEventEmitter emitter;
     auto h1 = emitter.on("a", []{});
@@ -348,7 +348,7 @@ TEST(EventEmitter, EventNamesAfterRemoval)
     EXPECT_EQ(names[0], "b");
 }
 
-TEST(EventEmitter, ErrorEventMsgInException)
+TEST(TzEventEmitter, ErrorEventMsgInException)
 {
     TzEventEmitter emitter;
     try {
@@ -359,7 +359,7 @@ TEST(EventEmitter, ErrorEventMsgInException)
     }
 }
 
-TEST(EventEmitter, ReentrantEmit)
+TEST(TzEventEmitter, ReentrantEmit)
 {
     TzEventEmitter emitter;
     int count = 0;
@@ -373,7 +373,7 @@ TEST(EventEmitter, ReentrantEmit)
     EXPECT_EQ(count, 2);
 }
 
-TEST(EventEmitter, ListenerAcceptsFewerArguments)
+TEST(TzEventEmitter, ListenerAcceptsFewerArguments)
 {
     TzEventEmitter emitter;
 
@@ -410,7 +410,7 @@ TEST(EventEmitter, ListenerAcceptsFewerArguments)
     EXPECT_EQ(receivedString, "hello");
 }
 
-TEST(EventEmitter, WrongArgumentType)
+TEST(TzEventEmitter, WrongArgumentType)
 {
     TzEventEmitter emitter;
     bool called = false;
@@ -423,7 +423,7 @@ TEST(EventEmitter, WrongArgumentType)
     EXPECT_FALSE(called);
 }
 
-TEST(EventEmitter, PrivateSignalPattern)
+TEST(TzEventEmitter, PrivateSignalPattern)
 {
     class MyService {
         struct PrivateSignal {};
@@ -458,7 +458,7 @@ TEST(EventEmitter, PrivateSignalPattern)
     EXPECT_EQ(externalCounter, 17);
 }
 
-TEST(EventEmitter, EventListenerSwap)
+TEST(TzEventEmitter, EventListenerSwap)
 {
     TzEventEmitter emitter;
     int a = 0, b = 0;
@@ -482,7 +482,7 @@ TEST(EventEmitter, EventListenerSwap)
     EXPECT_TRUE(hB.isConnected());
 }
 
-TEST(EventEmitter, EventListenerSwapDisconnected)
+TEST(TzEventEmitter, EventListenerSwapDisconnected)
 {
     TzEventEmitter emitter;
     auto h1 = emitter.on("ev", [] {});
@@ -498,7 +498,7 @@ TEST(EventEmitter, EventListenerSwapDisconnected)
     EXPECT_TRUE(h2.isConnected());
 }
 
-TEST(EventEmitter, EventListenerOperatorBool)
+TEST(TzEventEmitter, EventListenerOperatorBool)
 {
     TzEventEmitter emitter;
     auto h = emitter.on("click", [] {});
@@ -520,7 +520,7 @@ TEST(EventEmitter, EventListenerOperatorBool)
     EXPECT_FALSE(h2);
 }
 
-TEST(EventEmitter, ScopedEventListenerBasic)
+TEST(TzEventEmitter, ScopedEventListenerBasic)
 {
     TzEventEmitter emitter;
     int count = 0;
@@ -536,7 +536,7 @@ TEST(EventEmitter, ScopedEventListenerBasic)
     EXPECT_EQ(count, 1);
 }
 
-TEST(EventEmitter, ScopedEventListenerMove)
+TEST(TzEventEmitter, ScopedEventListenerMove)
 {
     TzEventEmitter emitter;
     int count = 0;
@@ -562,7 +562,7 @@ TEST(EventEmitter, ScopedEventListenerMove)
     EXPECT_TRUE(sc3);
 }
 
-TEST(EventEmitter, ScopedEventListenerRelease)
+TEST(TzEventEmitter, ScopedEventListenerRelease)
 {
     TzEventEmitter emitter;
     TzEventListener raw;
@@ -586,7 +586,7 @@ TEST(EventEmitter, ScopedEventListenerRelease)
     EXPECT_EQ(count, 2);
 }
 
-TEST(EventEmitter, ScopedEventListenerSwap)
+TEST(TzEventEmitter, ScopedEventListenerSwap)
 {
     TzEventEmitter emitter;
     int a = 0, b = 0;
@@ -607,7 +607,7 @@ TEST(EventEmitter, ScopedEventListenerSwap)
     EXPECT_TRUE(scB);
 }
 
-TEST(EventEmitter, ScopedEventListenerEmpty)
+TEST(TzEventEmitter, ScopedEventListenerEmpty)
 {
     TzScopedEventListener sc;
     EXPECT_FALSE(sc);
@@ -635,7 +635,7 @@ private:
     TzEventListener m_handle;
 };
 
-TEST(EventEmitter, InheritanceBasic)
+TEST(TzEventEmitter, InheritanceBasic)
 {
     InheritedEmitter obj;
     int externalCounter = 0;
@@ -653,7 +653,7 @@ TEST(EventEmitter, InheritanceBasic)
     EXPECT_EQ(externalCounter, 8);
 }
 
-TEST(EventEmitter, InheritanceScopedConnections)
+TEST(TzEventEmitter, InheritanceScopedConnections)
 {
     InheritedEmitter obj;
     int called = 0;
@@ -666,7 +666,7 @@ TEST(EventEmitter, InheritanceScopedConnections)
     EXPECT_EQ(called, 1);
 }
 
-TEST(EventEmitter, InheritanceEmitFromDerived)
+TEST(TzEventEmitter, InheritanceEmitFromDerived)
 {
     class DataSource : public TzEventEmitter
     {
@@ -688,7 +688,7 @@ TEST(EventEmitter, InheritanceEmitFromDerived)
     EXPECT_EQ(ds.data, 42);
 }
 
-TEST(EventEmitter, InheritanceSelfDisconnect)
+TEST(TzEventEmitter, InheritanceSelfDisconnect)
 {
     class SelfDisconnecting : public TzEventEmitter
     {
@@ -709,7 +709,7 @@ TEST(EventEmitter, InheritanceSelfDisconnect)
     EXPECT_NO_THROW(obj.emit("boom"));
 }
 
-TEST(EventEmitter, WeakPtrInCallback)
+TEST(TzEventEmitter, WeakPtrInCallback)
 {
     TzEventEmitter bus;
 

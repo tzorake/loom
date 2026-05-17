@@ -1,7 +1,9 @@
-#include <models/tzeventemitter.h>
-#include <tzeventemitter_p.h>
-#include <models/tzeventlistener.h>
-#include <models/tzscopedeventlistener.h>
+#include <loom/tzeventemitter.hpp>
+#include <tzeventemitter_p.hpp>
+#include <loom/tzeventlistener.hpp>
+#include <loom/tzscopedeventlistener.hpp>
+#include <exception>
+#include <iostream>
 
 TzEventListener::TzEventListener()
 {

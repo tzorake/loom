@@ -1,6 +1,6 @@
 #pragma once
-#include <models/tzabstractitemmodel.h>
-#include <models/tzclasshelpermacros.hpp>
+#include <loom/tzabstractitemmodel.hpp>
+#include <loom/tzclasshelpermacros.hpp>
 
 class TzPersistentTzModelIndexData
 {
