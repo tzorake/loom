@@ -1,4 +1,6 @@
-#include <models/tzbreadcrumbmodel.h>
+#include "tzbreadcrumbmodel.hpp"
+#include <ranges>
+#include <algorithm>
 
 TzBreadcrumbModel::TzBreadcrumbModel(const TzTreeNodePtr& root)
     : m_root(root)
@@ -21,7 +23,7 @@ std::vector<TzTreeNodePtr> TzBreadcrumbModel::path() const
     std::vector<TzTreeNodePtr> result;
     for (TzTreeNodePtr n = m_current; n; n = n->parent())
         result.push_back(n);
-    std::reverse(result.begin(), result.end());
+    std::ranges::reverse(result);
     return result;
 }
 
@@ -32,9 +34,9 @@ std::vector<TzTreeNodePtr> TzBreadcrumbModel::siblingsOf(const TzTreeNodePtr& no
 
     TzTreeNodePtr parent = node->parent();
     if (!parent)
-        return {};  // root has no siblings
+        return {};
 
-    return {parent->children().begin(), parent->children().end()};
+    return { parent->children().begin(), parent->children().end() };
 }
 
 bool TzBreadcrumbModel::navigateTo(const TzTreeNodePtr& node)

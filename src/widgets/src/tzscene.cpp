@@ -141,7 +141,10 @@ TzScene::TzScene(TzSurface *surface)
         if (!target) return;
         if (e->type() == TzEvent::MouseButtonPress && target != focusedWidget())
             setFocusedWidget(target);
-        TzCoreApplication::sendEvent(target, e);
+        TzPoint local = target->mapFromGlobal({ e->x(), e->y() });
+        TzMouseEvent localEvent(e->type(), e->button(), local.x, local.y,
+                                e->modifiers(), e->scrollDx(), e->scrollDy());
+        TzCoreApplication::sendEvent(target, &localEvent);
     });
 }
 

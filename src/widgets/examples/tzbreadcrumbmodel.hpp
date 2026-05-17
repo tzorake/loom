@@ -1,6 +1,6 @@
 #pragma once
-#include <loom/tztreenode.h>
-#include <loom/tzeventemitter.h>
+#include "tztreenode.hpp"
+#include <loom/tzeventemitter.hpp>
 #include <vector>
 
 class TzBreadcrumbModel

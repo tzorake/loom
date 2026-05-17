@@ -332,6 +332,23 @@ TzWidget *TzWidget::parentWidget() const
     return dynamic_cast<TzWidget *>(parent());
 }
 
+TzPoint TzWidget::mapToGlobal(const TzPoint &local) const
+{
+    double ax = local.x;
+    double ay = local.y;
+    for (const TzWidget *p = this; p; p = p->parentWidget()) {
+        ax += p->x();
+        ay += p->y();
+    }
+    return { ax, ay };
+}
+
+TzPoint TzWidget::mapFromGlobal(const TzPoint &global) const
+{
+    TzPoint origin = mapToGlobal({ 0.0, 0.0 });
+    return { global.x - origin.x, global.y - origin.y };
+}
+
 void TzWidget::paint(TzPainter * painter)
 {
     (void)painter;

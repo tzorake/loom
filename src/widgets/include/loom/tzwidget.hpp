@@ -66,6 +66,9 @@ public:
 
     TzWidget *parentWidget() const;
 
+    TzPoint mapToGlobal(const TzPoint &local) const;
+    TzPoint mapFromGlobal(const TzPoint &global) const;
+
     virtual void paint(TzPainter *painter);
 
     bool event(TzEvent *event) override;
