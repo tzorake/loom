@@ -6,7 +6,7 @@
 #include <loom/TzKeyEvent>
 #include <loom/TzMouseEvent>
 #include <loom/TzRect>
-#include <loom/ScopedEventListener>
+#include <loom/TzScopedEventListener>
 
 #include "tzbreadcrumbmodel.hpp"
 #include "tztreenode.hpp"
