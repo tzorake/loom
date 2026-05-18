@@ -20,3 +20,7 @@ target_sources(loom-models-private INTERFACE
 if(LOOM_BUILD_EXAMPLES)
     add_subdirectory(examples)
 endif()
+
+if(LOOM_BUILD_TESTS)
+    add_subdirectory(tests)
+endif()
