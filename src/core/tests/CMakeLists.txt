@@ -20,3 +20,14 @@ target_link_libraries(test_tzglobalstatic PRIVATE
 )
 
 gtest_discover_tests(test_tzglobalstatic)
+
+add_executable(test_tzoverload
+    test_tzoverload.cpp
+)
+
+target_link_libraries(test_tzoverload PRIVATE
+    loom-core
+    GTest::gtest_main
+)
+
+gtest_discover_tests(test_tzoverload)
