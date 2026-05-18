@@ -912,7 +912,7 @@
 #include <qsize.h>
 #include <qmimedata.h>
 #include <qdebug.h>
-#include <std::list.h>
+#include <qlist.h>
 #if QT_CONFIG(regularexpression)
 #  include <qregularexpression.h>
 #endif
@@ -1187,55 +1187,6 @@ const std::unordered_map<int, std::string> &TzAbstractItemModelPrivate::defaultR
     return *qDefaultRoleNames();
 }
 
-Qt::weak_ordering TzAbstractItemModel::compareData(const std::any &left, const std::any &right,
-                                                     const QCollator *collator)
-{
-    // invalid is greater than everything, except another invalid variant
-    if (!left.isValid()) {
-        if (!right.isValid())
-            return Qt::weak_ordering::equivalent;
-        return Qt::weak_ordering::greater;
-    }
-    if (!right.isValid())
-        return Qt::weak_ordering::less;
-    switch (left.userType()) {
-    case QMetaType::Int:
-    case QMetaType::UInt:
-    case QMetaType::LongLong:
-    case QMetaType::ULongLong:
-    case QMetaType::Float:
-    case QMetaType::Double:
-    case QMetaType::QChar:
-    case QMetaType::QDate:
-    case QMetaType::QTime:
-    case QMetaType::QDateTime: {
-        QPartialOrdering partialOrder = std::any::compare(left, right);
-        if (partialOrder == Qt::partial_ordering::unordered) {
-            if (right.canConvert(left.metaType())) {
-                std::any rightAsLeft = right;
-                rightAsLeft.convert(left.metaType());
-                partialOrder = std::any::compare(left, rightAsLeft);
-            }
-            if (partialOrder == Qt::partial_ordering::unordered)
-                return Qt::weak_ordering::greater;
-        }
-        if (partialOrder == Qt::partial_ordering::equivalent)
-            return Qt::weak_ordering::equivalent;
-        return partialOrder < 0 ? Qt::weak_ordering::less
-                                : Qt::weak_ordering::greater;
-    }
-    default:
-    case QMetaType::QString: {
-        const Qt::CaseSensitivity cs = collator ? collator->caseSensitivity()
-                                     : Qt::CaseSensitive;
-        const int res = collator
-                      ? collator->compare(left.toString(), right.toString())
-                      : left.toString().compare(right.toString(), cs);
-        return Qt::compareThreeWay(res, 0);
-    }
-    }
-}
-
 static uint typeOfVariant(const std::any &value)
 {
     //return 0 for integer, 1 for floating point and 2 for other
@@ -1257,19 +1208,6 @@ static uint typeOfVariant(const std::any &value)
             return 1;
         default:
             return 2;
-    }
-}
-
-bool TzAbstractItemModelPrivate::variantLessThan(const std::any &v1, const std::any &v2)
-{
-    switch(qMax(typeOfVariant(v1), typeOfVariant(v2)))
-    {
-    case 0: //integer type
-        return v1.toLongLong() < v2.toLongLong();
-    case 1: //floating point
-        return v1.toReal() < v2.toReal();
-    default:
-        return v1.toString().localeAwareCompare(v2.toString()) < 0;
     }
 }
 
@@ -1383,7 +1321,7 @@ void TzAbstractItemModelPrivate::itemsAboutToBeMoved(const TzModelIndex &srcPare
     persistent.moved.push(persistent_moved_in_destination);
 }
 
-void TzAbstractItemModelPrivate::movePersistentIndexes(const std::list<TzPersistentModelIndexData *> &indexes, int change,
+void TzAbstractItemModelPrivate::movePersistentIndexes(const std::vector<TzPersistentModelIndexData *> &indexes, int change,
                                                       const TzModelIndex &parent, Qt::Orientation orientation)
 {
     for (auto *data : indexes) {
@@ -1927,8 +1865,8 @@ bool TzAbstractItemModel::decodeData(int row, int column, const TzModelIndex &pa
     int left = std::numeric_limits<int>::max();
     int bottom = 0;
     int right = 0;
-    std::list<int> rows, columns;
-    std::list<std::unordered_map<int, std::any>> data;
+    std::vector<int> rows, columns;
+    std::vector<std::unordered_map<int, std::any>> data;
 
     while (!stream.atEnd()) {
         int r, c;
@@ -1949,7 +1887,7 @@ bool TzAbstractItemModel::decodeData(int row, int column, const TzModelIndex &pa
     int dragColumnCount = right - left + 1;
 
     // Compute the number of continuous rows upon insertion and modify the rows to match
-    std::list<int> rowsToInsert(bottom + 1);
+    std::vector<int> rowsToInsert(bottom + 1);
     for (int i = 0; i < rows.size(); ++i)
         rowsToInsert[rows.at(i)] = 1;
     for (int i = 0; i < rowsToInsert.size(); ++i) {
@@ -1974,7 +1912,7 @@ bool TzAbstractItemModel::decodeData(int row, int column, const TzModelIndex &pa
     row = qMax(0, row);
     column = qMax(0, column);
 
-    std::list<TzPersistentModelIndex> newIndexes(data.size());
+    std::vector<TzPersistentModelIndex> newIndexes(data.size());
     // set the data in the table
     for (int j = 0; j < data.size(); ++j) {
         int relativeRow = rows.at(j) - top;
@@ -2246,7 +2184,7 @@ void TzAbstractItemModel::changePersistentIndexList(const TzModelIndexList &from
     TZ_D(TzAbstractItemModel);
     if (d->persistent.indexes.isEmpty())
         return;
-    std::list<TzPersistentModelIndexData *> toBeReinserted;
+    std::vector<TzPersistentModelIndexData *> toBeReinserted;
     toBeReinserted.reserve(to.size());
     for (int i = 0; i < from.size(); ++i) {
         if (from.at(i) == to.at(i))
@@ -2389,8 +2327,8 @@ bool TzAbstractItemModelPrivate::dropOnItem(const TzModelIndex &index, QDataStre
 
     int top = std::numeric_limits<int>::max();
     int left = std::numeric_limits<int>::max();
-    std::list<int> rows, columns;
-    std::list<std::unordered_map<int, std::any>> data;
+    std::vector<int> rows, columns;
+    std::vector<std::unordered_map<int, std::any>> data;
 
     while (!stream.atEnd()) {
         int r, c;

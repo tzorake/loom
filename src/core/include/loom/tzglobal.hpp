@@ -7,4 +7,12 @@
 
 constexpr inline void tzNoop(void) noexcept {}
 
+template <typename T>
+constexpr inline void tzPtrSwap(T* &lhs, T* &rhs) noexcept
+{
+    T *tmp = lhs;
+    lhs = rhs;
+    rhs = tmp;
+}
+
 #endif // TZGLOBAL_HPP

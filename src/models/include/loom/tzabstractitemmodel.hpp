@@ -284,14 +284,14 @@
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR LGPL-3.0-only OR GPL-2.0-only OR GPL-3.0-only
 // Qt-Security score:significant reason:default
 
-#ifndef TzAbstractItemModel_H
-#define TzAbstractItemModel_H
+#ifndef TZABSTRACTITEMMODEL_HPP
+#define TZABSTRACTITEMMODEL_HPP
 
 #include <QtCore/qcompare.h>
-#include <QtCore/std::unordered_map.h>
-#include <QtCore/std::list.h>
+#include <QtCore/qhash.h>
+#include <QtCore/qlist.h>
 #include <QtCore/qobject.h>
-#include <QtCore/std::any.h>
+#include <QtCore/qvariant.h>
 
 class TzAbstractItemModel;
 class TzPersistentModelIndex;
@@ -359,10 +359,9 @@ public:
     inline bool operator!=(const TzPersistentModelIndex &other) const noexcept
     { return !operator==(other); }
     TzPersistentModelIndex &operator=(const TzPersistentModelIndex &other);
-    inline TzPersistentModelIndex(TzPersistentModelIndex &&other) noexcept
-        : d(std::exchange(other.d, nullptr)) {}
-    QT_MOVE_ASSIGNMENT_OPERATOR_IMPL_VIA_PURE_SWAP(TzPersistentModelIndex)
-    void swap(TzPersistentModelIndex &other) noexcept { qt_ptr_swap(d, other.d); }
+    inline TzPersistentModelIndex(TzPersistentModelIndex &&other) noexcept : d(std::exchange(other.d, nullptr)) {}
+    TzPersistentModelIndex &operator=(TzPersistentModelIndex &&other) noexcept { swap(other); return *this; }
+    void swap(TzPersistentModelIndex &other) noexcept { tzPtrSwap(d, other.d); }
     bool operator==(const TzModelIndex &other) const noexcept;
     bool operator!=(const TzModelIndex &other) const noexcept;
     TzPersistentModelIndex &operator=(const TzModelIndex &other);
@@ -380,24 +379,19 @@ public:
     bool isValid() const;
 private:
     TzPersistentModelIndexData *d;
-    friend size_t std::unordered_map(const TzPersistentModelIndex &, size_t seed) noexcept;
-    friend bool std::unordered_mapEquals(const TzPersistentModelIndex &a, const TzPersistentModelIndex &b) noexcept
+    friend size_t qHash(const TzPersistentModelIndex &, size_t seed) noexcept;
+    friend bool qHashEquals(const TzPersistentModelIndex &a, const TzPersistentModelIndex &b) noexcept
     { return a.d == b.d; }
-    friend Q_CORE_EXPORT bool
-    comparesEqual(const TzPersistentModelIndex &lhs, const TzPersistentModelIndex &rhs) noexcept;
-    friend Q_CORE_EXPORT bool
-    comparesEqual(const TzPersistentModelIndex &lhs, const TzModelIndex &rhs) noexcept;
-    friend Q_CORE_EXPORT Qt::strong_ordering // ### Qt 7: partial_ordering?
-    compareThreeWay(const TzPersistentModelIndex &lhs, const TzPersistentModelIndex &rhs) noexcept;
-    friend Q_CORE_EXPORT Qt::strong_ordering // ### Qt 7: partial_ordering?
-    compareThreeWay(const TzPersistentModelIndex &lhs, const TzModelIndex &rhs) noexcept;
+    friend bool comparesEqual(const TzPersistentModelIndex &lhs, const TzPersistentModelIndex &rhs) noexcept;
+    friend bool comparesEqual(const TzPersistentModelIndex &lhs, const TzModelIndex &rhs) noexcept;
+    friend Qt::strong_ordering compareThreeWay(const TzPersistentModelIndex &lhs, const TzPersistentModelIndex &rhs) noexcept;
+    friend Qt::strong_ordering compareThreeWay(const TzPersistentModelIndex &lhs, const TzModelIndex &rhs) noexcept;
 };
-Q_DECLARE_SHARED(TzPersistentModelIndex)
 
-inline size_t std::unordered_map(const TzPersistentModelIndex &index, size_t seed) noexcept
-{ return std::unordered_map(index.d, seed); }
+inline size_t qHash(const TzPersistentModelIndex &index, size_t seed) noexcept
+{ return qHash(index.d, seed); }
 
-using TzModelIndexList = std::list<TzModelIndex>;
+using TzModelIndexList = std::vector<TzModelIndex>;
 
 class TzAbstractItemModelPrivate;
 
@@ -409,8 +403,7 @@ public:
     virtual ~TzAbstractItemModel();
 
     bool hasIndex(int row, int column, const TzModelIndex &parent = TzModelIndex()) const;
-    virtual TzModelIndex index(int row, int column,
-                              const TzModelIndex &parent = TzModelIndex()) const = 0;
+    virtual TzModelIndex index(int row, int column, const TzModelIndex &parent = TzModelIndex()) const = 0;
     virtual TzModelIndex parent(const TzModelIndex &child) const = 0;
 
     virtual TzModelIndex sibling(int row, int column, const TzModelIndex &idx) const;
@@ -486,10 +479,10 @@ public:
 
 // Q_SIGNALS: BEGIN
     void dataChanged(const TzModelIndex &topLeft, const TzModelIndex &bottomRight,
-                     const std::list<int> &roles = std::list<int>());
+                     const std::vector<int> &roles = std::vector<int>());
     void headerDataChanged(Qt::Orientation orientation, int first, int last);
-    void layoutChanged(const std::list<TzPersistentModelIndex> &parents = std::list<TzPersistentModelIndex>(), TzAbstractItemModel::LayoutChangeHint hint = TzAbstractItemModel::NoLayoutChangeHint);
-    void layoutAboutToBeChanged(const std::list<TzPersistentModelIndex> &parents = std::list<TzPersistentModelIndex>(), TzAbstractItemModel::LayoutChangeHint hint = TzAbstractItemModel::NoLayoutChangeHint);
+    void layoutChanged(const std::vector<TzPersistentModelIndex> &parents = std::vector<TzPersistentModelIndex>(), TzAbstractItemModel::LayoutChangeHint hint = TzAbstractItemModel::NoLayoutChangeHint);
+    void layoutAboutToBeChanged(const std::vector<TzPersistentModelIndex> &parents = std::vector<TzPersistentModelIndex>(), TzAbstractItemModel::LayoutChangeHint hint = TzAbstractItemModel::NoLayoutChangeHint);
 
     void rowsAboutToBeInserted(const TzModelIndex &parent, int first, int last, QPrivateSignal);
     void rowsInserted(const TzModelIndex &parent, int first, int last, QPrivateSignal);

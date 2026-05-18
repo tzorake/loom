@@ -117,7 +117,7 @@ public:
     static const TzAbstractItemModelPrivate *get(const TzAbstractItemModel *model) { return model->d_func(); }
 
     void removePersistentIndexData(TzPersistentModelIndexData *data);
-    void movePersistentIndexes(const std::list<TzPersistentModelIndexData *> &indexes, int change, const TzModelIndex &parent,
+    void movePersistentIndexes(const std::vector<TzPersistentModelIndexData *> &indexes, int change, const TzModelIndex &parent,
                                Qt::Orientation orientation);
     void rowsAboutToBeInserted(const TzModelIndex &parent, int first, int last);
     void rowsInserted(const TzModelIndex &parent, int first, int last);
@@ -128,7 +128,6 @@ public:
     void columnsAboutToBeRemoved(const TzModelIndex &parent, int first, int last);
     void columnsRemoved(const TzModelIndex &parent, int first, int last);
     static TzAbstractItemModel *staticEmptyModel();
-    static bool variantLessThan(const QVariant &v1, const QVariant &v2);
 
     void itemsAboutToBeMoved(const TzModelIndex &srcParent, int srcFirst, int srcLast, const TzModelIndex &destinationParent, int destinationChild, Qt::Orientation);
     void itemsMoved(const TzModelIndex &srcParent, int srcFirst, int srcLast, const TzModelIndex &destinationParent, int destinationChild, Qt::Orientation orientation);
@@ -188,5 +187,5 @@ public:
 
     bool resetting = false;
 
-    static const std::unordered_map<int,QByteArray> &defaultRoleNames();
+    static const std::unordered_map<int, std::string> &defaultRoleNames();
 };
