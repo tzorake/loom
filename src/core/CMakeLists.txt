@@ -24,6 +24,7 @@ add_library(loom-core
     src/tzrect.cpp
     src/tzsize.cpp
     src/tzeventemitter.cpp
+    src/tzdebug.cpp
 )
 target_include_directories(loom-core
     PUBLIC  include

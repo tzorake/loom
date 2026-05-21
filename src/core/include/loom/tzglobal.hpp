@@ -1,6 +1,8 @@
 #ifndef TZGLOBAL_HPP
 #define TZGLOBAL_HPP
 
+#include <loom/tzdebug.hpp>
+
 #define TZ_UNUSED(x) (void)x;
 
 #define TZ_UNIMPLEMENTED() tzWarning("Unimplemented code.")
