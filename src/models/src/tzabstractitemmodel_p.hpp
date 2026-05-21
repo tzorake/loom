@@ -2,7 +2,10 @@
 #define TZABSTRACTITEMMODEL_P_HPP
 
 #include <loom/tzabstractitemmodel.hpp>
-#include <loom/tzeventemitter.hpp>
+
+#include <atomic>
+#include <unordered_map>
+#include <vector>
 
 class TzPersistentModelIndexData
 {
@@ -10,7 +13,7 @@ public:
     TzPersistentModelIndexData() {}
     TzPersistentModelIndexData(const TzModelIndex &idx) : index(idx) {}
     TzModelIndex index;
-    QAtomicInt ref;
+    std::atomic<int> ref{0};
     static TzPersistentModelIndexData *create(const TzModelIndex &index);
     static void destroy(TzPersistentModelIndexData *data);
 };
@@ -21,6 +24,8 @@ class TzAbstractItemModelPrivate
 public:
     TzAbstractItemModelPrivate();
     ~TzAbstractItemModelPrivate();
+
+    TzAbstractItemModel *q_ptr = nullptr;
 
     static const TzAbstractItemModelPrivate *get(const TzAbstractItemModel *model) { return model->d_func(); }
 
@@ -46,7 +51,7 @@ public:
     { return q_func()->createIndex(row, column, data); }
 
     inline TzModelIndex createIndex(int row, int column, int id) const
-    { return q_func()->createIndex(row, column, id); }
+    { return q_func()->createIndex(row, column, (uintptr_t)id); }
 
     inline bool indexValid(const TzModelIndex &index) const
     { return (index.row() >= 0) && (index.column() >= 0) && (index.model() == q_func()); }
@@ -77,21 +82,19 @@ public:
 
         constexpr bool isValid() const { return first >= 0 && last >= 0; }
     };
-    std::stack<Change> changes;
+    std::vector<Change> changes;
 
     struct Persistent {
         Persistent() {}
         std::unordered_multimap<TzModelIndex, TzPersistentModelIndexData *> indexes;
-        std::stack<std::vector<TzPersistentModelIndexData *>> moved;
-        std::stack<std::vector<TzPersistentModelIndexData *>> invalidated;
+        std::vector<std::vector<TzPersistentModelIndexData *>> moved;
+        std::vector<std::vector<TzPersistentModelIndexData *>> invalidated;
         void insertMultiAtEnd(const TzModelIndex& key, TzPersistentModelIndexData *data);
     } persistent;
 
     bool resetting = false;
 
     static const std::unordered_map<int, std::string> &defaultRoleNames();
-
-    TzEventEmitter emitter;
 };
 
 #endif // TZABSTRACTITEMMODEL_P_HPP

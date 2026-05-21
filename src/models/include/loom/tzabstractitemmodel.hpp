@@ -2,6 +2,16 @@
 #define TZABSTRACTITEMMODEL_HPP
 
 #include <loom/tzflags.hpp>
+#include <loom/tzglobal.hpp>
+#include <loom/tzclasshelpermacros.hpp>
+#include <loom/tzeventemitter.hpp>
+
+#include <any>
+#include <functional>
+#include <string>
+#include <unordered_map>
+#include <utility>
+#include <vector>
 
 enum TzItemDataRole {
     DisplayRole = 0,
@@ -64,10 +74,22 @@ public:
     inline TzModelIndex sibling(int row, int column) const;
     inline TzModelIndex siblingAtColumn(int column) const;
     inline TzModelIndex siblingAtRow(int row) const;
-    inline std::any data(int role = TzTzItemDataRole::DisplayRole) const;
+    inline std::any data(int role = TzItemDataRole::DisplayRole) const;
     inline TzItemFlags flags() const;
     constexpr inline const TzAbstractItemModel *model() const noexcept { return m; }
     constexpr inline bool isValid() const noexcept { return (r >= 0) && (c >= 0) && (m != nullptr); }
+
+    constexpr inline bool operator==(const TzModelIndex &other) const noexcept
+    { return r == other.r && c == other.c && i == other.i && m == other.m; }
+    constexpr inline bool operator!=(const TzModelIndex &other) const noexcept
+    { return !operator==(other); }
+    constexpr inline bool operator<(const TzModelIndex &other) const noexcept
+    {
+        if (m != other.m) return m < other.m;
+        if (r != other.r) return r < other.r;
+        if (c != other.c) return c < other.c;
+        return i < other.i;
+    }
 
 private:
     inline TzModelIndex(int arow, int acolumn, const void *ptr, const TzAbstractItemModel *amodel) noexcept
@@ -78,6 +100,23 @@ private:
     uintptr_t i;
     const TzAbstractItemModel *m;
 };
+
+namespace std {
+template<>
+struct hash<TzModelIndex> {
+    size_t operator()(const TzModelIndex &idx) const noexcept {
+        size_t seed = 0;
+        auto combine = [&seed](size_t h) {
+            seed ^= h + 0x9e3779b9u + (seed << 6) + (seed >> 2);
+        };
+        combine(std::hash<int>{}(idx.row()));
+        combine(std::hash<int>{}(idx.column()));
+        combine(std::hash<uintptr_t>{}(idx.internalId()));
+        combine(std::hash<const void *>{}(idx.model()));
+        return seed;
+    }
+};
+} // namespace std
 
 class TzPersistentModelIndexData;
 
@@ -109,7 +148,7 @@ public:
     uintptr_t internalId() const;
     TzModelIndex parent() const;
     TzModelIndex sibling(int row, int column) const;
-    std::any data(int role = TzTzItemDataRole::DisplayRole) const;
+    std::any data(int role = TzItemDataRole::DisplayRole) const;
     TzItemFlags flags() const;
     const TzAbstractItemModel *model() const;
     bool isValid() const;
@@ -140,13 +179,13 @@ public:
     virtual int columnCount(const TzModelIndex &parent = TzModelIndex()) const = 0;
     virtual bool hasChildren(const TzModelIndex &parent = TzModelIndex()) const;
 
-    virtual std::any data(const TzModelIndex &index, int role = TzTzItemDataRole::DisplayRole) const = 0;
-    virtual bool setData(const TzModelIndex &index, const std::any &value, int role = TzTzItemDataRole::EditRole);
+    virtual std::any data(const TzModelIndex &index, int role = TzItemDataRole::DisplayRole) const = 0;
+    virtual bool setData(const TzModelIndex &index, const std::any &value, int role = TzItemDataRole::EditRole);
 
     virtual std::any headerData(int section, TzOrientation orientation,
-                                int role = TzTzItemDataRole::DisplayRole) const;
+                                int role = TzItemDataRole::DisplayRole) const;
     virtual bool setHeaderData(int section, TzOrientation orientation, const std::any &value,
-                               int role = TzTzItemDataRole::EditRole);
+                               int role = TzItemDataRole::EditRole);
 
     virtual bool insertRows(int row, int count, const TzModelIndex &parent = TzModelIndex());
     virtual bool insertColumns(int column, int count, const TzModelIndex &parent = TzModelIndex());
@@ -190,12 +229,14 @@ public:
 
     [[nodiscard]] bool checkIndex(const TzModelIndex &index, CheckIndexOptions options = CheckIndexOption::NoOption) const;
 
-// TZ_SIGNALS.begin
+// TZ_SIGNALS.begin — call these to notify subscribers; subscribe via model.emitter.on("signalName", cb)
 public:
+    TzEventEmitter emitter;
+
     void dataChanged(const TzModelIndex &topLeft, const TzModelIndex &bottomRight, const std::vector<int> &roles = std::vector<int>());
     void headerDataChanged(TzOrientation orientation, int first, int last);
-    void layoutChanged(const std::vector<TzPersistentModelIndex> &parents = std::vector<TzPersistentModelIndex>(), TzAbstractItemModel::LayoutChangeHint hint = TzAbstractItemModel::NoLayoutChangeHint);
-    void layoutAboutToBeChanged(const std::vector<TzPersistentModelIndex> &parents = std::vector<TzPersistentModelIndex>(), TzAbstractItemModel::LayoutChangeHint hint = TzAbstractItemModel::NoLayoutChangeHint);
+    void layoutChanged(const std::vector<TzPersistentModelIndex> &parents = std::vector<TzPersistentModelIndex>(), TzAbstractItemModel::LayoutChangeHint hint = TzAbstractItemModel::LayoutChangeHint::NoLayoutChangeHint);
+    void layoutAboutToBeChanged(const std::vector<TzPersistentModelIndex> &parents = std::vector<TzPersistentModelIndex>(), TzAbstractItemModel::LayoutChangeHint hint = TzAbstractItemModel::LayoutChangeHint::NoLayoutChangeHint);
 
 private:
     void rowsAboutToBeInserted(const TzModelIndex &parent, int first, int last);
@@ -232,6 +273,8 @@ protected:
 // TZ_SLOTS.end
 
 protected:
+    explicit TzAbstractItemModel(TzAbstractItemModelPrivate &dd);
+
     inline TzModelIndex createIndex(int row, int column, const void *data = nullptr) const;
     inline TzModelIndex createIndex(int row, int column, uintptr_t id) const;
 
@@ -263,6 +306,7 @@ protected:
 private:
     TZ_DECLARE_PRIVATE(TzAbstractItemModel)
     TZ_DISABLE_COPY(TzAbstractItemModel)
+    TzAbstractItemModelPrivate *d_ptr;
 };
 
 TZ_DECLARE_OPERATORS_FOR_FLAGS(TzAbstractItemModel::CheckIndexOptions)

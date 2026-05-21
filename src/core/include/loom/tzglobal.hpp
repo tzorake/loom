@@ -5,6 +5,16 @@
 
 #define TZ_UNUSED(x) (void)x;
 
+enum class TzOrientation {
+    Horizontal,
+    Vertical
+};
+
+enum class TzSortOrder {
+    AscendingOrder,
+    DescendingOrder
+};
+
 #define TZ_UNIMPLEMENTED() tzWarning("Unimplemented code.")
 
 constexpr inline void tzNoop(void) noexcept {}

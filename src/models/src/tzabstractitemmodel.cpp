@@ -1,18 +1,24 @@
 #include <loom/tzabstractitemmodel.hpp>
 #include <tzabstractitemmodel_p.hpp>
 
+#include <loom/tzassert.hpp>
+#include <loom/tzdebug.hpp>
+#include <loom/tzglobalstatic.hpp>
+
+#include <algorithm>
+
 TzPersistentModelIndexData *TzPersistentModelIndexData::create(const TzModelIndex &index)
 {
     TZ_ASSERT(index.isValid()); // we will _never_ insert an invalid index in the list
     TzPersistentModelIndexData *d = nullptr;
     TzAbstractItemModel *model = const_cast<TzAbstractItemModel *>(index.model());
-    std::unordered_multimap<TzModelIndex, TzPersistentModelIndexData *> &indexes = model->d_func()->persistent.indexes;
+    auto &indexes = model->d_func()->persistent.indexes;
     const auto it = indexes.find(index);
     if (it != indexes.cend()) {
-        d = (*it);
+        d = it->second;
     } else {
         d = new TzPersistentModelIndexData(index);
-        indexes.insert(index, d);
+        indexes.insert({index, d});
     }
     TZ_ASSERT(d);
     return d;
@@ -21,7 +27,7 @@ TzPersistentModelIndexData *TzPersistentModelIndexData::create(const TzModelInde
 void TzPersistentModelIndexData::destroy(TzPersistentModelIndexData *data)
 {
     TZ_ASSERT(data);
-    TZ_ASSERT(data->ref.loadRelaxed() == 0);
+    TZ_ASSERT(data->ref.load(std::memory_order_relaxed) == 0);
     TzAbstractItemModel *model = const_cast<TzAbstractItemModel *>(data->index.model());
     // a valid persistent model index with a null model pointer can only happen if the model was destroyed
     if (model) {
@@ -41,7 +47,7 @@ TzPersistentModelIndex::TzPersistentModelIndex(const TzPersistentModelIndex &oth
     : d(other.d)
 {
     if (d)
-        d->ref.ref();
+        d->ref.fetch_add(1, std::memory_order_relaxed);
 }
 
 TzPersistentModelIndex::TzPersistentModelIndex(const TzModelIndex &index)
@@ -49,13 +55,13 @@ TzPersistentModelIndex::TzPersistentModelIndex(const TzModelIndex &index)
 {
     if (index.isValid()) {
         d = TzPersistentModelIndexData::create(index);
-        d->ref.ref();
+        d->ref.fetch_add(1, std::memory_order_relaxed);
     }
 }
 
 TzPersistentModelIndex::~TzPersistentModelIndex()
 {
-    if (d && !d->ref.deref()) {
+    if (d && d->ref.fetch_sub(1, std::memory_order_acq_rel) == 1) {
         TzPersistentModelIndexData::destroy(d);
         d = nullptr;
     }
@@ -65,20 +71,20 @@ TzPersistentModelIndex &TzPersistentModelIndex::operator=(const TzPersistentMode
 {
     if (d == other.d)
         return *this;
-    if (d && !d->ref.deref())
+    if (d && d->ref.fetch_sub(1, std::memory_order_acq_rel) == 1)
         TzPersistentModelIndexData::destroy(d);
     d = other.d;
-    if (d) d->ref.ref();
+    if (d) d->ref.fetch_add(1, std::memory_order_relaxed);
     return *this;
 }
 
 TzPersistentModelIndex &TzPersistentModelIndex::operator=(const TzModelIndex &other)
 {
-    if (d && !d->ref.deref())
+    if (d && d->ref.fetch_sub(1, std::memory_order_acq_rel) == 1)
         TzPersistentModelIndexData::destroy(d);
     if (other.isValid()) {
         d = TzPersistentModelIndexData::create(other);
-        if (d) d->ref.ref();
+        if (d) d->ref.fetch_add(1, std::memory_order_relaxed);
     } else {
         d = nullptr;
     }
@@ -90,6 +96,16 @@ TzPersistentModelIndex::operator TzModelIndex() const
     if (d)
         return d->index;
     return TzModelIndex();
+}
+
+bool TzPersistentModelIndex::operator<(const TzPersistentModelIndex &other) const noexcept
+{
+    return d < other.d;
+}
+
+bool TzPersistentModelIndex::operator==(const TzPersistentModelIndex &other) const noexcept
+{
+    return d == other.d;
 }
 
 int TzPersistentModelIndex::row() const
@@ -152,7 +168,7 @@ TzItemFlags TzPersistentModelIndex::flags() const
 {
     if (d)
         return d->index.flags();
-    return TzItemFlags::NoItemFlags;
+    return TzItemFlag::NoItemFlags;
 }
 
 const TzAbstractItemModel *TzPersistentModelIndex::model() const
@@ -196,7 +212,7 @@ TzAbstractItemModel *TzAbstractItemModelPrivate::staticEmptyModel()
 
 void TzAbstractItemModelPrivate::invalidatePersistentIndexes()
 {
-    for (TzPersistentModelIndexData *data : std::as_const(persistent.indexes))
+    for (auto &[_k, data] : std::as_const(persistent.indexes))
         data->index = TzModelIndex();
     persistent.indexes.clear();
 }
@@ -204,7 +220,7 @@ void TzAbstractItemModelPrivate::invalidatePersistentIndexes()
 void TzAbstractItemModelPrivate::invalidatePersistentIndex(const TzModelIndex &index) {
     const auto it = persistent.indexes.find(index);
     if (it != persistent.indexes.end()) {
-        TzPersistentModelIndexData *data = *it;
+        TzPersistentModelIndexData *data = it->second;
         persistent.indexes.erase(it);
         data->index = TzModelIndex();
     }
@@ -229,24 +245,33 @@ const std::unordered_map<int,std::string> &TzAbstractItemModelPrivate::defaultRo
 void TzAbstractItemModelPrivate::removePersistentIndexData(TzPersistentModelIndexData *data)
 {
     if (data->index.isValid()) {
-        int removed = persistent.indexes.remove(data->index);
+        int removed = 0;
+        auto range = persistent.indexes.equal_range(data->index);
+        for (auto it = range.first; it != range.second; ) {
+            if (it->second == data) {
+                it = persistent.indexes.erase(it);
+                ++removed;
+            } else {
+                ++it;
+            }
+        }
         TZ_ASSERT_X(removed == 1, "TzPersistentModelIndex::~TzPersistentModelIndex",
-                   "persistent model indexes corrupted"); //maybe the index was somewhat invalid?
-        // This assert may happen if the model use changePersistentIndex in a way that could result on two
-        // TzPersistentModelIndex pointing to the same index.
+                   "persistent model indexes corrupted");
         TZ_UNUSED(removed);
     }
     // make sure our optimization still works
-    for (int i = persistent.moved.size() - 1; i >= 0; --i) {
-        int idx = persistent.moved.at(i).indexOf(data);
-        if (idx >= 0)
-            persistent.moved[i].remove(idx);
+    for (int i = (int)persistent.moved.size() - 1; i >= 0; --i) {
+        auto &movedVec = persistent.moved[i];
+        auto it = std::find(movedVec.begin(), movedVec.end(), data);
+        if (it != movedVec.end())
+            movedVec.erase(it);
     }
     // update the references to invalidated persistent indexes
-    for (int i = persistent.invalidated.size() - 1; i >= 0; --i) {
-        int idx = persistent.invalidated.at(i).indexOf(data);
-        if (idx >= 0)
-            persistent.invalidated[i].remove(idx);
+    for (int i = (int)persistent.invalidated.size() - 1; i >= 0; --i) {
+        auto &invalidatedVec = persistent.invalidated[i];
+        auto it = std::find(invalidatedVec.begin(), invalidatedVec.end(), data);
+        if (it != invalidatedVec.end())
+            invalidatedVec.erase(it);
     }
 }
 
@@ -256,7 +281,7 @@ void TzAbstractItemModelPrivate::rowsAboutToBeInserted(const TzModelIndex &paren
     TZ_UNUSED(last);
     std::vector<TzPersistentModelIndexData *> persistentMoved;
     if (first < q->rowCount(parent)) {
-        for (auto *data : std::as_const(persistent.indexes)) {
+        for (auto &[_k, data] : std::as_const(persistent.indexes)) {
             const TzModelIndex &index = data->index;
             if (index.row() >= first && index.isValid() && index.parent() == parent) {
                 persistentMoved.push_back(data);
@@ -277,7 +302,7 @@ void TzAbstractItemModelPrivate::rowsInserted(const TzModelIndex &parent, int fi
         if (data->index.isValid()) {
             persistent.insertMultiAtEnd(data->index, data);
         } else {
-            tzWarning() << "TzAbstractItemModel::endInsertRows:  Invalid index (" << old.row() + count << ',' << old.column() << ") in model" << q_func();
+            tzWarning() << "TzAbstractItemModel::endInsertRows: Invalid index in model";
         }
     }
 }
@@ -291,7 +316,7 @@ void TzAbstractItemModelPrivate::itemsAboutToBeMoved(const TzModelIndex &srcPare
     const bool sameParent = (srcParent == destinationParent);
     const bool movingUp = (srcFirst > destinationChild);
 
-    for (auto *data : std::as_const(persistent.indexes)) {
+    for (auto &[_k, data] : std::as_const(persistent.indexes)) {
         const TzModelIndex &index = data->index;
         const TzModelIndex &parent = index.parent();
         const bool isSourceIndex = (parent == srcParent);
@@ -351,7 +376,7 @@ void TzAbstractItemModelPrivate::movePersistentIndexes(const std::vector<TzPersi
         if (data->index.isValid()) {
             persistent.insertMultiAtEnd(data->index, data);
         } else {
-            tzWarning() << "TzAbstractItemModel::endMoveRows:  Invalid index (" << row << "," << column << ") in model" << q_func();
+            tzWarning() << "TzAbstractItemModel::endMoveRows: Invalid index in model";
         }
     }
 }
@@ -380,7 +405,7 @@ void TzAbstractItemModelPrivate::rowsAboutToBeRemoved(const TzModelIndex &parent
     std::vector<TzPersistentModelIndexData *> persistentInvalidated;
     // find the persistent indexes that are affected by the change, either by being in the removed subtree
     // or by being on the same level and below the removed rows
-    for (auto *data : std::as_const(persistent.indexes)) {
+    for (auto &[_k, data] : std::as_const(persistent.indexes)) {
         bool levelChanged = false;
         TzModelIndex current = data->index;
         while (current.isValid()) {
@@ -412,7 +437,7 @@ void TzAbstractItemModelPrivate::rowsRemoved(const TzModelIndex &parent, int fir
         if (data->index.isValid()) {
             persistent.insertMultiAtEnd(data->index, data);
         } else {
-            tzWarning() << "TzAbstractItemModel::endRemoveRows:  Invalid index (" << old.row() - count << ',' << old.column() << ") in model" << q_func();
+            tzWarning() << "TzAbstractItemModel::endRemoveRows: Invalid index in model";
         }
     }
     const std::vector<TzPersistentModelIndexData *> persistentInvalidated = std::move(persistent.invalidated.back()); persistent.invalidated.pop_back();
@@ -430,7 +455,7 @@ void TzAbstractItemModelPrivate::columnsAboutToBeInserted(const TzModelIndex &pa
     TZ_UNUSED(last);
     std::vector<TzPersistentModelIndexData *> persistentMoved;
     if (first < q->columnCount(parent)) {
-        for (auto *data : std::as_const(persistent.indexes)) {
+        for (auto &[_k, data] : std::as_const(persistent.indexes)) {
             const TzModelIndex &index = data->index;
             if (index.column() >= first && index.isValid() && index.parent() == parent)
                 persistentMoved.push_back(data);
@@ -450,7 +475,7 @@ void TzAbstractItemModelPrivate::columnsInserted(const TzModelIndex &parent, int
         if (data->index.isValid()) {
             persistent.insertMultiAtEnd(data->index, data);
         } else {
-            tzWarning() << "TzAbstractItemModel::endInsertColumns:  Invalid index (" << old.row() << ',' << old.column() + count << ") in model" << q_func();
+            tzWarning() << "TzAbstractItemModel::endInsertColumns: Invalid index in model";
         }
     }
 }
@@ -461,7 +486,7 @@ void TzAbstractItemModelPrivate::columnsAboutToBeRemoved(const TzModelIndex &par
     std::vector<TzPersistentModelIndexData *> persistentInvalidated;
     // find the persistent indexes that are affected by the change, either by being in the removed subtree
     // or by being on the same level and to the right of the removed columns
-    for (auto *data : std::as_const(persistent.indexes)) {
+    for (auto &[_k, data] : std::as_const(persistent.indexes)) {
         bool levelChanged = false;
         TzModelIndex current = data->index;
         while (current.isValid()) {
@@ -493,13 +518,13 @@ void TzAbstractItemModelPrivate::columnsRemoved(const TzModelIndex &parent, int 
         if (data->index.isValid()) {
             persistent.insertMultiAtEnd(data->index, data);
         } else {
-            tzWarning() << "TzAbstractItemModel::endRemoveColumns:  Invalid index (" << old.row() << ',' << old.column() - count << ") in model" << q_func();
+            tzWarning() << "TzAbstractItemModel::endRemoveColumns: Invalid index in model";
         }
     }
     const std::vector<TzPersistentModelIndexData *> persistentInvalidated = std::move(persistent.invalidated.back()); persistent.invalidated.pop_back();
     for (auto *data : persistentInvalidated) {
         auto index = persistent.indexes.find(data->index);
-        if (index != persistent.indexes.constEnd())
+        if (index != persistent.indexes.cend())
             persistent.indexes.erase(index);
         data->index = TzModelIndex();
     }
@@ -512,11 +537,13 @@ void TzAbstractItemModel::resetInternalData()
 TzAbstractItemModel::TzAbstractItemModel()
     : d_ptr(new TzAbstractItemModelPrivate)
 {
+    d_ptr->q_ptr = this;
 }
 
 TzAbstractItemModel::TzAbstractItemModel(TzAbstractItemModelPrivate &dd)
     : d_ptr(&dd)
 {
+    d_ptr->q_ptr = this;
 }
 
 TzAbstractItemModel::~TzAbstractItemModel()
@@ -644,6 +671,100 @@ bool TzAbstractItemModel::setHeaderData(int section, TzOrientation orientation, 
     return false;
 }
 
+// ── Signal implementations ──────────────────────────────────────────────────
+
+void TzAbstractItemModel::dataChanged(const TzModelIndex &topLeft, const TzModelIndex &bottomRight, const std::vector<int> &roles)
+{
+    emitter.emit("dataChanged", topLeft, bottomRight, roles);
+}
+
+void TzAbstractItemModel::headerDataChanged(TzOrientation orientation, int first, int last)
+{
+    emitter.emit("headerDataChanged", orientation, first, last);
+}
+
+void TzAbstractItemModel::layoutChanged(const std::vector<TzPersistentModelIndex> &parents, TzAbstractItemModel::LayoutChangeHint hint)
+{
+    emitter.emit("layoutChanged", parents, hint);
+}
+
+void TzAbstractItemModel::layoutAboutToBeChanged(const std::vector<TzPersistentModelIndex> &parents, TzAbstractItemModel::LayoutChangeHint hint)
+{
+    emitter.emit("layoutAboutToBeChanged", parents, hint);
+}
+
+void TzAbstractItemModel::rowsAboutToBeInserted(const TzModelIndex &parent, int first, int last)
+{
+    emitter.emit("rowsAboutToBeInserted", parent, first, last);
+}
+
+void TzAbstractItemModel::rowsInserted(const TzModelIndex &parent, int first, int last)
+{
+    emitter.emit("rowsInserted", parent, first, last);
+}
+
+void TzAbstractItemModel::rowsAboutToBeRemoved(const TzModelIndex &parent, int first, int last)
+{
+    emitter.emit("rowsAboutToBeRemoved", parent, first, last);
+}
+
+void TzAbstractItemModel::rowsRemoved(const TzModelIndex &parent, int first, int last)
+{
+    emitter.emit("rowsRemoved", parent, first, last);
+}
+
+void TzAbstractItemModel::columnsAboutToBeInserted(const TzModelIndex &parent, int first, int last)
+{
+    emitter.emit("columnsAboutToBeInserted", parent, first, last);
+}
+
+void TzAbstractItemModel::columnsInserted(const TzModelIndex &parent, int first, int last)
+{
+    emitter.emit("columnsInserted", parent, first, last);
+}
+
+void TzAbstractItemModel::columnsAboutToBeRemoved(const TzModelIndex &parent, int first, int last)
+{
+    emitter.emit("columnsAboutToBeRemoved", parent, first, last);
+}
+
+void TzAbstractItemModel::columnsRemoved(const TzModelIndex &parent, int first, int last)
+{
+    emitter.emit("columnsRemoved", parent, first, last);
+}
+
+void TzAbstractItemModel::modelAboutToBeReset()
+{
+    emitter.emit("modelAboutToBeReset");
+}
+
+void TzAbstractItemModel::modelReset()
+{
+    emitter.emit("modelReset");
+}
+
+void TzAbstractItemModel::rowsAboutToBeMoved(const TzModelIndex &sourceParent, int sourceStart, int sourceEnd, const TzModelIndex &destinationParent, int destinationRow)
+{
+    emitter.emit("rowsAboutToBeMoved", sourceParent, sourceStart, sourceEnd, destinationParent, destinationRow);
+}
+
+void TzAbstractItemModel::rowsMoved(const TzModelIndex &sourceParent, int sourceStart, int sourceEnd, const TzModelIndex &destinationParent, int destinationRow)
+{
+    emitter.emit("rowsMoved", sourceParent, sourceStart, sourceEnd, destinationParent, destinationRow);
+}
+
+void TzAbstractItemModel::columnsAboutToBeMoved(const TzModelIndex &sourceParent, int sourceStart, int sourceEnd, const TzModelIndex &destinationParent, int destinationColumn)
+{
+    emitter.emit("columnsAboutToBeMoved", sourceParent, sourceStart, sourceEnd, destinationParent, destinationColumn);
+}
+
+void TzAbstractItemModel::columnsMoved(const TzModelIndex &sourceParent, int sourceStart, int sourceEnd, const TzModelIndex &destinationParent, int destinationColumn)
+{
+    emitter.emit("columnsMoved", sourceParent, sourceStart, sourceEnd, destinationParent, destinationColumn);
+}
+
+// ── Begin/End row operations ─────────────────────────────────────────────────
+
 void TzAbstractItemModel::beginInsertRows(const TzModelIndex &parent, int first, int last)
 {
     TZ_ASSERT(first >= 0);
@@ -690,7 +811,7 @@ bool TzAbstractItemModelPrivate::allowMove(const TzModelIndex &srcParent, int st
 
     TzModelIndex destinationAncestor = destinationParent;
     int pos = (TzOrientation::Vertical == orientation) ? destinationAncestor.row() : destinationAncestor.column();
-    forever {
+    while (true) {
         if (destinationAncestor == srcParent) {
             if (pos >= start && pos <= end)
                 return false;
@@ -842,7 +963,7 @@ void TzAbstractItemModel::beginResetModel()
 {
     TZ_D(TzAbstractItemModel);
     if (d->resetting) {
-        tzWarning() << "beginResetModel called on" << this << "without calling endResetModel first";
+        tzWarning() << "beginResetModel called without calling endResetModel first";
         // Warn, but don't return early in case user code relies on the incorrect behavior.
     }
 
@@ -855,7 +976,7 @@ void TzAbstractItemModel::endResetModel()
 {
     TZ_D(TzAbstractItemModel);
     if (!d->resetting) {
-        tzWarning() << "endResetModel called on" << this << "without calling beginResetModel first";
+        tzWarning() << "endResetModel called without calling beginResetModel first";
         // Warn, but don't return early in case user code relies on the incorrect behavior.
     }
 
@@ -869,12 +990,12 @@ void TzAbstractItemModel::endResetModel()
 void TzAbstractItemModel::changePersistentIndex(const TzModelIndex &from, const TzModelIndex &to)
 {
     TZ_D(TzAbstractItemModel);
-    if (d->persistent.indexes.isEmpty())
+    if (d->persistent.indexes.empty())
         return;
     // find the data and reinsert it sorted
     const auto it = d->persistent.indexes.find(from);
     if (it != d->persistent.indexes.cend()) {
-        TzPersistentModelIndexData *data = *it;
+        TzPersistentModelIndexData *data = it->second;
         d->persistent.indexes.erase(it);
         data->index = to;
         if (to.isValid())
@@ -885,20 +1006,20 @@ void TzAbstractItemModel::changePersistentIndex(const TzModelIndex &from, const 
 void TzAbstractItemModel::changePersistentIndexList(const TzModelIndexList &from, const TzModelIndexList &to)
 {
     TZ_D(TzAbstractItemModel);
-    if (d->persistent.indexes.isEmpty())
+    if (d->persistent.indexes.empty())
         return;
     std::vector<TzPersistentModelIndexData *> toBeReinserted;
     toBeReinserted.reserve(to.size());
-    for (int i = 0; i < from.size(); ++i) {
+    for (int i = 0; i < (int)from.size(); ++i) {
         if (from.at(i) == to.at(i))
             continue;
         const auto it = d->persistent.indexes.find(from.at(i));
         if (it != d->persistent.indexes.cend()) {
-            TzPersistentModelIndexData *data = *it;
+            TzPersistentModelIndexData *data = it->second;
             d->persistent.indexes.erase(it);
             data->index = to.at(i);
             if (data->index.isValid())
-                toBeReinserted << data;
+                toBeReinserted.push_back(data);
         }
     }
 
@@ -911,7 +1032,7 @@ TzModelIndexList TzAbstractItemModel::persistentIndexList() const
     TZ_D(const TzAbstractItemModel);
     TzModelIndexList result;
     result.reserve(d->persistent.indexes.size());
-    for (auto *data : std::as_const(d->persistent.indexes))
+    for (auto &[_k, data] : std::as_const(d->persistent.indexes))
         result.push_back(data->index);
     return result;
 }
@@ -921,28 +1042,24 @@ bool TzAbstractItemModel::checkIndex(const TzModelIndex &index, CheckIndexOption
 {
     if (!index.isValid()) {
         if (options & CheckIndexOption::IndexIsValid) {
-            qCWarning(lcCheckIndex) << "Index" << index << "is not valid (expected valid)";
+            tzWarning() << "Index is not valid (expected valid)";
             return false;
         }
         return true;
     }
 
     if (index.model() != this) {
-        qCWarning(lcCheckIndex) << "Index" << index
-                                << "is for model" << index.model()
-                                << "which is different from this model" << this;
+        tzWarning() << "Index is for a different model";
         return false;
     }
 
     if (index.row() < 0) {
-        qCWarning(lcCheckIndex) << "Index" << index
-                                << "has negative row" << index.row();
+        tzWarning() << "Index has negative row";
         return false;
     }
 
     if (index.column() < 0) {
-        qCWarning(lcCheckIndex) << "Index" << index
-                                << "has negative column" << index.column();
+        tzWarning() << "Index has negative column";
         return false;
     }
 
@@ -950,153 +1067,82 @@ bool TzAbstractItemModel::checkIndex(const TzModelIndex &index, CheckIndexOption
         const TzModelIndex parentIndex = index.parent();
         if (options & CheckIndexOption::ParentIsInvalid) {
             if (parentIndex.isValid()) {
-                qCWarning(lcCheckIndex) << "Index" << index
-                                        << "has valid parent" << parentIndex
-                                        << "(expected an invalid parent)";
+                tzWarning() << "Index has valid parent (expected an invalid parent)";
                 return false;
             }
         }
 
         const int rc = rowCount(parentIndex);
         if (index.row() >= rc) {
-            qCWarning(lcCheckIndex) << "Index" << index
-                                    << "has out of range row" << index.row()
-                                    << "rowCount() is" << rc;
+            tzWarning() << "Index has out of range row";
             return false;
         }
 
         const int cc = columnCount(parentIndex);
         if (index.column() >= cc) {
-            qCWarning(lcCheckIndex) << "Index" << index
-                                    << "has out of range column" << index.column()
-                                    << "columnCount() is" << cc;
+            tzWarning() << "Index has out of range column";
             return false;
-
         }
     }
 
     return true;
 }
 
-void TzAbstractItemModel::multiData(const TzModelIndex &index, QModelRoleDataSpan roleDataSpan) const
-{
-    TZ_ASSERT(checkIndex(index, CheckIndexOption::IndexIsValid));
+// ── TzAbstractTableModel ─────────────────────────────────────────────────────
 
-    for (QModelRoleData &d : roleDataSpan)
-        d.setData(data(index, d.role()));
-}
-
-
-
-QAbstractTableModel::QAbstractTableModel(QObject *parent)
-    : TzAbstractItemModel(parent)
+TzAbstractTableModel::TzAbstractTableModel()
+    : TzAbstractItemModel()
 {
 }
 
-
-QAbstractTableModel::QAbstractTableModel(TzAbstractItemModelPrivate &dd, QObject *parent)
-    : TzAbstractItemModel(dd, parent)
+TzAbstractTableModel::TzAbstractTableModel(TzAbstractItemModelPrivate &dd)
+    : TzAbstractItemModel(dd)
 {
-
 }
 
-
-QAbstractTableModel::~QAbstractTableModel()
+TzAbstractTableModel::~TzAbstractTableModel()
 {
-
 }
 
-
-TzModelIndex QAbstractTableModel::index(int row, int column, const TzModelIndex &parent) const
+TzModelIndex TzAbstractTableModel::index(int row, int column, const TzModelIndex &parent) const
 {
     return hasIndex(row, column, parent) ? createIndex(row, column) : TzModelIndex();
 }
 
-
-TzModelIndex QAbstractTableModel::parent(const TzModelIndex &) const
+TzModelIndex TzAbstractTableModel::parent(const TzModelIndex &) const
 {
     return TzModelIndex();
 }
 
-TzModelIndex QAbstractTableModel::sibling(int row, int column, const TzModelIndex &) const
+TzModelIndex TzAbstractTableModel::sibling(int row, int column, const TzModelIndex &) const
 {
     return index(row, column);
 }
 
-bool QAbstractTableModel::hasChildren(const TzModelIndex &parent) const
+bool TzAbstractTableModel::hasChildren(const TzModelIndex &parent) const
 {
     if (!parent.isValid())
         return rowCount(parent) > 0 && columnCount(parent) > 0;
     return false;
 }
 
-TzItemFlags QAbstractTableModel::flags(const TzModelIndex &index) const
+TzItemFlags TzAbstractTableModel::flags(const TzModelIndex &index) const
 {
     TzItemFlags f = TzAbstractItemModel::flags(index);
     if (index.isValid())
-        f |= Qt::ItemNeverHasChildren;
+        f |= TzItemFlag::ItemNeverHasChildren;
     return f;
 }
 
-
-
-TzAbstractListModel::TzAbstractListModel(QObject *parent)
-    : TzAbstractItemModel(parent)
-{
-}
-
-TzAbstractListModel::TzAbstractListModel(TzAbstractItemModelPrivate &dd, QObject *parent)
-    : TzAbstractItemModel(dd, parent)
-{
-}
-
-TzAbstractListModel::~TzAbstractListModel()
-{
-}
-
-TzModelIndex TzAbstractListModel::index(int row, int column, const TzModelIndex &parent) const
-{
-    return hasIndex(row, column, parent) ? createIndex(row, column) : TzModelIndex();
-}
-
-
-TzModelIndex TzAbstractListModel::parent(const TzModelIndex &index) const
-{
-    TZ_UNUSED(index);
-    return TzModelIndex();
-}
-
-TzModelIndex TzAbstractListModel::sibling(int row, int column, const TzModelIndex &parent) const
-{
-    TZ_UNUSED(parent);
-    return index(row, column);
-}
-
-TzItemFlags TzAbstractListModel::flags(const TzModelIndex &index) const
-{
-    TzItemFlags f = TzAbstractItemModel::flags(index);
-    if (index.isValid())
-        f |= TzItemFlags::ItemNeverHasChildren;
-    return f;
-}
-
-int TzAbstractListModel::columnCount(const TzModelIndex &parent) const
-{
-    return parent.isValid() ? 0 : 1;
-}
-
-bool TzAbstractListModel::hasChildren(const TzModelIndex &parent) const
-{
-    return parent.isValid() ? false : (rowCount() > 0);
-}
+// ── TzAbstractItemModelPrivate::Persistent ────────────────────────────────────
 
 void TzAbstractItemModelPrivate::Persistent::insertMultiAtEnd(const TzModelIndex& key, TzPersistentModelIndexData *data)
 {
-    auto newIt = indexes.insert(key, data);
+    auto newIt = indexes.insert({key, data});
     auto it = newIt;
     ++it;
-    while (it != indexes.end() && it.key() == key) {
-        tzSwap(*newIt, *it);
+    while (it != indexes.end() && it->first == key) {
+        std::swap(newIt->second, it->second);
         newIt = it;
         ++it;
     }

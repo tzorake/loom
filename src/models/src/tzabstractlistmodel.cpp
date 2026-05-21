@@ -36,3 +36,16 @@ bool TzAbstractListModel::hasChildren(const TzModelIndex &parent) const
         return false;
     return rowCount() > 0;
 }
+
+TzModelIndex TzAbstractListModel::sibling(int row, int column, const TzModelIndex & /*parent*/) const
+{
+    return index(row, column);
+}
+
+TzItemFlags TzAbstractListModel::flags(const TzModelIndex &index) const
+{
+    TzItemFlags f = TzAbstractItemModel::flags(index);
+    if (index.isValid())
+        f |= TzItemFlag::ItemNeverHasChildren;
+    return f;
+}
