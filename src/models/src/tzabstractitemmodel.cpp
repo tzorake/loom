@@ -230,11 +230,7 @@ using DefaultRoleNames = std::unordered_map<int, std::string>;
 TZ_GLOBAL_STATIC(DefaultRoleNames, tzDefaultRoleNames,
     {
         { TzItemDataRole::DisplayRole, "display" },
-        { TzItemDataRole::DecorationRole, "decoration" },
         { TzItemDataRole::EditRole, "edit" },
-        { TzItemDataRole::ToolTipRole, "toolTip" },
-        { TzItemDataRole::StatusTipRole, "statusTip" },
-        { TzItemDataRole::WhatsThisRole, "whatsThis" },
     })
 
 const std::unordered_map<int,std::string> &TzAbstractItemModelPrivate::defaultRoleNames()

@@ -3,6 +3,7 @@
 
 #include <loom/tzflags.hpp>
 #include <loom/tzglobal.hpp>
+#include <loom/tzhash.hpp>
 #include <loom/tzclasshelpermacros.hpp>
 #include <loom/tzeventemitter.hpp>
 
@@ -15,30 +16,7 @@
 
 enum TzItemDataRole {
     DisplayRole = 0,
-    DecorationRole = 1,
     EditRole = 2,
-    ToolTipRole = 3,
-    StatusTipRole = 4,
-    WhatsThisRole = 5,
-    // Metadata
-    FontRole = 6,
-    TextAlignmentRole = 7,
-    BackgroundRole = 8,
-    ForegroundRole = 9,
-    CheckStateRole = 10,
-    // Accessibility
-    AccessibleTextRole = 11,
-    AccessibleDescriptionRole = 12,
-    // More general purpose
-    SizeHintRole = 13,
-    InitialSortOrderRole = 14,
-    // Internal UiLib roles. Start worrying when public roles go that high.
-    DisplayPropertyRole = 27,
-    DecorationPropertyRole = 28,
-    ToolTipPropertyRole = 29,
-    StatusTipPropertyRole = 30,
-    WhatsThisPropertyRole = 31,
-    // Reserved
     UserRole = 0x0100
 };
 
@@ -104,16 +82,8 @@ private:
 namespace std {
 template<>
 struct hash<TzModelIndex> {
-    size_t operator()(const TzModelIndex &idx) const noexcept {
-        size_t seed = 0;
-        auto combine = [&seed](size_t h) {
-            seed ^= h + 0x9e3779b9u + (seed << 6) + (seed >> 2);
-        };
-        combine(std::hash<int>{}(idx.row()));
-        combine(std::hash<int>{}(idx.column()));
-        combine(std::hash<uintptr_t>{}(idx.internalId()));
-        combine(std::hash<const void *>{}(idx.model()));
-        return seed;
+    size_t operator()(const TzModelIndex &index) const noexcept {
+        return tzHashMulti(0, index.row(), index.column(), index.internalId());
     }
 };
 } // namespace std
@@ -156,6 +126,15 @@ private:
     TzPersistentModelIndexData *d;
     friend class std::hash<TzPersistentModelIndex>;
 };
+
+namespace std {
+template<>
+struct hash<TzPersistentModelIndex> {
+    size_t operator()(const TzPersistentModelIndex &index) const noexcept {
+        return tzHash(index.d, 0);
+    }
+};
+} // namespace std
 
 using TzModelIndexList = std::vector<TzModelIndex>;
 
