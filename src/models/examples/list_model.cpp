@@ -19,25 +19,25 @@ public:
         return parent.isValid() ? 0 : static_cast<int>(m_items.size());
     }
 
-    std::any data(const TzModelIndex &index, int role = TzItemDataRole::Display) const override
+    std::any data(const TzModelIndex &index, int role = TzItemDataRole::DisplayRole) const override
     {
         if (!index.isValid() || index.row() >= rowCount())
             return {};
-        if (role == TzItemDataRole::Display || role == TzItemDataRole::Edit)
+        if (role == TzItemDataRole::DisplayRole || role == TzItemDataRole::EditRole)
             return m_items[static_cast<std::size_t>(index.row())];
         return {};
     }
 
     bool setData(const TzModelIndex &index, const std::any &value,
-                 int role = TzItemDataRole::Edit) override
+                 int role = TzItemDataRole::EditRole) override
     {
         if (!index.isValid() || index.row() >= rowCount())
             return false;
-        if (role != TzItemDataRole::Edit)
+        if (role != TzItemDataRole::EditRole)
             return false;
 
         m_items[static_cast<std::size_t>(index.row())] = std::any_cast<std::string>(value);
-        emitDataChanged(index, index, {TzItemDataRole::Display, TzItemDataRole::Edit});
+        dataChanged(index, index, {TzItemDataRole::DisplayRole, TzItemDataRole::EditRole});
         return true;
     }
 

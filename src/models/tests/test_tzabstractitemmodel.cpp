@@ -1,5 +1,5 @@
 #include <gtest/gtest.h>
-#include <loom/tzabstractitemmodel.hpp>
+#include <loom/tzabstractlistmodel.hpp>
 #include <loom/tzscopedeventlistener.hpp>
 
 class TestListModel : public TzAbstractListModel

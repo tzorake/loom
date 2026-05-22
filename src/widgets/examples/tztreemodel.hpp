@@ -8,7 +8,7 @@ class TzTreeModelPrivate;
 
 class TzTreeModel : public TzAbstractItemModel
 {
-    TZ_DECLARE_PRIVATE_D(m_d, TzTreeModel)
+    TZ_DECLARE_PRIVATE_D(d_ptr, TzTreeModel)
 public:
     TzTreeModel(const TzTreeNodePtr &node);
     TzTreeModel(const std::vector<TzTreeNodePtr> &nodes);
@@ -37,6 +37,4 @@ private:
     void disconnectNode(const TzTreeNodePtr &node);
     void connectRecursively(const TzTreeNodePtr &node);
     void disconnectRecursively(const TzTreeNodePtr &node);
-
-    TzTreeModelPrivate *m_d{nullptr};
 };

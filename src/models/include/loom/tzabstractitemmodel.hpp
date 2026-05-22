@@ -14,27 +14,6 @@
 #include <utility>
 #include <vector>
 
-enum TzItemDataRole {
-    DisplayRole = 0,
-    EditRole = 2,
-    UserRole = 0x0100
-};
-
-enum TzItemFlag {
-    NoItemFlags = 0,
-    ItemIsSelectable = 1,
-    ItemIsEditable = 2,
-    ItemIsDragEnabled = 4,
-    ItemIsDropEnabled = 8,
-    ItemIsUserCheckable = 16,
-    ItemIsEnabled = 32,
-    ItemIsAutoTristate = 64,
-    ItemNeverHasChildren = 128,
-    ItemIsUserTristate = 256
-};
-TZ_DECLARE_FLAGS(TzItemFlags, TzItemFlag)
-TZ_DECLARE_OPERATORS_FOR_FLAGS(TzItemFlags)
-
 class TzAbstractItemModel;
 class TzPersistentModelIndex;
 
@@ -142,8 +121,8 @@ class TzAbstractItemModelPrivate;
 
 class TzAbstractItemModel
 {
-    friend class TzPersistentModelIndexData;
-    friend class TzAbstractProxyModel;
+    TZ_DECLARE_PRIVATE(TzAbstractItemModel)
+    TZ_DISABLE_COPY(TzAbstractItemModel)
 public:
     TzAbstractItemModel();
     virtual ~TzAbstractItemModel();
@@ -283,10 +262,12 @@ protected:
     void changePersistentIndexList(const TzModelIndexList &from, const TzModelIndexList &to);
     TzModelIndexList persistentIndexList() const;
 
-private:
-    TZ_DECLARE_PRIVATE(TzAbstractItemModel)
-    TZ_DISABLE_COPY(TzAbstractItemModel)
+protected:
     TzAbstractItemModelPrivate *d_ptr;
+
+private:
+    friend class TzPersistentModelIndexData;
+    friend class TzAbstractProxyModel;
 };
 
 TZ_DECLARE_OPERATORS_FOR_FLAGS(TzAbstractItemModel::CheckIndexOptions)
@@ -327,27 +308,6 @@ protected:
 private:
     TZ_DISABLE_COPY(TzAbstractTableModel)
     TzModelIndex parent(const TzModelIndex &child) const override;
-    bool hasChildren(const TzModelIndex &parent) const override;
-};
-
-class TzAbstractListModel : public TzAbstractItemModel
-{
-public:
-    TzAbstractListModel();
-    ~TzAbstractListModel();
-
-    TzModelIndex index(int row, int column = 0, const TzModelIndex &parent = TzModelIndex()) const override;
-    TzModelIndex sibling(int row, int column, const TzModelIndex &idx) const override;
-
-    TzItemFlags flags(const TzModelIndex &index) const override;
-
-protected:
-    TzAbstractListModel(TzAbstractItemModelPrivate &dd);
-
-private:
-    TZ_DISABLE_COPY(TzAbstractListModel)
-    TzModelIndex parent(const TzModelIndex &child) const override;
-    int columnCount(const TzModelIndex &parent) const override;
     bool hasChildren(const TzModelIndex &parent) const override;
 };
 

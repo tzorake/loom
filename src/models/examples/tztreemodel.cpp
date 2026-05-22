@@ -118,7 +118,7 @@ bool TzTreeModel::setData(const TzModelIndex &index, const std::any &value, int 
         return false;
 
     if (index.column() == 0) {
-        if (role == TzItemDataRole::Edit) {
+        if (role == TzItemDataRole::EditRole) {
             if (auto *name = std::any_cast<std::string>(&value))
                 return node->setName(*name);
         }
@@ -137,7 +137,7 @@ std::any TzTreeModel::data(const TzModelIndex &index, int role) const
         return std::any();
 
     if (index.column() == 0) {
-        if (role == TzItemDataRole::Display || role == TzItemDataRole::Edit)
+        if (role == TzItemDataRole::DisplayRole || role == TzItemDataRole::EditRole)
             return node->name();
     }
 
@@ -217,7 +217,7 @@ void TzTreeModel::connectNode(const TzTreeNodePtr &node)
             TzModelIndex idx = indexForNode(node);
             if (idx.isValid()) {
                 TzModelIndex lastCol = index(idx.row(), 0, parent(idx));
-                emitDataChanged(idx, lastCol, {});
+                dataChanged(idx, lastCol, {});
             }
         }));
 
@@ -230,7 +230,7 @@ void TzTreeModel::connectNode(const TzTreeNodePtr &node)
 
                               TzModelIndex idx = indexForNode(node);
                               if (idx.isValid()) {
-                                  emitDataChanged(idx, idx, {TzItemDataRole::Display});
+                                  dataChanged(idx, idx, {TzItemDataRole::DisplayRole});
                               }
                           }));
 }

@@ -1,4 +1,5 @@
 #include <gtest/gtest.h>
+#include <loom/tzabstractlistmodel.hpp>
 #include <loom/tzitemselectionmodel.hpp>
 #include <loom/tzscopedeventlistener.hpp>
 

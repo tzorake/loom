@@ -23,8 +23,8 @@ public:
     virtual int columnCount(const TzModelIndex &parent = TzModelIndex()) const override;
 
     bool setData(const TzModelIndex &index, const std::any &value,
-                 int role = TzItemDataRole::Edit) override;
-    std::any data(const TzModelIndex &index, int role = TzItemDataRole::Display) const override;
+                 int role = TzItemDataRole::EditRole) override;
+    std::any data(const TzModelIndex &index, int role = TzItemDataRole::DisplayRole) const override;
 
     virtual TzTreeNodePtr nodeForIndex(const TzModelIndex &index) const;
     virtual TzModelIndex indexForNode(const TzTreeNodePtr &node, int column = 0) const;

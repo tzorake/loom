@@ -173,7 +173,6 @@ TzModelIndex TzTreeModel::indexForNode(const TzTreeNodePtr &node, int column) co
 TzTreeModel::TzTreeModel(TzTreeModelPrivate &dd)
     : TzAbstractItemModel(dd)
 {
-    m_d = &dd;
 }
 
 void TzTreeModel::connectNode(const TzTreeNodePtr &node)
