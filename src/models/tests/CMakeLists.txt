@@ -20,3 +20,14 @@ target_link_libraries(test_tzabstractproxymodel PRIVATE
 )
 
 gtest_discover_tests(test_tzabstractproxymodel)
+
+add_executable(test_tzitemselectionmodel
+    test_tzitemselectionmodel.cpp
+)
+
+target_link_libraries(test_tzitemselectionmodel PRIVATE
+    loom-models
+    GTest::gtest_main
+)
+
+gtest_discover_tests(test_tzitemselectionmodel)

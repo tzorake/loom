@@ -2,6 +2,7 @@ add_library(loom-models
     src/tzabstractitemmodel.cpp
     src/tzabstractlistmodel.cpp
     src/tzabstractproxymodel.cpp
+    src/tzitemselectionmodel.cpp
 )
 target_include_directories(loom-models
     PUBLIC  include
@@ -17,6 +18,7 @@ target_include_directories(loom-models-private INTERFACE src)
 target_sources(loom-models-private INTERFACE
     src/tzabstractitemmodel_p.hpp
     src/tzabstractproxymodel_p.hpp
+    src/tzitemselectionmodel_p.hpp
 )
 
 if(LOOM_BUILD_EXAMPLES)

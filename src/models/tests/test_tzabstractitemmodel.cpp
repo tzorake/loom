@@ -95,14 +95,14 @@ TEST(TzAbstractListModel, SignalRowsInserted)
     int aboutFired = 0, insertedFired = 0;
     int capturedFirst = -1, capturedLast = -1;
 
-    auto l1 = model.emitter.on("rowsAboutToBeInserted",
+    auto l1 = model.events().on("rowsAboutToBeInserted",
         [&](const TzModelIndex & /*parent*/, int first, int last) {
             ++aboutFired;
             capturedFirst = first;
             capturedLast  = last;
         });
 
-    auto l2 = model.emitter.on("rowsInserted",
+    auto l2 = model.events().on("rowsInserted",
         [&](const TzModelIndex & /*parent*/, int /*first*/, int /*last*/) {
             ++insertedFired;
         });
@@ -122,7 +122,7 @@ TEST(TzAbstractListModel, SignalRowsRemoved)
     TestListModel model(5);
 
     int removedFired = 0;
-    auto l = model.emitter.on("rowsRemoved",
+    auto l = model.events().on("rowsRemoved",
         [&](const TzModelIndex & /*parent*/, int /*first*/, int /*last*/) {
             ++removedFired;
         });
@@ -141,7 +141,7 @@ TEST(TzAbstractListModel, SignalDataChanged)
     int fired = 0;
     TzModelIndex capturedTL, capturedBR;
 
-    auto l = model.emitter.on("dataChanged",
+    auto l = model.events().on("dataChanged",
         [&](const TzModelIndex &tl, const TzModelIndex &br, const std::vector<int> & /*roles*/) {
             ++fired;
             capturedTL = tl;
@@ -160,8 +160,8 @@ TEST(TzAbstractListModel, SignalModelReset)
     TestListModel model(4);
 
     int aboutFired = 0, resetFired = 0;
-    model.emitter.on("modelAboutToBeReset", [&]() { ++aboutFired; });
-    model.emitter.on("modelReset",          [&]() { ++resetFired; });
+    model.events().on("modelAboutToBeReset", [&]() { ++aboutFired; });
+    model.events().on("modelReset",          [&]() { ++resetFired; });
 
     model.publicBeginResetModel();
     model.publicEndResetModel();
@@ -176,9 +176,9 @@ TEST(TzAbstractListModel, MultipleListeners)
     TestListModel model;
 
     int a = 0, b = 0;
-    model.emitter.on("rowsInserted",
+    model.events().on("rowsInserted",
         [&](const TzModelIndex &, int, int) { ++a; });
-    model.emitter.on("rowsInserted",
+    model.events().on("rowsInserted",
         [&](const TzModelIndex &, int, int) { ++b; });
 
     model.publicBeginInsertRows(0, 0);
@@ -193,7 +193,7 @@ TEST(TzAbstractListModel, DisconnectListener)
     TestListModel model;
 
     int fired = 0;
-    TzEventListener listener = model.emitter.on("rowsInserted",
+    TzEventListener listener = model.events().on("rowsInserted",
         [&](const TzModelIndex &, int, int) { ++fired; });
 
     model.publicBeginInsertRows(0, 0);
@@ -214,7 +214,7 @@ TEST(TzAbstractListModel, ScopedListenerAutoDisconnects)
     int fired = 0;
     {
         TzScopedEventListener scoped{
-            model.emitter.on("rowsRemoved",
+            model.events().on("rowsRemoved",
                 [&](const TzModelIndex &, int, int) { ++fired; })
         };
 

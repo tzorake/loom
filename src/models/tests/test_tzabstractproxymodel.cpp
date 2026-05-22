@@ -1,6 +1,6 @@
 #include <gtest/gtest.h>
 #include <loom/tzabstractproxymodel.hpp>
-#include <loom/tzitemselection.hpp>
+#include <loom/tzitemselectionmodel.hpp>
 #include <loom/tzscopedeventlistener.hpp>
 
 class ProxyTestSourceModel : public TzAbstractListModel
@@ -137,7 +137,7 @@ TEST(TzAbstractProxyModel, SignalSourceModelChanged)
     IdentityProxy proxy;
 
     int fired = 0;
-    proxy.emitter.on("sourceModelChanged", [&]() { ++fired; });
+    proxy.events().on("sourceModelChanged", [&]() { ++fired; });
 
     proxy.setSourceModel(&source);
     EXPECT_EQ(fired, 1);
@@ -153,7 +153,7 @@ TEST(TzAbstractProxyModel, SetSameSourceModelNoSignal)
     proxy.setSourceModel(&source);
 
     int fired = 0;
-    proxy.emitter.on("sourceModelChanged", [&]() { ++fired; });
+    proxy.events().on("sourceModelChanged", [&]() { ++fired; });
 
     // Setting the same model again must not fire
     proxy.setSourceModel(&source);
@@ -224,7 +224,7 @@ TEST(TzAbstractProxyModel, ForwardsRowsInserted)
 
     // The proxy does NOT automatically re-emit source signals in this minimal
     // identity implementation, but the source signals are still reachable via
-    // the source model's emitter.  More importantly, the private slots that
+    // the source model's.events().  More importantly, the private slots that
     // track header-update state are exercised here.
     int rowCount = proxy.rowCount();
     source.appendRows(3);
@@ -248,7 +248,7 @@ TEST(TzAbstractProxyModel, OldSourceListenersDisconnected)
     proxy.setSourceModel(&s1);
     proxy.setSourceModel(&s2); // replaces s1
 
-    // s1's emitter should have no listeners for the proxy's private slots
+    // s1's.events() should have no listeners for the proxy's private slots
     // (they were disconnected).  The easiest observable effect: rowCount
     // reflects s2, not s1.
     s1.appendRows(10); // old source grows, but proxy is bound to s2
@@ -337,7 +337,7 @@ TEST(TzAbstractProxyModel, ScopedListenerOnProxy)
     int fired = 0;
     {
         TzScopedEventListener scoped{
-            proxy.emitter.on("sourceModelChanged", [&]() { ++fired; })
+            proxy.events().on("sourceModelChanged", [&]() { ++fired; })
         };
         proxy.setSourceModel(&s1);
         EXPECT_EQ(fired, 1);

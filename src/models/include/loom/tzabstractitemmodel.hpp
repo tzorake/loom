@@ -208,10 +208,11 @@ public:
 
     [[nodiscard]] bool checkIndex(const TzModelIndex &index, CheckIndexOptions options = CheckIndexOption::NoOption) const;
 
+    TzEventEmitter &events();
+    const TzEventEmitter &events() const;
+
 // TZ_SIGNALS.begin — call these to notify subscribers; subscribe via model.emitter.on("signalName", cb)
 public:
-    TzEventEmitter emitter;
-
     void dataChanged(const TzModelIndex &topLeft, const TzModelIndex &bottomRight, const std::vector<int> &roles = std::vector<int>());
     void headerDataChanged(TzOrientation orientation, int first, int last);
     void layoutChanged(const std::vector<TzPersistentModelIndex> &parents = std::vector<TzPersistentModelIndex>(), TzAbstractItemModel::LayoutChangeHint hint = TzAbstractItemModel::LayoutChangeHint::NoLayoutChangeHint);

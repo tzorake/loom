@@ -642,12 +642,10 @@ bool TzAbstractItemModel::submit()
     return true;
 }
 
-
 void TzAbstractItemModel::revert()
 {
     // do nothing
 }
-
 
 std::any TzAbstractItemModel::headerData(int section, TzOrientation orientation, int role) const
 {
@@ -656,7 +654,6 @@ std::any TzAbstractItemModel::headerData(int section, TzOrientation orientation,
         return section + 1;
     return std::any();
 }
-
 
 bool TzAbstractItemModel::setHeaderData(int section, TzOrientation orientation, const std::any &value, int role)
 {
@@ -667,99 +664,113 @@ bool TzAbstractItemModel::setHeaderData(int section, TzOrientation orientation, 
     return false;
 }
 
-// ── Signal implementations ──────────────────────────────────────────────────
-
 void TzAbstractItemModel::dataChanged(const TzModelIndex &topLeft, const TzModelIndex &bottomRight, const std::vector<int> &roles)
 {
-    emitter.emit("dataChanged", topLeft, bottomRight, roles);
+    TZ_D(TzAbstractItemModel);
+    d->events.emit("dataChanged", topLeft, bottomRight, roles);
 }
 
 void TzAbstractItemModel::headerDataChanged(TzOrientation orientation, int first, int last)
 {
-    emitter.emit("headerDataChanged", orientation, first, last);
+    TZ_D(TzAbstractItemModel);
+    d->events.emit("headerDataChanged", orientation, first, last);
 }
 
 void TzAbstractItemModel::layoutChanged(const std::vector<TzPersistentModelIndex> &parents, TzAbstractItemModel::LayoutChangeHint hint)
 {
-    emitter.emit("layoutChanged", parents, hint);
+    TZ_D(TzAbstractItemModel);
+    d->events.emit("layoutChanged", parents, hint);
 }
 
 void TzAbstractItemModel::layoutAboutToBeChanged(const std::vector<TzPersistentModelIndex> &parents, TzAbstractItemModel::LayoutChangeHint hint)
 {
-    emitter.emit("layoutAboutToBeChanged", parents, hint);
+    TZ_D(TzAbstractItemModel);
+    d->events.emit("layoutAboutToBeChanged", parents, hint);
 }
 
 void TzAbstractItemModel::rowsAboutToBeInserted(const TzModelIndex &parent, int first, int last)
 {
-    emitter.emit("rowsAboutToBeInserted", parent, first, last);
+    TZ_D(TzAbstractItemModel);
+    d->events.emit("rowsAboutToBeInserted", parent, first, last);
 }
 
 void TzAbstractItemModel::rowsInserted(const TzModelIndex &parent, int first, int last)
 {
-    emitter.emit("rowsInserted", parent, first, last);
+    TZ_D(TzAbstractItemModel);
+    d->events.emit("rowsInserted", parent, first, last);
 }
 
 void TzAbstractItemModel::rowsAboutToBeRemoved(const TzModelIndex &parent, int first, int last)
 {
-    emitter.emit("rowsAboutToBeRemoved", parent, first, last);
+    TZ_D(TzAbstractItemModel);
+    d->events.emit("rowsAboutToBeRemoved", parent, first, last);
 }
 
 void TzAbstractItemModel::rowsRemoved(const TzModelIndex &parent, int first, int last)
 {
-    emitter.emit("rowsRemoved", parent, first, last);
+    TZ_D(TzAbstractItemModel);
+    d->events.emit("rowsRemoved", parent, first, last);
 }
 
 void TzAbstractItemModel::columnsAboutToBeInserted(const TzModelIndex &parent, int first, int last)
 {
-    emitter.emit("columnsAboutToBeInserted", parent, first, last);
+    TZ_D(TzAbstractItemModel);
+    d->events.emit("columnsAboutToBeInserted", parent, first, last);
 }
 
 void TzAbstractItemModel::columnsInserted(const TzModelIndex &parent, int first, int last)
 {
-    emitter.emit("columnsInserted", parent, first, last);
+    TZ_D(TzAbstractItemModel);
+    d->events.emit("columnsInserted", parent, first, last);
 }
 
 void TzAbstractItemModel::columnsAboutToBeRemoved(const TzModelIndex &parent, int first, int last)
 {
-    emitter.emit("columnsAboutToBeRemoved", parent, first, last);
+    TZ_D(TzAbstractItemModel);
+    d->events.emit("columnsAboutToBeRemoved", parent, first, last);
 }
 
 void TzAbstractItemModel::columnsRemoved(const TzModelIndex &parent, int first, int last)
 {
-    emitter.emit("columnsRemoved", parent, first, last);
+    TZ_D(TzAbstractItemModel);
+    d->events.emit("columnsRemoved", parent, first, last);
 }
 
 void TzAbstractItemModel::modelAboutToBeReset()
 {
-    emitter.emit("modelAboutToBeReset");
+    TZ_D(TzAbstractItemModel);
+    d->events.emit("modelAboutToBeReset");
 }
 
 void TzAbstractItemModel::modelReset()
 {
-    emitter.emit("modelReset");
+    TZ_D(TzAbstractItemModel);
+    d->events.emit("modelReset");
 }
 
 void TzAbstractItemModel::rowsAboutToBeMoved(const TzModelIndex &sourceParent, int sourceStart, int sourceEnd, const TzModelIndex &destinationParent, int destinationRow)
 {
-    emitter.emit("rowsAboutToBeMoved", sourceParent, sourceStart, sourceEnd, destinationParent, destinationRow);
+    TZ_D(TzAbstractItemModel);
+    d->events.emit("rowsAboutToBeMoved", sourceParent, sourceStart, sourceEnd, destinationParent, destinationRow);
 }
 
 void TzAbstractItemModel::rowsMoved(const TzModelIndex &sourceParent, int sourceStart, int sourceEnd, const TzModelIndex &destinationParent, int destinationRow)
 {
-    emitter.emit("rowsMoved", sourceParent, sourceStart, sourceEnd, destinationParent, destinationRow);
+    TZ_D(TzAbstractItemModel);
+    d->events.emit("rowsMoved", sourceParent, sourceStart, sourceEnd, destinationParent, destinationRow);
 }
 
 void TzAbstractItemModel::columnsAboutToBeMoved(const TzModelIndex &sourceParent, int sourceStart, int sourceEnd, const TzModelIndex &destinationParent, int destinationColumn)
 {
-    emitter.emit("columnsAboutToBeMoved", sourceParent, sourceStart, sourceEnd, destinationParent, destinationColumn);
+    TZ_D(TzAbstractItemModel);
+    d->events.emit("columnsAboutToBeMoved", sourceParent, sourceStart, sourceEnd, destinationParent, destinationColumn);
 }
 
 void TzAbstractItemModel::columnsMoved(const TzModelIndex &sourceParent, int sourceStart, int sourceEnd, const TzModelIndex &destinationParent, int destinationColumn)
 {
-    emitter.emit("columnsMoved", sourceParent, sourceStart, sourceEnd, destinationParent, destinationColumn);
+    TZ_D(TzAbstractItemModel);
+    d->events.emit("columnsMoved", sourceParent, sourceStart, sourceEnd, destinationParent, destinationColumn);
 }
-
-// ── Begin/End row operations ─────────────────────────────────────────────────
 
 void TzAbstractItemModel::beginInsertRows(const TzModelIndex &parent, int first, int last)
 {
@@ -1033,7 +1044,6 @@ TzModelIndexList TzAbstractItemModel::persistentIndexList() const
     return result;
 }
 
-
 bool TzAbstractItemModel::checkIndex(const TzModelIndex &index, CheckIndexOptions options) const
 {
     if (!index.isValid()) {
@@ -1084,7 +1094,17 @@ bool TzAbstractItemModel::checkIndex(const TzModelIndex &index, CheckIndexOption
     return true;
 }
 
-// ── TzAbstractTableModel ─────────────────────────────────────────────────────
+TzEventEmitter &TzAbstractItemModel::events()
+{
+    TZ_D(TzAbstractItemModel);
+    return d->events;
+}
+
+const TzEventEmitter &TzAbstractItemModel::events() const
+{
+    TZ_D(const TzAbstractItemModel);
+    return d->events;
+}
 
 TzAbstractTableModel::TzAbstractTableModel()
     : TzAbstractItemModel()
@@ -1129,8 +1149,6 @@ TzItemFlags TzAbstractTableModel::flags(const TzModelIndex &index) const
         f |= TzItemFlag::ItemNeverHasChildren;
     return f;
 }
-
-// ── TzAbstractItemModelPrivate::Persistent ────────────────────────────────────
 
 void TzAbstractItemModelPrivate::Persistent::insertMultiAtEnd(const TzModelIndex& key, TzPersistentModelIndexData *data)
 {

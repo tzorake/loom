@@ -2,7 +2,7 @@
 #define TZABSTRACTPROXYMODEL_HPP
 
 #include <loom/tzabstractitemmodel.hpp>
-#include <loom/tzitemselection.hpp>
+#include <loom/tzitemselectionmodel.hpp>
 
 class TzAbstractProxyModelPrivate;
 

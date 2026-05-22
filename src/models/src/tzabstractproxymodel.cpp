@@ -129,37 +129,37 @@ void TzAbstractProxyModel::setSourceModel(TzAbstractItemModel *sourceModel)
 
             // Subscribe to all relevant source model signals.
             d->sourceListeners.push_back(
-                sourceModel->emitter.on("rowsAboutToBeInserted",
+                sourceModel->events().on("rowsAboutToBeInserted",
                     [d](const TzModelIndex &parent, int first, int last) {
                         d->_q_sourceModelRowsAboutToBeInserted(parent, first, last);
                     }));
 
             d->sourceListeners.push_back(
-                sourceModel->emitter.on("rowsInserted",
+                sourceModel->events().on("rowsInserted",
                     [d](const TzModelIndex &parent, int first, int last) {
                         d->_q_sourceModelRowsInserted(parent, first, last);
                     }));
 
             d->sourceListeners.push_back(
-                sourceModel->emitter.on("rowsRemoved",
+                sourceModel->events().on("rowsRemoved",
                     [d](const TzModelIndex &parent, int first, int last) {
                         d->_q_sourceModelRowsRemoved(parent, first, last);
                     }));
 
             d->sourceListeners.push_back(
-                sourceModel->emitter.on("columnsAboutToBeInserted",
+                sourceModel->events().on("columnsAboutToBeInserted",
                     [d](const TzModelIndex &parent, int first, int last) {
                         d->_q_sourceModelColumnsAboutToBeInserted(parent, first, last);
                     }));
 
             d->sourceListeners.push_back(
-                sourceModel->emitter.on("columnsInserted",
+                sourceModel->events().on("columnsInserted",
                     [d](const TzModelIndex &parent, int first, int last) {
                         d->_q_sourceModelColumnsInserted(parent, first, last);
                     }));
 
             d->sourceListeners.push_back(
-                sourceModel->emitter.on("columnsRemoved",
+                sourceModel->events().on("columnsRemoved",
                     [d](const TzModelIndex &parent, int first, int last) {
                         d->_q_sourceModelColumnsRemoved(parent, first, last);
                     }));
@@ -181,7 +181,8 @@ TzAbstractItemModel *TzAbstractProxyModel::sourceModel() const
 
 void TzAbstractProxyModel::sourceModelChanged()
 {
-    emitter.emit("sourceModelChanged");
+    TZ_D(TzAbstractProxyModel);
+    d->events.emit("sourceModelChanged");
 }
 
 bool TzAbstractProxyModel::submit()

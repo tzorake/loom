@@ -2,6 +2,7 @@
 #define TZABSTRACTITEMMODEL_P_HPP
 
 #include <loom/tzabstractitemmodel.hpp>
+#include <loom/tzeventemitter.hpp>
 
 #include <atomic>
 #include <unordered_map>
@@ -95,6 +96,8 @@ public:
     bool resetting = false;
 
     static const std::unordered_map<int, std::string> &defaultRoleNames();
+
+    TzEventEmitter events;
 };
 
 #endif // TZABSTRACTITEMMODEL_P_HPP
