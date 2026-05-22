@@ -10,3 +10,15 @@ add_executable(breadcrumb_browser
     tzbreadcrumbmodel.cpp
 )
 target_link_libraries(breadcrumb_browser PRIVATE loom-widgets loom-models)
+
+add_executable(merge_materials
+    merge_materials.cpp
+    tzmergemodel.cpp
+    tztreenode.cpp
+    tztreemodel.cpp
+)
+target_include_directories(merge_materials PRIVATE
+    ${CMAKE_CURRENT_SOURCE_DIR}
+    ${CMAKE_SOURCE_DIR}/src/models/src
+)
+target_link_libraries(merge_materials PRIVATE loom-widgets loom-models loom-models-private)
