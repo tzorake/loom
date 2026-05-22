@@ -4,17 +4,30 @@
 #include <loom/tzabstractproxymodel.hpp>
 #include <tzabstractitemmodel_p.hpp>
 
+#include <loom/tzeventlistener.hpp>
+#include <vector>
+
 class TzAbstractProxyModelPrivate : public TzAbstractItemModelPrivate
 {
     TZ_DECLARE_PUBLIC(TzAbstractProxyModel)
 public:
     TzAbstractProxyModelPrivate()
         : TzAbstractItemModelPrivate()
+        , model(nullptr)
         , sourceHadZeroRows(false)
         , sourceHadZeroColumns(false)
         , updateVerticalHeader(false)
         , updateHorizontalHeader(false)
     {}
+
+    // The wrapped source model (never null after construction; points to
+    // staticEmptyModel() when no real source has been set).
+    TzAbstractItemModel *model;
+
+    // Listeners on the current source model's emitter — disconnected when the
+    // source model is replaced or the proxy is destroyed.
+    std::vector<TzEventListener> sourceListeners;
+
     void setModelForwarder(TzAbstractItemModel *sourceModel)
     { q_func()->setSourceModel(sourceModel); }
     void modelChangedForwarder()
@@ -22,10 +35,6 @@ public:
     TzAbstractItemModel *getModelForwarder() const
     { return q_func()->sourceModel(); }
 
-    // Q_OBJECT_COMPAT_PROPERTY_WITH_ARGS(TzAbstractProxyModelPrivate, TzAbstractItemModel *, model,
-    //                                    &TzAbstractProxyModelPrivate::setModelForwarder,
-    //                                    &TzAbstractProxyModelPrivate::modelChangedForwarder,
-    //                                    &TzAbstractProxyModelPrivate::getModelForwarder, nullptr)
     virtual void _q_sourceModelDestroyed();
     void _q_sourceModelRowsAboutToBeInserted(const TzModelIndex &parent, int first, int last);
     void _q_sourceModelRowsInserted(const TzModelIndex &parent, int first, int last);
@@ -33,9 +42,6 @@ public:
     void _q_sourceModelColumnsAboutToBeInserted(const TzModelIndex &parent, int first, int last);
     void _q_sourceModelColumnsInserted(const TzModelIndex &parent, int first, int last);
     void _q_sourceModelColumnsRemoved(const TzModelIndex &parent, int first, int last);
-
-    void mapDropCoordinatesToSource(int row, int column, const TzModelIndex &parent,
-                                    int *sourceRow, int *sourceColumn, TzModelIndex *sourceParent) const;
 
     void scheduleHeaderUpdate(TzOrientation orientation);
     void emitHeaderDataChanged();

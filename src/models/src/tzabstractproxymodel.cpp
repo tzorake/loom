@@ -1,6 +1,7 @@
 #include <loom/tzabstractproxymodel.hpp>
 #include <tzabstractproxymodel_p.hpp>
-#include <loom/tzitemselectionmodel.hpp>
+
+// ── Private slot implementations ────────────────────────────────────────────
 
 void TzAbstractProxyModelPrivate::_q_sourceModelDestroyed()
 {
@@ -14,12 +15,12 @@ void TzAbstractProxyModelPrivate::emitHeaderDataChanged()
 
     if (updateHorizontalHeader) {
         if (auto columnCount = q->columnCount(); columnCount > 0)
-            emit q->headerDataChanged(TzOrientation::Horizontal, 0, columnCount - 1);
+            q->headerDataChanged(TzOrientation::Horizontal, 0, columnCount - 1);
     }
 
     if (updateVerticalHeader) {
         if (auto rowCount = q->rowCount(); rowCount > 0)
-            emit q->headerDataChanged(TzOrientation::Vertical, 0, rowCount - 1);
+            q->headerDataChanged(TzOrientation::Vertical, 0, rowCount - 1);
     }
 
     updateHorizontalHeader = false;
@@ -37,10 +38,10 @@ void TzAbstractProxyModelPrivate::scheduleHeaderUpdate(TzOrientation orientation
     else
         return;
 
-    if (!isUpdateScheduled) {
-        TZ_Q(TzAbstractProxyModel);
-        QMetaObject::invokeMethod(q, [this]() { emitHeaderDataChanged(); }, Qt::QueuedConnection);
-    }
+    // Without a queued-connection mechanism, flush immediately when the first
+    // update is scheduled (mirrors the batched-emit intent as closely as possible).
+    if (!isUpdateScheduled)
+        emitHeaderDataChanged();
 }
 
 void TzAbstractProxyModelPrivate::_q_sourceModelRowsAboutToBeInserted(const TzModelIndex &parent, int, int)
@@ -90,7 +91,7 @@ void TzAbstractProxyModelPrivate::_q_sourceModelColumnsRemoved(const TzModelInde
 }
 
 TzAbstractProxyModel::TzAbstractProxyModel()
-    :TzAbstractItemModel(*new TzAbstractProxyModelPrivate)
+    : TzAbstractItemModel(*new TzAbstractProxyModelPrivate)
 {
     setSourceModel(TzAbstractItemModelPrivate::staticEmptyModel());
 }
@@ -103,46 +104,70 @@ TzAbstractProxyModel::TzAbstractProxyModel(TzAbstractProxyModelPrivate &dd)
 
 TzAbstractProxyModel::~TzAbstractProxyModel()
 {
+    TZ_D(TzAbstractProxyModel);
+    for (auto &l : d->sourceListeners)
+        l.disconnect();
 }
 
 void TzAbstractProxyModel::setSourceModel(TzAbstractItemModel *sourceModel)
 {
     TZ_D(TzAbstractProxyModel);
-    d->model.removeBindingUnlessInWrapper();
-    // Special case to handle nullptr models. Otherwise we will have unwanted
-    // notifications.
-    const TzAbstractItemModel *currentModel = d->model.valueBypassingBindings();
+
+    const TzAbstractItemModel *currentModel = d->model;
+    // Special case: setting nullptr when already at the empty-model stub is a no-op.
     if (!sourceModel && currentModel == TzAbstractItemModelPrivate::staticEmptyModel())
         return;
-    static const struct {
-        const char *signalName;
-        const char *slotName;
-    } connectionTable[] = {
-        // clang-format off
-        { SIGNAL(destroyed()), SLOT(_q_sourceModelDestroyed()) },
-        { SIGNAL(rowsAboutToBeInserted(TzModelIndex,int,int)), SLOT(_q_sourceModelRowsAboutToBeInserted(TzModelIndex,int,int)) },
-        { SIGNAL(rowsInserted(TzModelIndex,int,int)), SLOT(_q_sourceModelRowsInserted(TzModelIndex,int,int)) },
-        { SIGNAL(rowsRemoved(TzModelIndex,int,int)), SLOT(_q_sourceModelRowsRemoved(TzModelIndex,int,int)) },
-        { SIGNAL(columnsAboutToBeInserted(TzModelIndex,int,int)), SLOT(_q_sourceModelColumnsAboutToBeInserted(TzModelIndex,int,int)) },
-        { SIGNAL(columnsInserted(TzModelIndex,int,int)), SLOT(_q_sourceModelColumnsInserted(TzModelIndex,int,int)) },
-        { SIGNAL(columnsRemoved(TzModelIndex,int,int)), SLOT(_q_sourceModelColumnsRemoved(TzModelIndex,int,int)) }
-        // clang-format on
-    };
 
     if (sourceModel != currentModel) {
-        if (currentModel) {
-            for (const auto &c : connectionTable)
-                disconnect(currentModel, c.signalName, this, c.slotName);
-        }
+        // Disconnect listeners from the old source model.
+        for (auto &l : d->sourceListeners)
+            l.disconnect();
+        d->sourceListeners.clear();
 
         if (sourceModel) {
-            d->model.setValueBypassingBindings(sourceModel);
-            for (const auto &c : connectionTable)
-                connect(sourceModel, c.signalName, this, c.slotName);
+            d->model = sourceModel;
+
+            // Subscribe to all relevant source model signals.
+            d->sourceListeners.push_back(
+                sourceModel->emitter.on("rowsAboutToBeInserted",
+                    [d](const TzModelIndex &parent, int first, int last) {
+                        d->_q_sourceModelRowsAboutToBeInserted(parent, first, last);
+                    }));
+
+            d->sourceListeners.push_back(
+                sourceModel->emitter.on("rowsInserted",
+                    [d](const TzModelIndex &parent, int first, int last) {
+                        d->_q_sourceModelRowsInserted(parent, first, last);
+                    }));
+
+            d->sourceListeners.push_back(
+                sourceModel->emitter.on("rowsRemoved",
+                    [d](const TzModelIndex &parent, int first, int last) {
+                        d->_q_sourceModelRowsRemoved(parent, first, last);
+                    }));
+
+            d->sourceListeners.push_back(
+                sourceModel->emitter.on("columnsAboutToBeInserted",
+                    [d](const TzModelIndex &parent, int first, int last) {
+                        d->_q_sourceModelColumnsAboutToBeInserted(parent, first, last);
+                    }));
+
+            d->sourceListeners.push_back(
+                sourceModel->emitter.on("columnsInserted",
+                    [d](const TzModelIndex &parent, int first, int last) {
+                        d->_q_sourceModelColumnsInserted(parent, first, last);
+                    }));
+
+            d->sourceListeners.push_back(
+                sourceModel->emitter.on("columnsRemoved",
+                    [d](const TzModelIndex &parent, int first, int last) {
+                        d->_q_sourceModelColumnsRemoved(parent, first, last);
+                    }));
         } else {
-            d->model.setValueBypassingBindings(TzAbstractItemModelPrivate::staticEmptyModel());
+            d->model = TzAbstractItemModelPrivate::staticEmptyModel();
         }
-        d->model.notify();
+
+        sourceModelChanged();
     }
 }
 
@@ -152,6 +177,11 @@ TzAbstractItemModel *TzAbstractProxyModel::sourceModel() const
     if (d->model == TzAbstractItemModelPrivate::staticEmptyModel())
         return nullptr;
     return d->model;
+}
+
+void TzAbstractProxyModel::sourceModelChanged()
+{
+    emitter.emit("sourceModelChanged");
 }
 
 bool TzAbstractProxyModel::submit()
@@ -170,7 +200,7 @@ TzItemSelection TzAbstractProxyModel::mapSelectionToSource(const TzItemSelection
 {
     TzModelIndexList proxyIndexes = proxySelection.indexes();
     TzItemSelection sourceSelection;
-    for (int i = 0; i < proxyIndexes.size(); ++i) {
+    for (int i = 0; i < (int)proxyIndexes.size(); ++i) {
         const TzModelIndex proxyIdx = mapToSource(proxyIndexes.at(i));
         if (!proxyIdx.isValid())
             continue;
@@ -183,7 +213,7 @@ TzItemSelection TzAbstractProxyModel::mapSelectionFromSource(const TzItemSelecti
 {
     TzModelIndexList sourceIndexes = sourceSelection.indexes();
     TzItemSelection proxySelection;
-    for (int i = 0; i < sourceIndexes.size(); ++i) {
+    for (int i = 0; i < (int)sourceIndexes.size(); ++i) {
         const TzModelIndex srcIdx = mapFromSource(sourceIndexes.at(i));
         if (!srcIdx.isValid())
             continue;
@@ -260,7 +290,7 @@ void TzAbstractProxyModel::fetchMore(const TzModelIndex &parent)
     d->model->fetchMore(mapToSource(parent));
 }
 
-void TzAbstractProxyModel::sort(int column, Qt::SortOrder order)
+void TzAbstractProxyModel::sort(int column, TzSortOrder order)
 {
     TZ_D(TzAbstractProxyModel);
     d->model->sort(column, order);
@@ -279,8 +309,8 @@ TzModelIndex TzAbstractProxyModel::sibling(int row, int column, const TzModelInd
 
 std::unordered_map<int, std::string> TzAbstractProxyModel::roleNames() const
 {
-  TZ_D(const TzAbstractProxyModel);
-  return d->model->roleNames();
+    TZ_D(const TzAbstractProxyModel);
+    return d->model->roleNames();
 }
 
 TzModelIndex TzAbstractProxyModel::createSourceIndex(int row, int col, void *internalPtr) const

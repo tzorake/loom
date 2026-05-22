@@ -2,9 +2,9 @@
 #define TZABSTRACTPROXYMODEL_HPP
 
 #include <loom/tzabstractitemmodel.hpp>
+#include <loom/tzitemselection.hpp>
 
 class TzAbstractProxyModelPrivate;
-class TzItemSelection;
 
 class TzAbstractProxyModel : public TzAbstractItemModel
 {
@@ -40,7 +40,7 @@ public:
 
     std::unordered_map<int, std::string> roleNames() const override;
 
-// TZ_SIGNALS.begin
+// TZ_SIGNALS.begin — subscribe via proxy.emitter.on("sourceModelChanged", cb)
 private:
     void sourceModelChanged();
 // TZ_SIGNALS.end
@@ -52,13 +52,6 @@ protected:
 private:
     TZ_DECLARE_PRIVATE(TzAbstractProxyModel)
     TZ_DISABLE_COPY(TzAbstractProxyModel)
-    // Q_PRIVATE_SLOT(d_func(), void _q_sourceModelDestroyed())
-    // Q_PRIVATE_SLOT(d_func(), void _q_sourceModelRowsAboutToBeInserted(TzModelIndex, int, int))
-    // Q_PRIVATE_SLOT(d_func(), void _q_sourceModelRowsInserted(TzModelIndex, int, int))
-    // Q_PRIVATE_SLOT(d_func(), void _q_sourceModelRowsRemoved(TzModelIndex, int, int))
-    // Q_PRIVATE_SLOT(d_func(), void _q_sourceModelColumnsAboutToBeInserted(TzModelIndex, int, int))
-    // Q_PRIVATE_SLOT(d_func(), void _q_sourceModelColumnsInserted(TzModelIndex, int, int))
-    // Q_PRIVATE_SLOT(d_func(), void _q_sourceModelColumnsRemoved(TzModelIndex, int, int))
 };
 
 #endif // TZABSTRACTPROXYMODEL_HPP
