@@ -454,10 +454,6 @@ void TzCocoaWindowPrivate::onDrawRect(ObjcObject self, CGRect /*rect*/)
 
     CGColorSpaceRef colorSpace = CGColorSpaceCreateDeviceRGB();
 
-    CGContextSaveGState(ctx);
-    CGContextTranslateCTM(ctx, 0, bounds.size.height);
-    CGContextScaleCTM(ctx, 1.0, -1.0);
-
     CGDataProviderRef provider = CGDataProviderCreateWithData(nullptr, pixels.data(),
                                                               pixelWidth * pixelHeight * 4,
                                                               nullptr);
@@ -474,7 +470,6 @@ void TzCocoaWindowPrivate::onDrawRect(ObjcObject self, CGRect /*rect*/)
 
     CGDataProviderRelease(provider);
     CGColorSpaceRelease(colorSpace);
-    CGContextRestoreGState(ctx);
 }
 
 TzCocoaWindow::TzCocoaWindow(int width, int height)
