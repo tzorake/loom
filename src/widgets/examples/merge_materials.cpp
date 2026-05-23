@@ -353,11 +353,11 @@ static TzTreeModel *buildMetalsModel()
 {
     auto iron   = TzTreeNode::createItem("Iron");
     auto copper = TzTreeNode::createFolder("Copper");
-    copper->addChild(TzTreeNode::createItem("Electrolytic"));
-    copper->addChild(TzTreeNode::createItem("Beryllium"));
+    TzTreeNode::createItem("Electrolytic")->setParent(copper);
+    TzTreeNode::createItem("Beryllium")->setParent(copper);
     auto steel  = TzTreeNode::createFolder("Steel");
-    steel->addChild(TzTreeNode::createItem("Carbon Steel"));
-    steel->addChild(TzTreeNode::createItem("Stainless"));
+    TzTreeNode::createItem("Carbon Steel")->setParent(steel);
+    TzTreeNode::createItem("Stainless")->setParent(steel);
     return new TzTreeModel({iron, copper, steel});
 }
 
@@ -366,16 +366,16 @@ static TzTreeModel *buildFabricModel()
     auto cotton = TzTreeNode::createItem("Cotton");
     auto silk   = TzTreeNode::createItem("Silk");
     auto wool   = TzTreeNode::createFolder("Wool");
-    wool->addChild(TzTreeNode::createItem("Merino"));
-    wool->addChild(TzTreeNode::createItem("Cashmere"));
+    TzTreeNode::createItem("Merino")->setParent(wool);
+    TzTreeNode::createItem("Cashmere")->setParent(wool);
     return new TzTreeModel({cotton, silk, wool});
 }
 
 static TzTreeModel *buildWoodModel()
 {
     auto oak  = TzTreeNode::createFolder("Oak");
-    oak->addChild(TzTreeNode::createItem("White Oak"));
-    oak->addChild(TzTreeNode::createItem("Red Oak"));
+    TzTreeNode::createItem("White Oak")->setParent(oak);
+    TzTreeNode::createItem("Red Oak")->setParent(oak);
     auto pine  = TzTreeNode::createItem("Pine");
     auto maple = TzTreeNode::createItem("Maple");
     return new TzTreeModel({oak, pine, maple});

@@ -29,11 +29,11 @@ int main()
     auto docs = TzTreeNode::createFolder("docs");
     auto readme = TzTreeNode::createItem("README.md");
 
-    include->addChild(utilsH);
-    src->addChild(mainCpp);
-    src->addChild(utils);
-    src->addChild(include);
-    docs->addChild(readme);
+    utilsH->setParent(include);
+    mainCpp->setParent(src);
+    utils->setParent(src);
+    include->setParent(src);
+    readme->setParent(docs);
 
     TzTreeModel model({src, docs});
 
@@ -62,15 +62,15 @@ int main()
     printModel(model);
 
     std::println("\nAdding \"parser.cpp\" to src/:");
-    src->addChild(TzTreeNode::createItem("parser.cpp"));
+    TzTreeNode::createItem("parser.cpp")->setParent(src);
     printModel(model);
 
     std::println("\nAdding \"tests/\" folder with \"test_main.cpp\" to root:");
     auto tests = TzTreeNode::createFolder("tests");
     auto testMain = TzTreeNode::createItem("test_main.cpp");
-    tests->addChild(testMain);
+    testMain->setParent(tests);
 
-    model.invisibleRoot()->addChild(tests);
+    tests->setParent(model.invisibleRoot());
     printModel(model);
 
     std::println("\nRenaming \"utils.cpp\" → \"util.cpp\":");
@@ -78,7 +78,7 @@ int main()
     printModel(model);
 
     std::println("\nRemoving \"docs/\":");
-    model.invisibleRoot()->removeChild(docs);
+    docs->setParent(nullptr);
     printModel(model);
 
     std::println("\nIndex walk — column 0 of every top-level row:");

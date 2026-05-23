@@ -397,24 +397,24 @@ static TzTreeNodePtr buildDemoTree()
 
     auto src = TzTreeNode::createFolder("src");
     auto core = TzTreeNode::createFolder("core");
-    core->addChild(TzTreeNode::createItem("tzeventloop.cpp"));
-    core->addChild(TzTreeNode::createItem("tzpainter.cpp"));
+    TzTreeNode::createItem("tzeventloop.cpp")->setParent(core);
+    TzTreeNode::createItem("tzpainter.cpp")->setParent(core);
     auto widgets = TzTreeNode::createFolder("widgets");
-    widgets->addChild(TzTreeNode::createItem("tzwidget.cpp"));
-    widgets->addChild(TzTreeNode::createItem("tzanchors.cpp"));
+    TzTreeNode::createItem("tzwidget.cpp")->setParent(widgets);
+    TzTreeNode::createItem("tzanchors.cpp")->setParent(widgets);
     auto models = TzTreeNode::createFolder("models");
-    models->addChild(TzTreeNode::createItem("tzabstractitemmodel.cpp"));
-    src->addChild(core);
-    src->addChild(widgets);
-    src->addChild(models);
+    TzTreeNode::createItem("tzabstractitemmodel.cpp")->setParent(models);
+    core->setParent(src);
+    widgets->setParent(src);
+    models->setParent(src);
 
     auto docs = TzTreeNode::createFolder("docs");
-    docs->addChild(TzTreeNode::createItem("getting_started.md"));
-    docs->addChild(TzTreeNode::createItem("api_reference.md"));
+    TzTreeNode::createItem("getting_started.md")->setParent(docs);
+    TzTreeNode::createItem("api_reference.md")->setParent(docs);
 
-    root->addChild(src);
-    root->addChild(docs);
-    root->addChild(TzTreeNode::createItem("CMakeLists.txt"));
+    src->setParent(root);
+    docs->setParent(root);
+    TzTreeNode::createItem("CMakeLists.txt")->setParent(root);
 
     return root;
 }
