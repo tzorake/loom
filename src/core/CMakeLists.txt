@@ -24,7 +24,7 @@ add_library(loom-core
     src/tzrect.cpp
     src/tzsize.cpp
     src/tzeventemitter.cpp
-    src/tzdebug.cpp
+    src/tzlogging.cpp
 )
 target_include_directories(loom-core
     PUBLIC  include
@@ -45,6 +45,7 @@ target_sources(loom-core-private INTERFACE
     src/tztimer_p.hpp
     src/tzsignalpipe.hpp
     src/tzeventemitter_p.hpp
+    src/tzlogging_p.hpp
 )
 
 if(APPLE)

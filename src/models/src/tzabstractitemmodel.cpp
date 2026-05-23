@@ -2,7 +2,7 @@
 #include <tzabstractitemmodel_p.hpp>
 
 #include <loom/tzassert.hpp>
-#include <loom/tzdebug.hpp>
+#include <loom/tzlogging.hpp>
 #include <loom/tzglobalstatic.hpp>
 
 #include <algorithm>
@@ -298,7 +298,7 @@ void TzAbstractItemModelPrivate::rowsInserted(const TzModelIndex &parent, int fi
         if (data->index.isValid()) {
             persistent.insertMultiAtEnd(data->index, data);
         } else {
-            tzWarning() << "TzAbstractItemModel::endInsertRows: Invalid index in model";
+            tzWarning("TzAbstractItemModel::endInsertRows: Invalid index in model");
         }
     }
 }
@@ -372,7 +372,7 @@ void TzAbstractItemModelPrivate::movePersistentIndexes(const std::vector<TzPersi
         if (data->index.isValid()) {
             persistent.insertMultiAtEnd(data->index, data);
         } else {
-            tzWarning() << "TzAbstractItemModel::endMoveRows: Invalid index in model";
+            tzWarning("TzAbstractItemModel::endMoveRows: Invalid index in model");
         }
     }
 }
@@ -433,7 +433,7 @@ void TzAbstractItemModelPrivate::rowsRemoved(const TzModelIndex &parent, int fir
         if (data->index.isValid()) {
             persistent.insertMultiAtEnd(data->index, data);
         } else {
-            tzWarning() << "TzAbstractItemModel::endRemoveRows: Invalid index in model";
+            tzWarning("TzAbstractItemModel::endRemoveRows: Invalid index in model");
         }
     }
     const std::vector<TzPersistentModelIndexData *> persistentInvalidated = std::move(persistent.invalidated.back()); persistent.invalidated.pop_back();
@@ -471,7 +471,7 @@ void TzAbstractItemModelPrivate::columnsInserted(const TzModelIndex &parent, int
         if (data->index.isValid()) {
             persistent.insertMultiAtEnd(data->index, data);
         } else {
-            tzWarning() << "TzAbstractItemModel::endInsertColumns: Invalid index in model";
+            tzWarning("TzAbstractItemModel::endInsertColumns: Invalid index in model");
         }
     }
 }
@@ -514,7 +514,7 @@ void TzAbstractItemModelPrivate::columnsRemoved(const TzModelIndex &parent, int 
         if (data->index.isValid()) {
             persistent.insertMultiAtEnd(data->index, data);
         } else {
-            tzWarning() << "TzAbstractItemModel::endRemoveColumns: Invalid index in model";
+            tzWarning("TzAbstractItemModel::endRemoveColumns: Invalid index in model");
         }
     }
     const std::vector<TzPersistentModelIndexData *> persistentInvalidated = std::move(persistent.invalidated.back()); persistent.invalidated.pop_back();
@@ -970,11 +970,11 @@ void TzAbstractItemModel::beginResetModel()
 {
     TZ_D(TzAbstractItemModel);
     if (d->resetting) {
-        tzWarning() << "beginResetModel called without calling endResetModel first";
+        tzWarning("beginResetModel called without calling endResetModel first");
         // Warn, but don't return early in case user code relies on the incorrect behavior.
     }
 
-    tzDebug() << "beginResetModel called; about to modelAboutToBeReset";
+    tzDebug("beginResetModel called; about to modelAboutToBeReset");
     d->resetting = true;
     modelAboutToBeReset();
 }
@@ -983,11 +983,11 @@ void TzAbstractItemModel::endResetModel()
 {
     TZ_D(TzAbstractItemModel);
     if (!d->resetting) {
-        tzWarning() << "endResetModel called without calling beginResetModel first";
+        tzWarning("endResetModel called without calling beginResetModel first");
         // Warn, but don't return early in case user code relies on the incorrect behavior.
     }
 
-    tzDebug() << "endResetModel called; about to modelReset";
+    tzDebug("endResetModel called; about to modelReset");
     d->invalidatePersistentIndexes();
     resetInternalData();
     d->resetting = false;
@@ -1048,24 +1048,24 @@ bool TzAbstractItemModel::checkIndex(const TzModelIndex &index, CheckIndexOption
 {
     if (!index.isValid()) {
         if (options & CheckIndexOption::IndexIsValid) {
-            tzWarning() << "Index is not valid (expected valid)";
+            tzWarning("Index is not valid (expected valid)");
             return false;
         }
         return true;
     }
 
     if (index.model() != this) {
-        tzWarning() << "Index is for a different model";
+        tzWarning("Index is for a different model");
         return false;
     }
 
     if (index.row() < 0) {
-        tzWarning() << "Index has negative row";
+        tzWarning("Index has negative row");
         return false;
     }
 
     if (index.column() < 0) {
-        tzWarning() << "Index has negative column";
+        tzWarning("Index has negative column");
         return false;
     }
 
@@ -1073,20 +1073,20 @@ bool TzAbstractItemModel::checkIndex(const TzModelIndex &index, CheckIndexOption
         const TzModelIndex parentIndex = index.parent();
         if (options & CheckIndexOption::ParentIsInvalid) {
             if (parentIndex.isValid()) {
-                tzWarning() << "Index has valid parent (expected an invalid parent)";
+                tzWarning("Index has valid parent (expected an invalid parent)");
                 return false;
             }
         }
 
         const int rc = rowCount(parentIndex);
         if (index.row() >= rc) {
-            tzWarning() << "Index has out of range row";
+            tzWarning("Index has out of range row");
             return false;
         }
 
         const int cc = columnCount(parentIndex);
         if (index.column() >= cc) {
-            tzWarning() << "Index has out of range column";
+            tzWarning("Index has out of range column");
             return false;
         }
     }

@@ -1,7 +1,7 @@
 #ifndef TZGLOBAL_HPP
 #define TZGLOBAL_HPP
 
-#include <loom/tzdebug.hpp>
+#include <loom/tzlogging.hpp>
 #include <loom/tzflags.hpp>
 
 #define TZ_UNUSED(x) (void)x;
