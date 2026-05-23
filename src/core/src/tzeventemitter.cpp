@@ -160,6 +160,16 @@ std::size_t TzEventEmitter::getDefaultMaxListeners()
     return TzEventEmitterPrivate::defaultMaxListeners;
 }
 
+void TzEventEmitter::blockEvents(bool block)
+{
+    block ? ++d_ptr->blockDepth : --d_ptr->blockDepth;
+}
+
+bool TzEventEmitter::eventsBlocked() const
+{
+    return d_ptr->blockDepth > 0;
+}
+
 TzEventEmitterPrivate::TzEventEmitterPrivate() {}
 
 void TzEventEmitterPrivate::setMaxListeners(std::size_t n)
@@ -226,6 +236,9 @@ void TzEventEmitterPrivate::removeAllListeners(const std::string &eventName)
 void TzEventEmitterPrivate::emitPacked(const std::string &eventName,
                                        const std::vector<std::any> &args)
 {
+    if (blockDepth > 0)
+        return;
+
     auto it = listeners.find(eventName);
     if (it == listeners.end() || it->second.empty()) {
         if (eventName == "error") {

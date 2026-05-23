@@ -39,6 +39,9 @@ public:
     static void setDefaultMaxListeners(std::size_t n);
     static std::size_t getDefaultMaxListeners();
 
+    void blockEvents(bool block);
+    bool eventsBlocked() const;
+
 private:
     TzEventListener on(const std::string &eventName, ListenerCallback callback);
     TzEventListener once(const std::string &eventName, ListenerCallback callback);

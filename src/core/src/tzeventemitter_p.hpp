@@ -31,4 +31,5 @@ public:
     std::uint64_t nextId{1};
     std::size_t maxListeners = defaultMaxListeners;
     static inline std::size_t defaultMaxListeners = 10;
+    int blockDepth{0};
 };

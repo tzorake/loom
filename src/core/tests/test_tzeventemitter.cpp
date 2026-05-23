@@ -1,3 +1,4 @@
+#include <loom/tzeventblocker.hpp>
 #include <loom/tzeventemitter.hpp>
 #include <loom/tzeventlistener.hpp>
 #include <loom/tzscopedeventlistener.hpp>
@@ -729,4 +730,170 @@ TEST(TzEventEmitter, WeakPtrInCallback)
     owner.reset();
     EXPECT_NO_THROW(bus.emit("event", 50));
     EXPECT_EQ(called, 1);
+}
+
+// ── TzEventBlocker ───────────────────────────────────────────────────────────
+
+TEST(TzEventBlocker, BlockSuppressesEmit)
+{
+    TzEventEmitter emitter;
+    int count = 0;
+    auto h = emitter.on("tick", [&] { ++count; });
+
+    {
+        TzEventBlocker blocker(emitter);
+        emitter.emit("tick");
+        emitter.emit("tick");
+        EXPECT_EQ(count, 0);
+    }
+
+    emitter.emit("tick");
+    EXPECT_EQ(count, 1);
+}
+
+TEST(TzEventBlocker, SignalsBlockedReflectsState)
+{
+    TzEventEmitter emitter;
+    EXPECT_FALSE(emitter.eventsBlocked());
+
+    {
+        TzEventBlocker blocker(emitter);
+        EXPECT_TRUE(emitter.eventsBlocked());
+    }
+
+    EXPECT_FALSE(emitter.eventsBlocked());
+}
+
+TEST(TzEventBlocker, NestedBlockers)
+{
+    TzEventEmitter emitter;
+    int count = 0;
+    auto h = emitter.on("ev", [&] { ++count; });
+
+    {
+        TzEventBlocker outer(emitter);
+        EXPECT_TRUE(emitter.eventsBlocked());
+        {
+            TzEventBlocker inner(emitter);
+            emitter.emit("ev");
+            EXPECT_EQ(count, 0);
+        }
+        // inner gone, outer still active
+        EXPECT_TRUE(emitter.eventsBlocked());
+        emitter.emit("ev");
+        EXPECT_EQ(count, 0);
+    }
+
+    emitter.emit("ev");
+    EXPECT_EQ(count, 1);
+}
+
+TEST(TzEventBlocker, ListenerStaysConnectedWhileBlocked)
+{
+    TzEventEmitter emitter;
+    int count = 0;
+    auto h = emitter.on("ev", [&] { ++count; });
+
+    {
+        TzEventBlocker blocker(emitter);
+        emitter.emit("ev");
+        EXPECT_TRUE(h.isConnected());
+    }
+
+    emitter.emit("ev");
+    EXPECT_EQ(count, 1);
+    EXPECT_TRUE(h.isConnected());
+}
+
+TEST(TzEventBlocker, OnceListenerNotConsumedWhileBlocked)
+{
+    TzEventEmitter emitter;
+    int count = 0;
+    auto h = emitter.once("ev", [&] { ++count; });
+
+    {
+        TzEventBlocker blocker(emitter);
+        emitter.emit("ev");
+        EXPECT_EQ(count, 0);
+        EXPECT_TRUE(h.isConnected());
+    }
+
+    emitter.emit("ev");
+    EXPECT_EQ(count, 1);
+    EXPECT_FALSE(h.isConnected());
+    emitter.emit("ev");
+    EXPECT_EQ(count, 1);
+}
+
+TEST(TzEventBlocker, BlockingOneEmitterDoesNotAffectAnother)
+{
+    TzEventEmitter a, b;
+    int ca = 0, cb = 0;
+    a.on("ev", [&] { ++ca; });
+    b.on("ev", [&] { ++cb; });
+
+    {
+        TzEventBlocker blocker(a);
+        a.emit("ev");
+        b.emit("ev");
+    }
+
+    EXPECT_EQ(ca, 0);
+    EXPECT_EQ(cb, 1);
+}
+
+TEST(TzEventBlocker, ManualBlockSignals)
+{
+    TzEventEmitter emitter;
+    int count = 0;
+    auto h = emitter.on("ev", [&] { ++count; });
+
+    emitter.blockEvents(true);
+    EXPECT_TRUE(emitter.eventsBlocked());
+    emitter.emit("ev");
+    EXPECT_EQ(count, 0);
+
+    emitter.blockEvents(false);
+    EXPECT_FALSE(emitter.eventsBlocked());
+    emitter.emit("ev");
+    EXPECT_EQ(count, 1);
+}
+
+TEST(TzEventBlocker, ManualNestedBlockSignals)
+{
+    TzEventEmitter emitter;
+    int count = 0;
+    auto h = emitter.on("ev", [&] { ++count; });
+
+    emitter.blockEvents(true);
+    emitter.blockEvents(true);
+    emitter.blockEvents(false);
+    EXPECT_TRUE(emitter.eventsBlocked());
+    emitter.emit("ev");
+    EXPECT_EQ(count, 0);
+
+    emitter.blockEvents(false);
+    EXPECT_FALSE(emitter.eventsBlocked());
+    emitter.emit("ev");
+    EXPECT_EQ(count, 1);
+}
+
+TEST(TzEventBlocker, BlockInsideListener)
+{
+    TzEventEmitter emitter;
+    int outer = 0, inner = 0;
+
+    emitter.on("outer", [&] {
+        ++outer;
+        TzEventBlocker blocker(emitter);
+        emitter.emit("inner");
+    });
+    emitter.on("inner", [&] { ++inner; });
+
+    emitter.emit("outer");
+    EXPECT_EQ(outer, 1);
+    EXPECT_EQ(inner, 0);
+
+    emitter.emit("inner");
+    EXPECT_EQ(inner, 1);
 }
