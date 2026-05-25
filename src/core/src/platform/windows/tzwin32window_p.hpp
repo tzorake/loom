@@ -18,7 +18,7 @@
 class TzWin32WindowPrivate
 {
 public:
-    TzWin32WindowPrivate(int width, int height, TzAbstractWindow *owner);
+    TzWin32WindowPrivate(int width, int height, TzPlatformWindow *owner);
     ~TzWin32WindowPrivate();
 
     void setTitle(const std::string &title);
@@ -34,7 +34,7 @@ public:
     void onMouseMove(LPARAM lParam, WPARAM wParam);
     void onMouseWheel(UINT msg, WPARAM wParam, LPARAM lParam);
 
-    TzAbstractWindow *owner{nullptr};
+    TzPlatformWindow *owner{nullptr};
     HWND hwnd{nullptr};
     int windowWidth{0};
     int windowHeight{0};

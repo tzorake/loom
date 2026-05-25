@@ -1,13 +1,13 @@
 #ifndef TZCOCOAWINDOW_HPP
 #define TZCOCOAWINDOW_HPP
 
-#include <loom/tzabstractwindow.hpp>
+#include "tzplatformwindow.hpp"
 
 #include <memory>
 
 class TzCocoaWindowPrivate;
 
-class TzCocoaWindow : public TzAbstractWindow
+class TzCocoaWindow : public TzPlatformWindow
 {
 public:
     TzCocoaWindow(int width, int height);

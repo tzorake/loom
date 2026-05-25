@@ -5,6 +5,10 @@
 
 #include <memory>
 
+class TzCloseEvent;
+class TzKeyEvent;
+class TzMouseEvent;
+class TzResizeEvent;
 class TzSurface;
 class TzWidget;
 class TzScenePrivate;
@@ -33,6 +37,11 @@ public:
 
     int width() const;
     int height() const;
+
+    void dispatchCloseEvent(TzCloseEvent *event);
+    void dispatchKeyEvent(TzKeyEvent *event);
+    void dispatchMouseEvent(TzMouseEvent *event);
+    void dispatchResizeEvent(TzResizeEvent *event);
 
 private:
     std::unique_ptr<TzScenePrivate> d_ptr;

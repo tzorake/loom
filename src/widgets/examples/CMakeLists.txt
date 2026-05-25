@@ -1,3 +1,6 @@
+add_executable(window window.cpp)
+target_link_libraries(window PRIVATE loom-widgets)
+
 add_executable(widget widget.cpp)
 target_link_libraries(widget PRIVATE loom-widgets)
 

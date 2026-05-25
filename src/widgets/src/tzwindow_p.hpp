@@ -6,9 +6,10 @@
 
 #include "tzobject_p.hpp"
 
-#include <functional>
+#include <cstdint>
+#include <vector>
 
-class TzAbstractWindow;
+class TzPlatformWindow;
 class TzScene;
 class TzTimer;
 
@@ -18,10 +19,12 @@ class TzWindowPrivate : public TzObjectPrivate
 public:
     ~TzWindowPrivate() override;
 
-    TzAbstractWindow *platformWindow{nullptr};
+    TzPlatformWindow *platformWindow{nullptr};
     TzScene *scene{nullptr};
     TzTimer *paintTimer{nullptr};
-    std::function<void()> onClose;
+
+    std::vector<uint32_t> pixels;
+    bool paintDirty{false};
 };
 
 #endif // TZWINDOW_P_HPP

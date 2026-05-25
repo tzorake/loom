@@ -174,7 +174,7 @@ LRESULT CALLBACK TzWin32WindowPrivate::wndProc(HWND hwnd, UINT msg, WPARAM wPara
     }
 }
 
-TzWin32WindowPrivate::TzWin32WindowPrivate(int width, int height, TzAbstractWindow *owner)
+TzWin32WindowPrivate::TzWin32WindowPrivate(int width, int height, TzPlatformWindow *owner)
     : owner(owner)
     , windowWidth(width)
     , windowHeight(height)

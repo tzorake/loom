@@ -218,6 +218,15 @@ void TzPainter::drawLine(const TzPoint &a, const TzPoint &b, uint32_t argb, doub
     }
 }
 
+void TzPainter::drawCircle(const TzPoint &center, double radius, uint32_t argb)
+{
+    int r = static_cast<int>(radius);
+    for (int dy = -r; dy <= r; ++dy) {
+        double hw = std::sqrt(radius * radius - static_cast<double>(dy * dy));
+        fillRect(center.x - hw, center.y + dy, 2.0 * hw, 1.0, argb);
+    }
+}
+
 // ── Text ──────────────────────────────────────────────────────────────────
 
 void TzPainter::drawText(const TzPoint &pos, const std::string &text, uint32_t argb)

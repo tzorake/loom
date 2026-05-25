@@ -11,6 +11,8 @@ class TzCoreApplicationPrivate;
 class TzObject;
 class TzEvent;
 
+#define tzApp TzCoreApplication::instance()
+
 class TzCoreApplication
 {
     TZ_DECLARE_PRIVATE(TzCoreApplication)

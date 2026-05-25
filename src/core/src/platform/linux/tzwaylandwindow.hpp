@@ -1,13 +1,13 @@
 #ifndef TZWAYLANDWINDOW_HPP
 #define TZWAYLANDWINDOW_HPP
 
-#include <loom/tzabstractwindow.hpp>
+#include "tzplatformwindow.hpp"
 
 #include <memory>
 
 class TzWaylandWindowPrivate;
 
-class TzWaylandWindow : public TzAbstractWindow
+class TzWaylandWindow : public TzPlatformWindow
 {
 public:
     TzWaylandWindow(int width, int height);

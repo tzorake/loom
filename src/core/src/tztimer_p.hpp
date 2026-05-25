@@ -10,12 +10,11 @@ class TzTimerPrivate
 {
     TZ_DECLARE_PUBLIC(TzTimer)
 public:
-    explicit TzTimerPrivate(TzAbstractEventDispatcher *eventDispatcher);
+    TzTimerPrivate();
 
 private:
     TzTimer *q_ptr{nullptr};
 
-    TzAbstractEventDispatcher *eventDispatcher{nullptr};
     TzTimer::TimerHandle handle{nullptr};
     TzTimer::TimerInterval interval{0};
     bool singleShot{false};

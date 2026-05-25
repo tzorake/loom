@@ -1,7 +1,6 @@
 #ifndef TZCOCOAWINDOW_P_HPP
 #define TZCOCOAWINDOW_P_HPP
 
-#include <loom/tzabstractwindow.hpp>
 #include <loom/tzcloseevent.hpp>
 #include <loom/tzcoreapplication.hpp>
 #include <loom/tzevent.hpp>
@@ -20,7 +19,7 @@
 class TzCocoaWindowPrivate
 {
 public:
-    TzCocoaWindowPrivate(int width, int height, TzAbstractWindow *owner);
+    TzCocoaWindowPrivate(int width, int height, TzPlatformWindow *owner);
     ~TzCocoaWindowPrivate();
 
     void setTitle(const std::string &title);
@@ -35,7 +34,7 @@ public:
     void onKeyEvent(ObjcObject nsEvent, bool pressed);
     void onMouseEvent(ObjcObject nsEvent, TzEvent::Type type, MouseButton button);
 
-    TzAbstractWindow *owner{nullptr};
+    TzPlatformWindow *owner{nullptr};
 
     ObjcObject window{nullptr};
     ObjcObject delegate{nullptr};

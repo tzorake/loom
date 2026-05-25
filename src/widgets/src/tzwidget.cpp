@@ -83,7 +83,7 @@ TzWidget::TzWidget(TzWidgetPrivate &dd, TzWidget *parent)
     TZ_D(TzWidget);
     d->q_ptr = this;
     if (parent)
-        d->scene = static_cast<TzWidgetPrivate *>(parent->d_ptr)->scene;
+        d->scene = static_cast<TzWidgetPrivate *>(parent->d_ptr.get())->scene;
 }
 
 TzWidgetPrivate::~TzWidgetPrivate() {}

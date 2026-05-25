@@ -24,6 +24,7 @@ public:
 
     void drawRect(const TzRect &rect, uint32_t argb, double lineWidth = 1.0);
     void drawLine(const TzPoint &a, const TzPoint &b, uint32_t argb, double lineWidth = 1.0);
+    void drawCircle(const TzPoint &center, double radius, uint32_t argb);
 
     void drawText(const TzPoint &pos, const std::string &text, uint32_t argb);
     void drawText(double x, double y, const std::string &text, uint32_t argb);

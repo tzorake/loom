@@ -1,19 +1,23 @@
+#include <loom/tzobject.hpp>
+#include <tzobject_p.hpp>
+#include <loom/tzglobal.hpp>
 #include <loom/tzcoreapplication.hpp>
 #include <loom/tzdeferreddeleteevent.hpp>
-#include <loom/tzobject.hpp>
 
-#include "tzobject_p.hpp"
+TzObjectPrivate::TzObjectPrivate()
+{
+}
 
-TzObjectPrivate::TzObjectPrivate() {}
-
-TzObjectPrivate::~TzObjectPrivate() {}
+TzObjectPrivate::~TzObjectPrivate()
+{
+}
 
 void TzObjectPrivate::unlinkFromParent()
 {
     if (!parent)
         return;
 
-    TzObjectPrivate *pd = parent->d_ptr;
+    TzObjectPrivate *pd = parent->d_ptr.get();
     if (previousSibling)
         previousSibling->d_ptr->nextSibling = nextSibling;
     else
@@ -29,7 +33,7 @@ void TzObjectPrivate::unlinkFromParent()
 
 void TzObjectPrivate::appendToParent(TzObject *newParent)
 {
-    TzObjectPrivate *pd = newParent->d_ptr;
+    TzObjectPrivate *pd = newParent->d_ptr.get();
     parent = newParent;
 
     if (!pd->firstChild) {
@@ -49,8 +53,8 @@ TzObject::TzObject(TzObject *parent)
     : TzObject(*new TzObjectPrivate, parent)
 {}
 
-TzObject::TzObject(TzObjectPrivate &d, TzObject *parent)
-    : d_ptr(&d)
+TzObject::TzObject(TzObjectPrivate &dd, TzObject *parent)
+    : d_ptr(&dd)
 {
     d_ptr->q_ptr = this;
     if (parent)
@@ -59,8 +63,8 @@ TzObject::TzObject(TzObjectPrivate &d, TzObject *parent)
 
 TzObject::~TzObject()
 {
-    if (TzCoreApplication *app = TzCoreApplication::instance())
-        app->removePostedEvents(this);
+    if (TzCoreApplication *app = tzApp)
+        tzApp->removePostedEvents(this);
 
     d_ptr->unlinkFromParent();
 
@@ -74,8 +78,6 @@ TzObject::~TzObject()
         child = next;
     }
     d_ptr->firstChild = nullptr;
-
-    delete d_ptr;
 }
 
 void TzObject::setParent(TzObject *parent)
@@ -117,7 +119,7 @@ std::vector<TzObject *> TzObject::children() const
 
 bool TzObject::event(TzEvent *event)
 {
-    (void) event;
+    TZ_UNUSED(event);
     return false;
 }
 

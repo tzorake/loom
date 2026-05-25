@@ -1,7 +1,13 @@
-#include <loom/tzabstractplatformintegration.hpp>
-#include <loom/tzabstractwindow.hpp>
-#include <loom/tzcoreapplication.hpp>
+#include "tzplatformwindow.hpp"
+#include <loom/tzcloseevent.hpp>
+#include <loom/tzkeyevent.hpp>
+#include <loom/tzmouseevent.hpp>
+#include <loom/tzpaintevent.hpp>
+#include <loom/tzpainter.hpp>
 #include <loom/tzplatformsurface.hpp>
+#include <loom/tzpoint.hpp>
+#include <loom/tzrect.hpp>
+#include <loom/tzresizeevent.hpp>
 #include <loom/tzscene.hpp>
 #include <loom/tzsurface.hpp>
 #include <loom/tztimer.hpp>
@@ -15,13 +21,13 @@
 TzWindowPrivate::~TzWindowPrivate()
 {
     delete paintTimer;
-    // Clear scene callbacks before deleting the scene so the lambdas captured
-    // inside TzScene don't dangle during platform window teardown.
+    // Clear all platform callbacks before tearing down the scene and platform
+    // window so that no lambda can fire against a half-destroyed object graph.
     if (platformWindow) {
+        platformWindow->setCloseCallback({});
         platformWindow->setResizeCallback({});
         platformWindow->setKeyCallback({});
         platformWindow->setMouseCallback({});
-        platformWindow->setCloseCallback({});
     }
     delete scene;
     delete platformWindow;
@@ -41,26 +47,48 @@ TzWindow::TzWindow(TzWindowPrivate &dd, int width, int height, TzWindow *parent)
     TZ_D(TzWindow);
     d->q_ptr = this;
 
-    TzAbstractPlatformIntegration *platformIntegration
-        = TzCoreApplication::instance()->platformIntegration();
-    d->platformWindow = platformIntegration->createWindow(width, height);
+    d->platformWindow = tzCreatePlatformWindow(width, height);
     d->platformWindow->setSurface(this);
 
     d->scene = new TzScene(this);
 
     d->platformWindow->setCloseCallback([this] {
-        TZ_D(TzWindow);
-        closeEvent();
-        if (d->onClose)
-            d->onClose();
+        TzCloseEvent e;
+        closeEvent(&e);
+    });
+    d->platformWindow->setResizeCallback([this](int w, int h) {
+        TzResizeEvent e(w, h);
+        resizeEvent(&e);
+    });
+    d->platformWindow->setKeyCallback([this](TzKeyEvent *e) {
+        keyEvent(e);
+    });
+    d->platformWindow->setMouseCallback([this](TzMouseEvent *e) {
+        mouseEvent(e);
     });
 
-    d->paintTimer = TzTimer::repeat(TzCoreApplication::instance()->eventDispatcher(),
-                                    std::chrono::milliseconds(16), [this] {
-                                        TZ_D(TzWindow);
-                                        if (d->scene->isPaintDirty())
-                                            d->scene->doPaint();
-                                    });
+    d->paintTimer = TzTimer::repeat(std::chrono::milliseconds(16), [this] {
+        TZ_D(TzWindow);
+        // Scene (widget) paint path
+        if (d->scene->isPaintDirty())
+            d->scene->doPaint();
+
+        // Custom paint path
+        if (d->paintDirty) {
+            const int w = d->scene->width();
+            const int h = d->scene->height();
+            if (w > 0 && h > 0) {
+                d->pixels.resize(static_cast<size_t>(w) * static_cast<size_t>(h));
+                TzRect clip{0.0, 0.0, static_cast<double>(w), static_cast<double>(h)};
+                TzPoint origin{0.0, 0.0};
+                TzPainter painter(d->pixels.data(), w, h, clip, origin);
+                TzPaintEvent pe(&painter);
+                paintEvent(&pe);
+                d->platformWindow->render(d->pixels, w, h);
+            }
+            d->paintDirty = false;
+        }
+    });
 }
 
 TzWindow::~TzWindow() {}
@@ -85,10 +113,8 @@ void TzWindow::hide()
 
 void TzWindow::close()
 {
-    TZ_D(TzWindow);
-    closeEvent();
-    if (d->onClose)
-        d->onClose();
+    TzCloseEvent e;
+    closeEvent(&e);
 }
 
 TzScene *TzWindow::scene()
@@ -123,15 +149,38 @@ int TzWindow::height() const
     return d->scene->height();
 }
 
-void TzWindow::setOnClose(std::function<void()> callback)
+void TzWindow::update()
 {
     TZ_D(TzWindow);
-    d->onClose = std::move(callback);
+    d->paintDirty = true;
 }
 
-void TzWindow::closeEvent()
+void TzWindow::paintEvent(TzPaintEvent * /*event*/) {}
+
+void TzWindow::closeEvent(TzCloseEvent *event)
 {
+    TZ_D(TzWindow);
+    d->scene->dispatchCloseEvent(event);
     hide();
+}
+
+void TzWindow::keyEvent(TzKeyEvent *event)
+{
+    TZ_D(TzWindow);
+    d->scene->dispatchKeyEvent(event);
+}
+
+void TzWindow::mouseEvent(TzMouseEvent *event)
+{
+    TZ_D(TzWindow);
+    d->scene->dispatchMouseEvent(event);
+}
+
+void TzWindow::resizeEvent(TzResizeEvent *event)
+{
+    TZ_D(TzWindow);
+    d->scene->dispatchResizeEvent(event);
+    d->paintDirty = true;
 }
 
 TzSurface::SurfaceType TzWindow::surfaceType() const

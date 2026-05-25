@@ -1,7 +1,7 @@
 #ifndef TZX11WINDOW_HPP
 #define TZX11WINDOW_HPP
 
-#include <loom/tzabstractwindow.hpp>
+#include "tzplatformwindow.hpp"
 
 #include <memory>
 #include <string>
@@ -9,7 +9,7 @@
 
 class TzX11WindowPrivate;
 
-class TzX11Window : public TzAbstractWindow
+class TzX11Window : public TzPlatformWindow
 {
 public:
     TzX11Window(int width, int height);

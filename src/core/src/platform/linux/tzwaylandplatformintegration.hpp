@@ -10,16 +10,16 @@ class TzWaylandPlatformIntegration : public TzAbstractPlatformIntegration
 public:
     virtual TzAbstractEventDispatcher *createEventDispatcher() override;
     virtual TzAbstractConsoleInput *createConsoleInput() override;
-    virtual TzAbstractWindow *createWindow(int width, int height) override;
     virtual std::string name() const override;
+
+    // Called by tzCreatePlatformWindow before constructing the first window.
+    void ensureGlobals();
 
 private:
     // Non-owning reference to the dispatcher created by createEventDispatcher().
-    // Used to wire up the Wayland display fd on first createWindow() call.
+    // Used to wire up the Wayland display fd on first ensureGlobals() call.
     TzWaylandEventDispatcher *m_dispatcher{nullptr};
     bool m_globalsReady{false};
-
-    void ensureGlobals();
 };
 
 #endif // TZWAYLANDPLATFORMINTEGRATION_HPP

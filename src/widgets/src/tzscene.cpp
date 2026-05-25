@@ -1,7 +1,9 @@
+#include <loom/tzcloseevent.hpp>
 #include <loom/tzcoreapplication.hpp>
 #include <loom/tzfocusevent.hpp>
 #include <loom/tzkeyevent.hpp>
 #include <loom/tzmouseevent.hpp>
+#include <loom/tzresizeevent.hpp>
 #include <loom/tzpainter.hpp>
 #include <loom/tzpaintevent.hpp>
 #include <loom/tzplatformsurface.hpp>
@@ -21,7 +23,7 @@ void TzScenePrivate::layoutWidget(TzWidget *w, int passesLeft)
         TzObject *child = w->firstChild();
         while (child) {
             if (TzWidget *cw = dynamic_cast<TzWidget *>(child))
-                if (static_cast<TzWidgetPrivate *>(cw->d_ptr)->resolveAnchors())
+                if (static_cast<TzWidgetPrivate *>(cw->d_ptr.get())->resolveAnchors())
                     changed = true;
             child = child->nextSibling();
         }
@@ -68,7 +70,7 @@ void TzScenePrivate::paintWidget(TzWidget *w, double parentAbsX, double parentAb
 void TzScenePrivate::registerSubtree(TzWidget *w)
 {
     TZ_Q(TzScene);
-    static_cast<TzWidgetPrivate *>(w->d_ptr)->scene = q;
+    static_cast<TzWidgetPrivate *>(w->d_ptr.get())->scene = q;
     TzObject *child = w->firstChild();
     while (child) {
         if (TzWidget *cw = dynamic_cast<TzWidget *>(child))
@@ -79,7 +81,7 @@ void TzScenePrivate::registerSubtree(TzWidget *w)
 
 void TzScenePrivate::unregisterSubtree(TzWidget *w)
 {
-    static_cast<TzWidgetPrivate *>(w->d_ptr)->scene = nullptr;
+    static_cast<TzWidgetPrivate *>(w->d_ptr.get())->scene = nullptr;
     if (focusedWidget == w)
         focusedWidget = nullptr;
     TzObject *child = w->firstChild();
@@ -128,30 +130,42 @@ TzScene::TzScene(TzSurface *surface)
     TZ_D(TzScene);
     d->q_ptr = this;
     d->platformSurface = surface->surfaceHandle();
+}
 
-    d->platformSurface->setResizeCallback([this](int w, int h) {
-        TZ_D(TzScene);
-        d->width = w;
-        d->height = h;
-        doLayout();
-        doPaint();
-    });
-    d->platformSurface->setKeyCallback([this](TzKeyEvent *e) {
-        TZ_D(TzScene);
-        if (d->focusedWidget)
-            TzCoreApplication::sendEvent(d->focusedWidget, e);
-    });
-    d->platformSurface->setMouseCallback([this](TzMouseEvent *e) {
-        TzWidget *target = widgetAt(e->x(), e->y());
-        if (!target)
-            return;
-        if (e->type() == TzEvent::MouseButtonPress && target != focusedWidget())
-            setFocusedWidget(target);
-        TzPoint local = target->mapFromGlobal({e->x(), e->y()});
-        TzMouseEvent localEvent(e->type(), e->button(), local.x, local.y, e->modifiers(),
-                                e->scrollDx(), e->scrollDy());
-        TzCoreApplication::sendEvent(target, &localEvent);
-    });
+void TzScene::dispatchCloseEvent(TzCloseEvent *e)
+{
+    TZ_D(TzScene);
+    if (d->root)
+        TzCoreApplication::sendEvent(d->root, e);
+}
+
+void TzScene::dispatchKeyEvent(TzKeyEvent *e)
+{
+    TZ_D(TzScene);
+    if (d->focusedWidget)
+        TzCoreApplication::sendEvent(d->focusedWidget, e);
+}
+
+void TzScene::dispatchMouseEvent(TzMouseEvent *e)
+{
+    TzWidget *target = widgetAt(e->x(), e->y());
+    if (!target)
+        return;
+    if (e->type() == TzEvent::MouseButtonPress && target != focusedWidget())
+        setFocusedWidget(target);
+    TzPoint local = target->mapFromGlobal({e->x(), e->y()});
+    TzMouseEvent localEvent(e->type(), e->button(), local.x, local.y, e->modifiers(),
+                            e->scrollDx(), e->scrollDy());
+    TzCoreApplication::sendEvent(target, &localEvent);
+}
+
+void TzScene::dispatchResizeEvent(TzResizeEvent *e)
+{
+    TZ_D(TzScene);
+    d->width = e->width();
+    d->height = e->height();
+    doLayout();
+    doPaint();
 }
 
 TzScene::~TzScene()
@@ -179,7 +193,7 @@ void TzScene::setRoot(TzWidget *root)
         d->registerSubtree(d->root);
         d->root->setImplicitSize((double) d->width, (double) d->height);
 
-        TzWidgetPrivate *rd = static_cast<TzWidgetPrivate *>(d->root->d_ptr);
+        TzWidgetPrivate *rd = static_cast<TzWidgetPrivate *>(d->root->d_ptr.get());
         rd->resetWidth();
         rd->resetHeight();
 
@@ -254,7 +268,7 @@ void TzScene::setFocusedWidget(TzWidget *widget)
         return;
 
     if (d->focusedWidget) {
-        static_cast<TzWidgetPrivate *>(d->focusedWidget->d_ptr)->focused = false;
+        static_cast<TzWidgetPrivate *>(d->focusedWidget->d_ptr.get())->focused = false;
         TzFocusEvent out(TzEvent::FocusOut);
         TzCoreApplication::sendEvent(d->focusedWidget, &out);
     }
@@ -262,7 +276,7 @@ void TzScene::setFocusedWidget(TzWidget *widget)
     d->focusedWidget = widget;
 
     if (d->focusedWidget) {
-        static_cast<TzWidgetPrivate *>(d->focusedWidget->d_ptr)->focused = true;
+        static_cast<TzWidgetPrivate *>(d->focusedWidget->d_ptr.get())->focused = true;
         TzFocusEvent in(TzEvent::FocusIn);
         TzCoreApplication::sendEvent(d->focusedWidget, &in);
     }

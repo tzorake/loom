@@ -1,4 +1,5 @@
 #include <loom/TzAnchors>
+#include <loom/TzCloseEvent>
 #include <loom/TzGuiApplication>
 #include <loom/TzKeyEvent>
 #include <loom/TzMouseEvent>
@@ -9,6 +10,7 @@
 
 #include <print>
 #include <string>
+#include <functional>
 
 // ── Palette ───────────────────────────────────────────────────────────────
 
@@ -343,15 +345,25 @@ private:
     CounterPanel *m_rightPanel{nullptr};
 };
 
-// ── main ──────────────────────────────────────────────────────────────────
+class AppWindow : public TzWindow
+{
+public:
+    AppWindow() : TzWindow(800, 600) {}
+
+protected:
+    void closeEvent(TzCloseEvent *event) override
+    {
+        TzWindow::closeEvent(event);
+        tzGuiApp->quit();
+    }
+};
 
 int main(int argc, char *argv[])
 {
     TzGuiApplication app(argc, argv);
 
-    TzWindow window(800, 600);
+    AppWindow window;
     window.setTitle("event-loop widget demo");
-    window.setOnClose([&] { app.quit(); });
 
     auto *root = new RootWidget(app);
     window.setRootWidget(root);

@@ -1,5 +1,5 @@
-#ifndef TZABSTRACTWINDOW_HPP
-#define TZABSTRACTWINDOW_HPP
+#ifndef TZPLATFORMWINDOW_HPP
+#define TZPLATFORMWINDOW_HPP
 
 #include <loom/tzcloseevent.hpp>
 #include <loom/tzkeyevent.hpp>
@@ -10,13 +10,13 @@
 
 #include <string>
 
-class TzAbstractWindowPrivate;
+class TzPlatformWindowPrivate;
 
-class TzAbstractWindow : public TzObject, public TzPlatformSurface
+class TzPlatformWindow : public TzObject, public TzPlatformSurface
 {
 public:
-    explicit TzAbstractWindow(TzObject *parent = nullptr);
-    ~TzAbstractWindow() override;
+    explicit TzPlatformWindow(TzObject *parent = nullptr);
+    ~TzPlatformWindow() override;
 
     virtual void setTitle(const std::string &title) = 0;
     virtual void show() = 0;
@@ -37,7 +37,10 @@ public:
     bool event(TzEvent *event) override;
 
 private:
-    TzAbstractWindowPrivate *d_ptr;
+    TzPlatformWindowPrivate *d_ptr;
 };
 
-#endif // TZABSTRACTWINDOW_HPP
+// Internal factory — used only by TzWindow. Not part of the public API.
+TzPlatformWindow *tzCreatePlatformWindow(int width, int height);
+
+#endif // TZPLATFORMWINDOW_HPP

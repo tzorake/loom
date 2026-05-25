@@ -1,4 +1,5 @@
 #include <loom/TzAnchors>
+#include <loom/TzCloseEvent>
 #include <loom/TzGuiApplication>
 #include <loom/TzKeyEvent>
 #include <loom/TzMouseEvent>
@@ -419,6 +420,16 @@ static TzTreeNodePtr buildDemoTree()
     return root;
 }
 
+class AppWindow : public TzWindow
+{
+public:
+    AppWindow(int w, int h, TzGuiApplication &app) : TzWindow(w, h), m_app(app) {}
+protected:
+    void closeEvent(TzCloseEvent *event) override { TzWindow::closeEvent(event); m_app.quit(); }
+private:
+    TzGuiApplication &m_app;
+};
+
 int main(int argc, char *argv[])
 {
     TzGuiApplication app(argc, argv);
@@ -426,9 +437,8 @@ int main(int argc, char *argv[])
     auto root = buildDemoTree();
     TzBreadcrumbModel model(root);
 
-    TzWindow window(640, 480);
+    AppWindow window(640, 480, app);
     window.setTitle("Breadcrumb Browser");
-    window.setOnClose([&] { app.quit(); });
 
     auto *browser = new BreadcrumbBrowserRoot(app, model);
     window.setRootWidget(browser);

@@ -31,13 +31,9 @@ public:
     void deleteLater();
 
 protected:
-    // Used by subclasses that supply their own (derived) private object so only
-    // one allocation is made for the entire class hierarchy.
-    explicit TzObject(TzObjectPrivate &d, TzObject *parent = nullptr);
+    TzObject(TzObjectPrivate &dd, TzObject *parent = nullptr);
 
-    // Owned by this class; deleted in ~TzObject().  Subclasses access it via
-    // TZ_DECLARE_PRIVATE_D(d_ptr, SubClass) and the TZ_D() macro.
-    TzObjectPrivate *d_ptr;
+    std::unique_ptr<TzObjectPrivate> d_ptr;
 
     friend class TzCoreApplication;
 };

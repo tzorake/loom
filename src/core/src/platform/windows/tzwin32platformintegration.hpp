@@ -8,7 +8,6 @@ class TzWin32PlatformIntegration : public TzAbstractPlatformIntegration
 public:
     virtual TzAbstractEventDispatcher *createEventDispatcher() override;
     virtual TzAbstractConsoleInput *createConsoleInput() override;
-    virtual TzAbstractWindow *createWindow(int width, int height) override;
     virtual std::string name() const override;
 };
 

@@ -15,15 +15,16 @@
 
 TzCoreApplication *TzCoreApplication::s_instance = nullptr;
 
-TzCoreApplicationPrivate::TzCoreApplicationPrivate(TzCoreApplication *q)
-    : q_ptr(q)
-{}
+TzCoreApplicationPrivate::TzCoreApplicationPrivate()
+{
+}
 
 TzCoreApplication::TzCoreApplication(int /*argc*/, char * /*argv*/[])
-    : d_ptr(new TzCoreApplicationPrivate(this))
+    : d_ptr(new TzCoreApplicationPrivate)
 {
     if (s_instance)
         throw std::runtime_error("TzCoreApplication: only one instance allowed");
+    d_ptr->q_ptr = this;
     s_instance = this;
 
     d_ptr->platformIntegration = std::unique_ptr<TzAbstractPlatformIntegration>(
@@ -32,13 +33,14 @@ TzCoreApplication::TzCoreApplication(int /*argc*/, char * /*argv*/[])
         d_ptr->platformIntegration->createEventDispatcher());
     d_ptr->eventLoop = std::make_unique<TzEventLoop>(d_ptr->eventDispatcher.get());
     d_ptr->sigintHandler = std::unique_ptr<TzSignalHandler>(
-        TzSignalHandler::create(d_ptr->eventDispatcher.get(), SIGINT, [this](int) { quit(); }));
+        TzSignalHandler::create(SIGINT, [this](int) { quit(); }));
 
     d_ptr->eventDispatcher->setPreWaitCallback([this] { processPostedEvents(); });
 }
 
 TzCoreApplication::~TzCoreApplication()
 {
+    d_ptr->sigintHandler.reset();
     s_instance = nullptr;
 }
 

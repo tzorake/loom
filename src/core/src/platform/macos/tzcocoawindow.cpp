@@ -213,7 +213,7 @@ static void registerObjcClasses()
     });
 }
 
-TzCocoaWindowPrivate::TzCocoaWindowPrivate(int width, int height, TzAbstractWindow *owner)
+TzCocoaWindowPrivate::TzCocoaWindowPrivate(int width, int height, TzPlatformWindow *owner)
     : owner(owner)
     , windowWidth(width)
     , windowHeight(height)

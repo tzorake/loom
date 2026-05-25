@@ -1,4 +1,5 @@
 #include <loom/TzAnchors>
+#include <loom/TzCloseEvent>
 #include <loom/TzGuiApplication>
 #include <loom/TzKeyEvent>
 #include <loom/TzMouseEvent>
@@ -206,13 +207,22 @@ private:
     Button *m_quitBtn{nullptr};
 };
 
+class AppWindow : public TzWindow
+{
+public:
+    AppWindow(int w, int h, TzGuiApplication &app) : TzWindow(w, h), m_app(app) {}
+protected:
+    void closeEvent(TzCloseEvent *event) override { TzWindow::closeEvent(event); m_app.quit(); }
+private:
+    TzGuiApplication &m_app;
+};
+
 int main(int argc, char *argv[])
 {
     TzGuiApplication app(argc, argv);
 
-    TzWindow mainWindow(800, 600);
+    AppWindow mainWindow(800, 600, app);
     mainWindow.setTitle("Nested windows demo");
-    mainWindow.setOnClose([&] { app.quit(); });
 
     auto *root = new MainRoot(app, &mainWindow);
     mainWindow.setRootWidget(root);

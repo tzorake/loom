@@ -20,7 +20,7 @@ class TzCoreApplicationPrivate
 {
     TZ_DECLARE_PUBLIC(TzCoreApplication)
 public:
-    explicit TzCoreApplicationPrivate(TzCoreApplication *q);
+    TzCoreApplicationPrivate();
 
     TzCoreApplication *q_ptr{nullptr};
 

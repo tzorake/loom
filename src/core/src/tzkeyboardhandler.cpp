@@ -1,21 +1,21 @@
+#include <loom/tzkeyboardhandler.hpp>
+#include <tzkeyboardhandler_p.hpp>
 #include <loom/tzabstractconsoleinput.hpp>
 #include <loom/tzabstracteventdispatcher.hpp>
 #include <loom/tzcoreapplication.hpp>
-#include <loom/tzkeyboardhandler.hpp>
 #include <loom/tzkeyevent.hpp>
 #include <loom/tzsocketnotifier.hpp>
 
-#include "tzkeyboardhandler_p.hpp"
-
 #include <algorithm>
 
-TzKeyboardHandlerPrivate::TzKeyboardHandlerPrivate(TzAbstractEventDispatcher *eventDispatcher,
-                                                   TzAbstractConsoleInput *consoleInput)
-    : eventDispatcher(eventDispatcher)
-    , consoleInput(consoleInput)
-{}
+TzKeyboardHandlerPrivate::TzKeyboardHandlerPrivate(TzAbstractConsoleInput *consoleInput)
+    : consoleInput(consoleInput)
+{
+}
 
-TzKeyboardHandlerPrivate::~TzKeyboardHandlerPrivate() {}
+TzKeyboardHandlerPrivate::~TzKeyboardHandlerPrivate()
+{
+}
 
 void TzKeyboardHandlerPrivate::processKeyEvent(TzKeyEvent *event)
 {
@@ -139,12 +139,9 @@ void TzKeyboardHandlerPrivate::onInputAvailable()
     }
 }
 
-TzKeyboardHandler::TzKeyboardHandler(TzAbstractEventDispatcher *eventDispatcher,
-                                     TzAbstractConsoleInput *consoleInput, TzObject *parent)
-    : TzObject(parent)
-    , d_ptr(new TzKeyboardHandlerPrivate(eventDispatcher, consoleInput))
+TzKeyboardHandler::TzKeyboardHandler(TzAbstractConsoleInput *consoleInput, TzObject *parent)
+    : TzObject(*new TzKeyboardHandlerPrivate(consoleInput), parent)
 {
-    d_ptr->q_ptr = this;
 }
 
 TzKeyboardHandler::~TzKeyboardHandler()
@@ -154,53 +151,56 @@ TzKeyboardHandler::~TzKeyboardHandler()
 
 void TzKeyboardHandler::setCallback(KeyCallback callback)
 {
-    d_ptr->callback = std::move(callback);
+    TZ_D(TzKeyboardHandler);
+    d->callback = std::move(callback);
 }
 
-bool TzKeyboardHandler::event(TzEvent *e)
+bool TzKeyboardHandler::event(TzEvent *event)
 {
-    if ((e->type() == TzEvent::KeyPress || e->type() == TzEvent::KeyRelease) && d_ptr->callback) {
-        d_ptr->callback(static_cast<TzKeyEvent *>(e));
+    TZ_D(TzKeyboardHandler);
+    if ((event->type() == TzEvent::KeyPress || event->type() == TzEvent::KeyRelease) && d->callback) {
+        d->callback(static_cast<TzKeyEvent *>(event));
         return true;
     }
-    return TzObject::event(e);
+    return TzObject::event(event);
 }
 
 void TzKeyboardHandler::start()
 {
-    if (!d_ptr->eventDispatcher)
-        throw std::runtime_error("KeyboardHandler::start() without eventDispatcher");
+    TZ_D(TzKeyboardHandler);
+    TzAbstractEventDispatcher *eventDispatcher = tzApp->eventDispatcher();
+    if (!eventDispatcher)
+        throw std::runtime_error("TzKeyboardHandler::start() without eventDispatcher");
 
-    if (!d_ptr->callback)
-        throw std::runtime_error("KeyboardHandler::start() without callback");
+    if (!d->callback)
+        throw std::runtime_error("TzKeyboardHandler::start() without callback");
 
-    if (d_ptr->active)
+    if (d->active)
         return;
 
-    d_ptr->consoleInput->start();
-    d_ptr->notifier = std::make_unique<TzSocketNotifier>(d_ptr->eventDispatcher);
-    d_ptr->notifier->setFd(d_ptr->consoleInput->fd());
-    d_ptr->notifier->setCallback([this](int) { d_ptr->onInputAvailable(); });
-    d_ptr->notifier->start();
+    d->consoleInput->start();
+    d->notifier = std::make_unique<TzSocketNotifier>();
+    d->notifier->setFd(d->consoleInput->fd());
+    d->notifier->setCallback([this](int) { TZ_D(TzKeyboardHandler); d->onInputAvailable(); });
+    d->notifier->start();
 
-    d_ptr->active = true;
+    d->active = true;
 }
 
 void TzKeyboardHandler::stop()
 {
-    if (!d_ptr->active)
+    TZ_D(TzKeyboardHandler);
+    if (!d->active)
         return;
 
-    d_ptr->notifier.reset();
-    d_ptr->consoleInput->stop();
-    d_ptr->active = false;
+    d->notifier.reset();
+    d->consoleInput->stop();
+    d->active = false;
 }
 
-TzKeyboardHandler *TzKeyboardHandler::create(TzAbstractEventDispatcher *eventDispatcher,
-                                             TzAbstractConsoleInput *consoleInput,
-                                             KeyCallback callback, TzObject *parent)
+TzKeyboardHandler *TzKeyboardHandler::create(TzAbstractConsoleInput *consoleInput, KeyCallback callback, TzObject *parent)
 {
-    TzKeyboardHandler *h = new TzKeyboardHandler(eventDispatcher, consoleInput, parent);
+    TzKeyboardHandler *h = new TzKeyboardHandler(consoleInput, parent);
     h->setCallback(std::move(callback));
     h->start();
     return h;

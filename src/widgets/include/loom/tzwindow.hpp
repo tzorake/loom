@@ -2,10 +2,14 @@
 #define TZWINDOW_HPP
 
 #include <loom/tzclasshelpermacros.hpp>
+#include <loom/tzcloseevent.hpp>
+#include <loom/tzkeyevent.hpp>
+#include <loom/tzmouseevent.hpp>
 #include <loom/tzobject.hpp>
+#include <loom/tzpaintevent.hpp>
+#include <loom/tzresizeevent.hpp>
 #include <loom/tzsurface.hpp>
 
-#include <functional>
 #include <string>
 
 class TzWidget;
@@ -32,7 +36,7 @@ public:
     int width() const;
     int height() const;
 
-    void setOnClose(std::function<void()> cb);
+    void update();
 
     SurfaceType surfaceType() const override;
     TzPlatformSurface *surfaceHandle() override;
@@ -41,7 +45,11 @@ public:
 protected:
     explicit TzWindow(TzWindowPrivate &d, int width, int height, TzWindow *parent = nullptr);
 
-    virtual void closeEvent();
+    virtual void paintEvent(TzPaintEvent *event);
+    virtual void closeEvent(TzCloseEvent *event);
+    virtual void keyEvent(TzKeyEvent *event);
+    virtual void mouseEvent(TzMouseEvent *event);
+    virtual void resizeEvent(TzResizeEvent *event);
 };
 
 #endif // TZWINDOW_HPP

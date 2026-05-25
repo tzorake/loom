@@ -16,14 +16,10 @@ public:
     using std::unique_ptr<T>::unique_ptr;
 };
 
-namespace tz {
-
 template<typename T>
-TzScopedPointer<T> as_scoped_ptr(T *ptr)
+TzScopedPointer<T> tzScopedPointer(T *ptr)
 {
     return TzScopedPointer<T>(ptr);
 }
-
-} // namespace tz
 
 #endif // TZSCOPEDPOINTER_HPP

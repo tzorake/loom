@@ -12,10 +12,10 @@ int main(int argc, char *argv[])
 {
     TzCoreApplication app(argc, argv);
 
-    auto consoleInput = tz::as_scoped_ptr(app.platformIntegration()->createConsoleInput());
+    auto consoleInput = tzScopedPointer(app.platformIntegration()->createConsoleInput());
 
-    auto keyboard = tz::as_scoped_ptr(
-        TzKeyboardHandler::create(app.eventDispatcher(), consoleInput.get(), [&](TzKeyEvent *event) {
+    auto keyboard = tzScopedPointer(
+        TzKeyboardHandler::create(consoleInput.get(), [&](TzKeyEvent *event) {
             if (event->key() == Key::Enter)
                 std::println("Enter");
             else if (!event->utf8().empty())
@@ -24,11 +24,11 @@ int main(int argc, char *argv[])
                 app.quit();
         }));
 
-    auto periodic = tz::as_scoped_ptr(TzTimer::repeat(app.eventDispatcher(), std::chrono::seconds(2),
-                                                      []() { std::println("Tick"); }));
+    auto periodic = tzScopedPointer(
+        TzTimer::repeat(std::chrono::seconds(2), []() { std::println("Tick"); }));
 
-    auto quit = tz::as_scoped_ptr(
-        TzTimer::singleShot(app.eventDispatcher(), std::chrono::seconds(5), [&]() { app.quit(); }));
+    auto quit = tzScopedPointer(
+        TzTimer::singleShot(std::chrono::seconds(5), [&]() { app.quit(); }));
 
     return app.exec();
 }

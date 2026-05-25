@@ -18,7 +18,7 @@ public:
     using TimerInterval = std::chrono::milliseconds;
     using TimerCallback = std::function<void()>;
 
-    explicit TzTimer(TzAbstractEventDispatcher *eventDispatcher);
+    TzTimer();
     ~TzTimer();
 
     TimerHandle handle() const;
@@ -41,9 +41,9 @@ public:
     void start();
     void stop();
 
-    static TzTimer *singleShot(TzAbstractEventDispatcher *eventDispatcher, TimerInterval interval,
+    static TzTimer *singleShot(TimerInterval interval,
                                TimerCallback callback);
-    static TzTimer *repeat(TzAbstractEventDispatcher *eventDispatcher, TimerInterval interval,
+    static TzTimer *repeat(TimerInterval interval,
                            TimerCallback callback);
 
 private:

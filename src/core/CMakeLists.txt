@@ -5,7 +5,7 @@ add_library(loom-core
     src/tzabstractconsoleinput.cpp
     src/tzsurface.cpp
     src/tzplatformsurface.cpp
-    src/tzabstractwindow.cpp
+    src/tzplatformwindow.cpp
     src/tzeventloop.cpp
     src/tztimer.cpp
     src/tzsocketnotifier.cpp
@@ -34,7 +34,8 @@ target_include_directories(loom-core
 add_library(loom-core-private INTERFACE)
 target_include_directories(loom-core-private INTERFACE src)
 target_sources(loom-core-private INTERFACE
-    src/tzabstractwindow_p.hpp
+    src/tzplatformwindow.hpp
+    src/tzplatformwindow_p.hpp
     src/tzcoreapplication_p.hpp
     src/tzeventloop_p.hpp
     src/tzkeyboardhandler_p.hpp
@@ -64,7 +65,7 @@ if(APPLE)
         src/platform/macos/tzcocoawindow.hpp
         src/platform/macos/tzcocoawindow_p.hpp
         src/platform/macos/tzobjcutils.hpp
-        src/tzcocoaplatformintegration.hpp
+        src/platform/macos/tzcocoaplatformintegration.hpp
     )
     target_link_libraries(loom-core PUBLIC
         "-framework Cocoa"
@@ -86,7 +87,7 @@ elseif(WIN32)
         src/platform/windows/tzwin32consoleinput_p.hpp
         src/platform/windows/tzwin32window.hpp
         src/platform/windows/tzwin32window_p.hpp
-        src/tzwin32platformintegration.hpp
+        src/platform/windows/tzwin32platformintegration.hpp
     )
     target_link_libraries(loom-core PUBLIC
         user32 gdi32
@@ -127,7 +128,7 @@ elseif(UNIX AND NOT APPLE)
             src/platform/linux/tzx11window.hpp
             src/platform/linux/tzx11window_p.hpp
             src/platform/linux/tzx11globals.hpp
-            src/tzx11platformintegration.hpp
+            src/platform/linux/tzx11platformintegration.hpp
         )
         target_compile_definitions(loom-core PUBLIC LOOM_BACKEND_X11)
         target_link_libraries(loom-core PUBLIC X11)
@@ -150,7 +151,7 @@ elseif(UNIX AND NOT APPLE)
             src/platform/linux/tzwaylandwindow.hpp
             src/platform/linux/tzwaylandwindow_p.hpp
             src/platform/linux/tzwaylandglobals.hpp
-            src/tzwaylandplatformintegration.hpp
+            src/platform/linux/tzwaylandplatformintegration.hpp
         )
         target_link_libraries(loom-core PUBLIC
             wayland-client

@@ -1,13 +1,13 @@
 #ifndef TZWIN32WINDOW_HPP
 #define TZWIN32WINDOW_HPP
 
-#include <loom/tzabstractwindow.hpp>
+#include "tzplatformwindow.hpp"
 
 #include <memory>
 
 class TzWin32WindowPrivate;
 
-class TzWin32Window : public TzAbstractWindow
+class TzWin32Window : public TzPlatformWindow
 {
 public:
     TzWin32Window(int width, int height);

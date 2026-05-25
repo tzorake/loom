@@ -1,14 +1,13 @@
-#include <loom/tzabstracteventdispatcher.hpp>
 #include <loom/tzsocketnotifier.hpp>
+#include <tzsocketnotifier_p.hpp>
+#include <loom/tzabstracteventdispatcher.hpp>
+#include <loom/tzcoreapplication.hpp>
 
-#include "tzsocketnotifier_p.hpp"
-
-TzSocketNotifierPrivate::TzSocketNotifierPrivate(TzAbstractEventDispatcher *eventDispatcher)
-    : eventDispatcher(eventDispatcher)
+TzSocketNotifierPrivate::TzSocketNotifierPrivate()
 {}
 
-TzSocketNotifier::TzSocketNotifier(TzAbstractEventDispatcher *eventDispatcher)
-    : d_ptr(new TzSocketNotifierPrivate(eventDispatcher))
+TzSocketNotifier::TzSocketNotifier()
+    : d_ptr(new TzSocketNotifierPrivate)
 {}
 
 TzSocketNotifier::~TzSocketNotifier()
@@ -38,10 +37,12 @@ void TzSocketNotifier::setCallback(NotifyCallback callback)
 
 void TzSocketNotifier::start()
 {
-    d_ptr->handle = d_ptr->eventDispatcher->registerSocketNotifier(d_ptr->fd, d_ptr->callback);
+    TzAbstractEventDispatcher *eventDispatcher = tzApp->eventDispatcher();
+    d_ptr->handle = eventDispatcher->registerSocketNotifier(d_ptr->fd, d_ptr->callback);
 }
 
 void TzSocketNotifier::stop()
 {
-    d_ptr->eventDispatcher->unregisterSocketNotifier(d_ptr->handle);
+    TzAbstractEventDispatcher *eventDispatcher = tzApp->eventDispatcher();
+    eventDispatcher->unregisterSocketNotifier(d_ptr->handle);
 }

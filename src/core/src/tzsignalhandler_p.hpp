@@ -15,12 +15,11 @@ class TzSignalHandlerPrivate
 {
     TZ_DECLARE_PUBLIC(TzSignalHandler)
 public:
-    explicit TzSignalHandlerPrivate(TzAbstractEventDispatcher *eventDispatcher);
-    ~TzSignalHandlerPrivate() = default;
+    TzSignalHandlerPrivate();
+    ~TzSignalHandlerPrivate();
 
     TzSignalHandler *q_ptr{nullptr};
 
-    TzAbstractEventDispatcher *eventDispatcher{nullptr};
     TzSignalHandler::SignalCallback callback;
     std::unique_ptr<TzSocketNotifier> notifier;
 
