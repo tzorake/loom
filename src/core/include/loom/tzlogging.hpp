@@ -65,7 +65,7 @@ inline int addFile(std::FILE *f, TzLogLevel min = TzLogLevel::Trace)
 } // namespace TzLog
 
 #define tzLog(level, fmt, ...) \
-    TzMessageLogger::instance().log(level, __FILE__, __LINE__, std::format(fmt __VA_OPT__(,) __VA_ARGS__))
+    TzMessageLogger::instance().log(level, __FILE__, __LINE__, std::format(fmt, ##__VA_ARGS__))
 
 #define tzTrace(...) tzLog(TzLogLevel::Trace, __VA_ARGS__)
 #define tzDebug(...) tzLog(TzLogLevel::Debug, __VA_ARGS__)
