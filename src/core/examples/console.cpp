@@ -5,8 +5,8 @@
 #include <loom/TzKeyboardHandler>
 #include <loom/TzScopedPointer>
 #include <loom/TzTimer>
+#include <loom/TzLogging>
 #include <memory>
-#include <print>
 
 int main(int argc, char *argv[])
 {
@@ -17,15 +17,15 @@ int main(int argc, char *argv[])
     auto keyboard = tzScopedPointer(
         TzKeyboardHandler::create(consoleInput.get(), [&](TzKeyEvent *event) {
             if (event->key() == Key::Enter)
-                std::println("Enter");
+                tzInfo("Enter");
             else if (!event->utf8().empty())
-                std::println("Text: {}", event->utf8());
+                tzInfo("Text: {}", event->utf8());
             if (event->utf8() == "q")
                 app.quit();
         }));
 
     auto periodic = tzScopedPointer(
-        TzTimer::repeat(std::chrono::seconds(2), []() { std::println("Tick"); }));
+        TzTimer::repeat(std::chrono::seconds(2), []() { tzInfo("Tick"); }));
 
     auto quit = tzScopedPointer(
         TzTimer::singleShot(std::chrono::seconds(5), [&]() { app.quit(); }));

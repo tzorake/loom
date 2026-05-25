@@ -13,7 +13,7 @@ static void printModel(const TzTreeModel &model, const TzModelIndex &parent = Tz
         auto name = std::any_cast<std::string>(model.data(idx));
         auto node = model.nodeForIndex(idx);
         char tag = node->isFolder() ? 'd' : 'f';
-        std::println("{:{}}{} [{}]", "", depth * 2, name, tag);
+        tzInfo("{:{}}{} [{}]", "", depth * 2, name, tag);
         if (model.hasChildren(idx))
             printModel(model, idx, depth + 1);
     }
@@ -41,31 +41,31 @@ int main()
                                                             int last) {
         auto parentName = parent.isValid() ? std::any_cast<std::string>(model.data(parent))
                                            : std::string("<root>");
-        std::println("  [+] rows {}..{} inserted under \"{}\"", first, last, parentName);
+        tzInfo("  [+] rows {}..{} inserted under \"{}\"", first, last, parentName);
     });
 
     auto onRemoved = model.events().on("rowsRemoved", [&](const TzModelIndex &parent, int first,
                                                           int last) {
         auto parentName = parent.isValid() ? std::any_cast<std::string>(model.data(parent))
                                            : std::string("<root>");
-        std::println("  [-] rows {}..{} removed from \"{}\"", first, last, parentName);
+        tzInfo("  [-] rows {}..{} removed from \"{}\"", first, last, parentName);
     });
 
     auto onChanged = model.events().on("dataChanged", [&](const TzModelIndex &topLeft,
                                                           const TzModelIndex & /*bottomRight*/,
                                                           const std::vector<int> & /*roles*/) {
         auto newName = std::any_cast<std::string>(model.data(topLeft));
-        std::println("  [~] row {} renamed to \"{}\"", topLeft.row(), newName);
+        tzInfo("  [~] row {} renamed to \"{}\"", topLeft.row(), newName);
     });
 
-    std::println("Initial tree:  (f=file, d=dir)");
+    tzInfo("Initial tree:  (f=file, d=dir)");
     printModel(model);
 
-    std::println("\nAdding \"parser.cpp\" to src/:");
+    tzInfo("\nAdding \"parser.cpp\" to src/:");
     TzTreeNode::createItem("parser.cpp")->setParent(src);
     printModel(model);
 
-    std::println("\nAdding \"tests/\" folder with \"test_main.cpp\" to root:");
+    tzInfo("\nAdding \"tests/\" folder with \"test_main.cpp\" to root:");
     auto tests = TzTreeNode::createFolder("tests");
     auto testMain = TzTreeNode::createItem("test_main.cpp");
     testMain->setParent(tests);
@@ -73,24 +73,24 @@ int main()
     tests->setParent(model.invisibleRoot());
     printModel(model);
 
-    std::println("\nRenaming \"utils.cpp\" → \"util.cpp\":");
+    tzInfo("\nRenaming \"utils.cpp\" → \"util.cpp\":");
     utils->setName("util.cpp");
     printModel(model);
 
-    std::println("\nRemoving \"docs/\":");
+    tzInfo("\nRemoving \"docs/\":");
     docs->setParent(nullptr);
     printModel(model);
 
-    std::println("\nIndex walk — column 0 of every top-level row:");
+    tzInfo("\nIndex walk — column 0 of every top-level row:");
     for (int r = 0; r < model.rowCount(); ++r) {
         TzModelIndex idx = model.index(r, 0);
         auto name = std::any_cast<std::string>(model.data(idx));
-        std::println("  row {}: \"{}\"  hasChildren={}", r, name, model.hasChildren(idx));
+        tzInfo("  row {}: \"{}\"  hasChildren={}", r, name, model.hasChildren(idx));
     }
 
     auto idxSrc = model.indexForNode(src);
     auto recovered = model.nodeForIndex(idxSrc);
-    std::println("\nRound-trip src node: \"{}\" (same={})", recovered->name(), (recovered == src));
+    tzInfo("\nRound-trip src node: \"{}\" (same={})", recovered->name(), (recovered == src));
 
     return 0;
 }

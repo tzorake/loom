@@ -7,10 +7,9 @@
 #include <loom/TzScopedPointer>
 #include <loom/TzTimer>
 #include <loom/TzWindow>
-
+#include <loom/TzLogging>
 #include <cmath>
 #include <cstdint>
-#include <print>
 
 static constexpr int kFps = 60;
 
@@ -57,7 +56,7 @@ protected:
         if (event->key() == Key::Escape) {
             tzGuiApp->quit();
         } else if (!event->utf8().empty()) {
-            std::println("Key: {}", event->utf8());
+            tzInfo("Key: {}", event->utf8());
         }
     }
 
@@ -65,15 +64,15 @@ protected:
     {
         switch (event->type()) {
         case TzEvent::MouseButtonPress:
-            std::println("Mouse press   ({:.0f}, {:.0f}) button={}", event->x(), event->y(),
+            tzInfo("Mouse press   ({:.0f}, {:.0f}) button={}", event->x(), event->y(),
                          (int) event->button());
             break;
         case TzEvent::MouseButtonRelease:
-            std::println("Mouse release ({:.0f}, {:.0f}) button={}", event->x(), event->y(),
+            tzInfo("Mouse release ({:.0f}, {:.0f}) button={}", event->x(), event->y(),
                          (int) event->button());
             break;
         case TzEvent::MouseScroll:
-            std::println("Scroll dx={:.1f} dy={:.1f}", event->scrollDx(), event->scrollDy());
+            tzInfo("Scroll dx={:.1f} dy={:.1f}", event->scrollDx(), event->scrollDy());
             break;
         default:
             break;
@@ -83,7 +82,7 @@ protected:
     void resizeEvent(TzResizeEvent *event) override
     {
         TzWindow::resizeEvent(event);
-        std::println("Resized: {}x{}", event->width(), event->height());
+        tzInfo("Resized: {}x{}", event->width(), event->height());
     }
 
 private:

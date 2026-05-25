@@ -95,40 +95,40 @@ int main()
     auto onInserted = model.events().on("rowsInserted", [&](const TzModelIndex & /*parent*/,
                                                             int first, int last) {
         for (int r = first; r <= last; ++r)
-            std::println("  [+] row {} = \"{}\"", r, model.at(r));
+            tzInfo("  [+] row {} = \"{}\"", r, model.at(r));
     });
 
     auto onRemoved = model.events().on("rowsRemoved",
                                        [&](const TzModelIndex & /*parent*/, int first, int last) {
-                                           std::println("  [-] rows {}..{} removed", first, last);
+                                           tzInfo("  [-] rows {}..{} removed", first, last);
                                        });
 
     auto onChanged = model.events().on("dataChanged", [&](const TzModelIndex &topLeft,
                                                           const TzModelIndex &bottomRight,
                                                           const std::vector<int> & /*roles*/) {
         for (int r = topLeft.row(); r <= bottomRight.row(); ++r)
-            std::println("  [~] row {} = \"{}\"", r, model.at(r));
+            tzInfo("  [~] row {} = \"{}\"", r, model.at(r));
     });
 
-    std::println("Initial rows: {}", model.rowCount());
+    tzInfo("Initial rows: {}", model.rowCount());
     for (int r = 0; r < model.rowCount(); ++r)
-        std::println("  [{}] \"{}\"", r, model.at(r));
+        tzInfo("  [{}] \"{}\"", r, model.at(r));
 
-    std::println("\nappend(\"Dave\"):");
+    tzInfo("\nappend(\"Dave\"):");
     model.append("Dave");
 
-    std::println("\ninsert(1, \"Zara\"):");
+    tzInfo("\ninsert(1, \"Zara\"):");
     model.insert(1, "Zara");
 
-    std::println("\nsetData(row 0, \"Alicia\"):");
+    tzInfo("\nsetData(row 0, \"Alicia\"):");
     model.setData(model.index(0, 0), std::string("Alicia"));
 
-    std::println("\nremove(row 2):");
+    tzInfo("\nremove(row 2):");
     model.remove(2);
 
-    std::println("\nFinal rows: {}", model.rowCount());
+    tzInfo("\nFinal rows: {}", model.rowCount());
     for (int r = 0; r < model.rowCount(); ++r)
-        std::println("  [{}] \"{}\"", r, model.at(r));
+        tzInfo("  [{}] \"{}\"", r, model.at(r));
 
     return 0;
 }

@@ -7,12 +7,9 @@
 #include <loom/TzRect>
 #include <loom/TzWidget>
 #include <loom/TzWindow>
-
-#include <print>
+#include <loom/TzLogging>
 #include <string>
 #include <functional>
-
-// ── Palette ───────────────────────────────────────────────────────────────
 
 static constexpr uint32_t kColorBg = 0xFF1E1E2E;
 static constexpr uint32_t kColorHeader = 0xFF313244;
@@ -25,8 +22,6 @@ static constexpr uint32_t kColorButtonNorm = 0xFF313244;
 static constexpr uint32_t kColorButtonHover = 0xFF45475A;
 static constexpr uint32_t kColorButtonFocus = 0xFF89B4FA;
 static constexpr uint32_t kColorButtonText = 0xFFCDD6F4;
-
-// ── Label ─────────────────────────────────────────────────────────────────
 
 class Label : public TzWidget
 {
@@ -57,8 +52,6 @@ protected:
 private:
     std::string m_text;
 };
-
-// ── Button ────────────────────────────────────────────────────────────────
 
 class Button : public TzWidget
 {
@@ -114,20 +107,6 @@ private:
     ClickCallback m_onClick;
     bool m_hovered{false};
 };
-
-// ── Counter panel ─────────────────────────────────────────────────────────
-//
-// Layout (anchored):
-//
-//   ┌─────────────────────────────┐
-//   │  header label               │  40 px tall, anchored top/left/right
-//   ├─────────────────────────────┤
-//   │                             │
-//   │      [count label]          │  centered in remaining area
-//   │                             │
-//   │   [Decrement]  [Increment]  │  centered row, 12 px above bottom
-//   │                             │
-//   └─────────────────────────────┘
 
 class CounterPanel : public TzWidget
 {
@@ -195,14 +174,14 @@ private:
     {
         ++m_count;
         m_countLabel->setText(std::to_string(m_count));
-        std::println("count = {}", m_count);
+        tzInfo("count = {}", m_count);
     }
 
     void decrement()
     {
         --m_count;
         m_countLabel->setText(std::to_string(m_count));
-        std::println("count = {}", m_count);
+        tzInfo("count = {}", m_count);
     }
 
     int m_count{0};
@@ -214,8 +193,6 @@ private:
     Button *m_decBtn{nullptr};
     Button *m_incBtn{nullptr};
 };
-
-// ── Header bar (top-level) ────────────────────────────────────────────────
 
 class HeaderBar : public TzWidget
 {
@@ -245,8 +222,6 @@ private:
     Label *m_hint{nullptr};
 };
 
-// ── Status bar (bottom) ───────────────────────────────────────────────────
-
 class StatusBar : public TzWidget
 {
 public:
@@ -272,14 +247,11 @@ private:
     Label *m_label{nullptr};
 };
 
-// ── Root widget ───────────────────────────────────────────────────────────
-
 class RootWidget : public TzWidget
 {
 public:
-    explicit RootWidget(TzGuiApplication &app)
+    RootWidget()
         : TzWidget(nullptr)
-        , m_app(app)
     {
         // Header: 36 px at top
         m_header = new HeaderBar(this);
@@ -326,7 +298,7 @@ protected:
         if (e->type() == TzEvent::KeyPress) {
             auto *ke = static_cast<TzKeyEvent *>(e);
             if (ke->key() == Key::Escape) {
-                m_app.quit();
+                tzGuiApp->quit();
                 return true;
             }
             if (!ke->utf8().empty())
@@ -337,7 +309,6 @@ protected:
     }
 
 private:
-    TzGuiApplication &m_app;
     HeaderBar *m_header{nullptr};
     StatusBar *m_status{nullptr};
     TzWidget *m_content{nullptr};
@@ -365,7 +336,7 @@ int main(int argc, char *argv[])
     AppWindow window;
     window.setTitle("event-loop widget demo");
 
-    auto *root = new RootWidget(app);
+    auto *root = new RootWidget();
     window.setRootWidget(root);
 
     window.show();
