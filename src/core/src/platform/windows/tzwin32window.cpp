@@ -277,8 +277,8 @@ void TzWin32WindowPrivate::onPaint()
             BITMAPINFO bmi{};
             bmi.bmiHeader.biSize = sizeof(BITMAPINFOHEADER);
             bmi.bmiHeader.biWidth = pixelWidth;
-            // Positive height = bottom-up DIB, matching the painter's inverted-Y storage
-            bmi.bmiHeader.biHeight = pixelHeight;
+            // Negative height = top-down DIB, matching the painter's top-down storage
+            bmi.bmiHeader.biHeight = -pixelHeight;
             bmi.bmiHeader.biPlanes = 1;
             bmi.bmiHeader.biBitCount = 32;
             bmi.bmiHeader.biCompression = BI_RGB;
