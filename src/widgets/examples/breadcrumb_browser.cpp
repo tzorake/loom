@@ -430,7 +430,7 @@ private:
     TzGuiApplication &m_app;
 };
 
-int main(int argc, char *argv[])
+int loom_main(int argc, char *argv[])
 {
     TzGuiApplication app(argc, argv);
 

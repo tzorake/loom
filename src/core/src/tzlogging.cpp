@@ -3,6 +3,8 @@
 
 #if defined(_WIN32)
 #  include "platform/windows/tzlogging.hpp"
+#elif defined(__wasm__)
+#  include "platform/web/tzlogging.hpp"
 #else
 #  include "platform/posix/tzlogging.hpp"
 #endif

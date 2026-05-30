@@ -144,6 +144,36 @@ TzPlatformWindow *tzCreatePlatformWindow(int width, int height)
     return new TzWaylandWindow(width, height);
 }
 #endif // LOOM_BACKEND_X11
+#elif defined(__wasm__)
+#include "platform/web/tzwebconsoleinput.hpp"
+#include "platform/web/tzwebeventdispatcher.hpp"
+#include "platform/web/tzwebplatformintegration.hpp"
+#include "platform/web/tzwebwindow.hpp"
+
+TzAbstractEventDispatcher *TzWebPlatformIntegration::createEventDispatcher()
+{
+    return new TzWebEventDispatcher;
+}
+
+TzAbstractConsoleInput *TzWebPlatformIntegration::createConsoleInput()
+{
+    return new TzWebConsoleInput;
+}
+
+std::string TzWebPlatformIntegration::name() const
+{
+    return "web";
+}
+
+static TzAbstractPlatformIntegration *createPlatformIntegrationImpl()
+{
+    return new TzWebPlatformIntegration;
+}
+
+TzPlatformWindow *tzCreatePlatformWindow(int width, int height)
+{
+    return new TzWebWindow(width, height);
+}
 #else
 TzPlatformWindow *tzCreatePlatformWindow(int /*width*/, int /*height*/)
 {

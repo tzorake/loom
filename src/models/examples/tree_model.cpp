@@ -1,7 +1,6 @@
 #include "tztreemodel.hpp"
 #include "tztreenode.hpp"
 #include <loom/tzeventemitter.hpp>
-#include <print>
 #include <string>
 
 static void printModel(const TzTreeModel &model, const TzModelIndex &parent = TzModelIndex(),

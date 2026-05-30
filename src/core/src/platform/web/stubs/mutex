@@ -1,0 +1,43 @@
+// WASM / WASI stub for <mutex>.
+//
+// The WASI SDK's wasm32-wasi target defines _LIBCPP_HAS_NO_THREADS, which
+// removes std::mutex, std::lock_guard, etc. from the sysroot's <mutex>.
+// Loom uses these types in shared (non-platform) code that is compiled for
+// all targets, and for a single-threaded WASM module they are trivially
+// safe as no-ops.
+//
+// This header is placed on the include path BEFORE the WASI sysroot so that
+// #include <mutex> picks it up instead of the sysroot version.
+// It only provides what shared loom code actually uses.
+
+#pragma once
+
+namespace std {
+
+// No-op mutex — correct and safe for single-threaded WASM.
+struct mutex {
+    constexpr mutex() noexcept = default;
+    mutex(const mutex &)            = delete;
+    mutex &operator=(const mutex &) = delete;
+
+    void lock()          noexcept {}
+    void unlock()        noexcept {}
+    bool try_lock()      noexcept { return true; }
+};
+
+// Minimal lock_guard sufficient for the `std::lock_guard lock(m)` CTAD usage.
+template <class Mutex>
+struct lock_guard {
+    using mutex_type = Mutex;
+
+    explicit lock_guard(Mutex &m) noexcept : m_(m) { m_.lock(); }
+    ~lock_guard() noexcept { m_.unlock(); }
+
+    lock_guard(const lock_guard &)            = delete;
+    lock_guard &operator=(const lock_guard &) = delete;
+
+private:
+    Mutex &m_;
+};
+
+} // namespace std

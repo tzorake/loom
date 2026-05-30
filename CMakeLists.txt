@@ -7,6 +7,8 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 option(LOOM_BUILD_EXAMPLES "Build example applications" ON)
 option(LOOM_BUILD_TESTS "Build tests" ON)
 
+include(cmake/LoomHelpers.cmake)
+
 if(LOOM_BUILD_TESTS)
     add_subdirectory(external/googletest EXCLUDE_FROM_ALL)
 endif()

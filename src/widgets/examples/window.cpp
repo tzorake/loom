@@ -4,7 +4,7 @@
 #include <loom/TzMouseEvent>
 #include <loom/TzPaintEvent>
 #include <loom/TzPainter>
-#include <loom/TzScopedPointer>
+#include <loom/TzResizeEvent>
 #include <loom/TzTimer>
 #include <loom/TzWindow>
 #include <loom/TzLogging>
@@ -34,15 +34,14 @@ protected:
                 const double r = std::cos(static_cast<double>(x) / w + t) * 0.5 + 0.5;
                 const double g = std::sin(static_cast<double>(y) / h + t) * 0.5 + 0.5;
                 const double b = std::cos(static_cast<double>(x + y) / (w + h) + t) * 0.5 + 0.5;
-                // TzPainter works on the shared pixel buffer owned by TzWindow —
-                // fill it row by row via a single solid-colour rect per pixel.
                 p->fillRect(static_cast<double>(x), static_cast<double>(y), 1.0, 1.0,
                             (0xFFu << 24)
                             | (static_cast<uint32_t>(r * 255.0) << 16)
-                            | (static_cast<uint32_t>(g * 255.0) << 8)
+                            | (static_cast<uint32_t>(g * 255.0) <<  8)
                             |  static_cast<uint32_t>(b * 255.0));
             }
         }
+        update();
     }
 
     void closeEvent(TzCloseEvent *event) override
@@ -89,13 +88,24 @@ private:
     std::size_t m_frame{0};
 };
 
-int main(int argc, char *argv[])
+// ── Entry point ───────────────────────────────────────────────────────────────
+//
+// loom_add_executable() generates the platform-specific entry point that
+// calls loom_main():
+//   • Native: main()      — exec() blocks; stack or heap allocation both work.
+//   • Web:    loom_init() — exec() is non-blocking; objects MUST be
+//                           heap-allocated to survive loom_main() returning.
+//
+// This example uses heap allocation so the same source compiles and runs
+// correctly on all platforms.
+
+int loom_main(int argc, char *argv[])
 {
-    TzGuiApplication app(argc, argv);
-
-    auto window = tzScopedPointer(new ExampleWindow);
-    window->setTitle("event-loop window");
+    // Heap-allocate for web (WASM) compat.  On native these leak at process
+    // exit, which is harmless.
+    auto *app    = new TzGuiApplication(argc, argv);
+    auto *window = new ExampleWindow();
+    window->setTitle("loom window");
     window->show();
-
-    return app.exec();
+    return app->exec();
 }

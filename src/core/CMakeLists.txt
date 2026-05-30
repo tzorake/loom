@@ -49,7 +49,40 @@ target_sources(loom-core-private INTERFACE
     src/tzlogging_p.hpp
 )
 
-if(APPLE)
+if(CMAKE_SYSTEM_NAME STREQUAL "WASI")
+    target_sources(loom-core PRIVATE
+        src/platform/web/tzwebeventdispatcher.cpp
+        src/platform/web/tzwebwindow.cpp
+        src/platform/web/tzwebsignalpipe.cpp
+    )
+    target_include_directories(loom-core PRIVATE src/platform/web)
+    # The stubs/ directory shadows WASI sysroot headers that are unavailable
+    # in the single-threaded wasm32-wasi build (e.g. <mutex>).
+    # It must appear before system includes so -I is used, not -isystem.
+    target_compile_options(loom-core PUBLIC
+        -I${CMAKE_CURRENT_SOURCE_DIR}/src/platform/web/stubs)
+    target_sources(loom-core-private INTERFACE
+        src/platform/web/tzwebimports.hpp
+        src/platform/web/tzwebplatformintegration.hpp
+        src/platform/web/tzwebeventdispatcher.hpp
+        src/platform/web/tzwebeventdispatcher_p.hpp
+        src/platform/web/tzwebwindow.hpp
+        src/platform/web/tzwebconsoleinput.hpp
+        src/platform/web/tzlogging.hpp
+    )
+    target_compile_definitions(loom-core PUBLIC
+        LOOM_PLATFORM_WEB
+        # WASI does not have native signal support; opt into the emulation shim.
+        _WASI_EMULATED_SIGNAL
+    )
+    target_link_libraries(loom-core PUBLIC wasi-emulated-signal)
+    # --export-dynamic propagates to executables that link loom-core and honours
+    # all __attribute__((export_name(...))) annotations in platform/web/*.cpp.
+    target_link_options(loom-core PUBLIC
+        -Wl,--export-dynamic
+        -Wl,--export=memory
+    )
+elseif(APPLE)
     target_sources(loom-core PRIVATE
         src/platform/macos/tzcocoaeventdispatcher.cpp
         src/platform/macos/tzcocoaconsoleinput.cpp

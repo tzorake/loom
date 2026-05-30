@@ -75,6 +75,10 @@ TzWindow::TzWindow(TzWindowPrivate &dd, int width, int height, TzWindow *parent)
 
         // Custom paint path
         if (d->paintDirty) {
+            // Clear the flag before calling paintEvent so that any update()
+            // call made from within paintEvent (e.g. for continuous animation)
+            // survives and is not overwritten by a post-call clear.
+            d->paintDirty = false;
             const int w = d->scene->width();
             const int h = d->scene->height();
             if (w > 0 && h > 0) {
@@ -86,7 +90,6 @@ TzWindow::TzWindow(TzWindowPrivate &dd, int width, int height, TzWindow *parent)
                 paintEvent(&pe);
                 d->platformWindow->render(d->pixels, w, h);
             }
-            d->paintDirty = false;
         }
     });
 }

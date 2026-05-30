@@ -37,10 +37,74 @@ cmake --build build --parallel
 | `LOOM_BUILD_TESTS` | `ON` | Build unit tests |
 | `LOOM_LINUX_BACKEND` | `auto` | Linux display backend: `auto`, `wayland`, `x11` |
 
+### Web (WebAssembly)
+
+**1. Install the WASI SDK**
+
+Download from https://github.com/WebAssembly/wasi-sdk/releases and expose it:
+
+```sh
+export WASI_SDK_PATH=/path/to/wasi-sdk-25.0   # add to ~/.zshrc or ~/.bashrc
+```
+
+The toolchain also checks `/opt/wasi-sdk` and `~/wasi-sdk` automatically.
+
+**2. Configure and build**
+
+```sh
+cmake -B build-wasm \
+  -DCMAKE_TOOLCHAIN_FILE=cmake/toolchains/wasm32.cmake \
+  -DCMAKE_BUILD_TYPE=Release \
+  -DLOOM_BUILD_TESTS=OFF
+
+cmake --build build-wasm --target window
+```
+
+**3. Serve and open**
+
+Each web example is self-contained in its own output directory:
+
+```sh
+python3 -m http.server 8080 --directory build-wasm/src/widgets/examples/window
+# open http://localhost:8080
+```
+
+Replace `window` with any other example name (`widget`, `nested_windows`, …).
+
 ### Linking
 
 ```cmake
 target_link_libraries(myapp PRIVATE loom-core)       # core only
 target_link_libraries(myapp PRIVATE loom-widgets)    # widgets (pulls in core)
 target_link_libraries(myapp PRIVATE loom-models)     # models (pulls in core)
+```
+
+### Writing cross-platform applications
+
+Use `loom_add_executable()` instead of `add_executable()` to build for both
+native and web from the same source file and the same CMake call:
+
+```cmake
+include(cmake/LoomHelpers.cmake)
+loom_add_executable(my_app my_app.cpp)
+```
+
+Define `loom_main` instead of `main`. Heap-allocate application objects so
+they survive `exec()` returning on web (where the event loop is driven by
+`requestAnimationFrame` rather than blocking):
+
+```cpp
+#include <loom/TzGuiApplication>
+#include <loom/TzWindow>
+
+class MyWindow : public TzWindow { /* ... */ };
+
+int loom_main(int argc, char *argv[])
+{
+    auto *app    = new TzGuiApplication(argc, argv);
+    auto *window = new MyWindow();
+    window->setTitle("My App");
+    window->show();
+    return app->exec();
+}
 ```
