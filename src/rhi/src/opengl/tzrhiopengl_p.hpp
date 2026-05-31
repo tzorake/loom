@@ -72,6 +72,9 @@
        typedef void    (*PFNGLGENFRAMEBUFFERSPROC)(GLsizei, GLuint *);
        typedef void    (*PFNGLDELETEFRAMEBUFFERSPROC)(GLsizei, const GLuint *);
        typedef void    (*PFNGLFRAMEBUFFERTEXTURE2DPROC)(GLenum,GLenum,GLenum,GLuint,GLint);
+       typedef void    (*PFNGLGETACTIVEUNIFORMPROC)(GLuint,GLuint,GLsizei,GLsizei*,GLint*,GLenum*,GLchar*);
+       typedef GLint   (*PFNGLGETUNIFORMLOCATIONPROC)(GLuint, const GLchar *);
+       typedef void    (*PFNGLUNIFORM1IPROC)(GLint, GLint);
    }
    // Externs declared in tzrhiopengl.cpp
 #  define GL_ARRAY_BUFFER              0x8892
@@ -161,6 +164,13 @@
 #  define GL_COLOR_ATTACHMENT0         0x8CE0
 #  define GL_VERTEX_ARRAY_BINDING      0x85B5
 #  define GL_TEXTURE_BINDING_2D        0x8069
+#  define GL_ACTIVE_UNIFORM_BLOCKS     0x8A36
+#  define GL_ACTIVE_UNIFORMS           0x8B86
+#  define GL_SAMPLER_2D                0x8B5E
+#  define GL_SAMPLER_3D                0x8B5F
+#  define GL_SAMPLER_CUBE              0x8B60
+#  define GL_SAMPLER_2D_SHADOW         0x8B62
+#  define GL_SAMPLER_2D_ARRAY          0x8DC1
    extern PFNGLGENVERTEXARRAYSPROC      glGenVertexArrays;
    extern PFNGLBINDVERTEXARRAYPROC      glBindVertexArray;
    extern PFNGLDELETEVERTEXARRAYSPROC   glDeleteVertexArrays;
@@ -218,7 +228,10 @@
    extern PFNGLBINDFRAMEBUFFERPROC      glBindFramebuffer;
    extern PFNGLGENFRAMEBUFFERSPROC      glGenFramebuffers;
    extern PFNGLDELETEFRAMEBUFFERSPROC   glDeleteFramebuffers;
-   extern PFNGLFRAMEBUFFERTEXTURE2DPROC glFramebufferTexture2D;
+   extern PFNGLFRAMEBUFFERTEXTURE2DPROC  glFramebufferTexture2D;
+   extern PFNGLGETACTIVEUNIFORMPROC      glGetActiveUniform;
+   extern PFNGLGETUNIFORMLOCATIONPROC    glGetUniformLocation;
+   extern PFNGLUNIFORM1IPROC             glUniform1i;
 #  define TZ_GL_LOAD_PROCS() tzgl_load_procs()
    void tzgl_load_procs();
 #else // Linux

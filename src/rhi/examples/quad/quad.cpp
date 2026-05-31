@@ -11,7 +11,9 @@
 // loom_quad.wasm (web).
 
 #include <loom/tzguiapplication.hpp>
+#include <loom/tzcoreapplication.hpp>
 #include <loom/tzwindow.hpp>
+#include <loom/tztimer.hpp>
 #include <loom/tzrhi.hpp>
 #include <loom/tzrhiswapchain.hpp>
 #include <loom/tzrhirenderpassdescriptor.hpp>
@@ -26,6 +28,8 @@
 #include <loom/tzshader.hpp>
 #include <loom/tzrhishaderstage.hpp>
 #include <loom/tzresizeevent.hpp>
+#include <loom/tzcloseevent.hpp>
+#include <loom/tzlogging.hpp>
 
 #include <cmath>
 #include <cstdint>
@@ -137,13 +141,13 @@ public:
 #else
         m_rhi = TzRhi::create(TzRhi::Backend::OpenGL);
 #endif
-        if (!m_rhi) return;
+        if (!m_rhi) { tzError("RHI create failed"); return; }
 
         // SwapChain
         m_sc = m_rhi->newSwapChain();
         m_sc->setWindow(surfaceHandle()->nativeWindowHandle());
-        m_sc->setPixelSize(width(), height()); // set initial size before createOrResize
-        if (!m_sc->createOrResize()) return;
+        m_sc->setPixelSize(m_w, m_h);
+        if (!m_sc->createOrResize()) { tzError("createOrResize failed"); return; }
 
         m_rpd = m_rhi->newCompatibleRenderPassDescriptor(m_sc);
         m_sc->setRenderPassDescriptor(m_rpd);
@@ -202,7 +206,7 @@ public:
         m_ps->setShaderResourceBindings(m_srb);
         m_ps->setRenderPassDescriptor(m_rpd);
         m_ps->setTopology(TzRhiGraphicsPipeline::Triangles);
-        m_ps->create();
+        if (!m_ps->create()) { tzError("pipeline create failed"); return; }
 
         // Upload static data once
         auto *batch = m_rhi->nextResourceUpdateBatch();
@@ -215,6 +219,9 @@ public:
         m_firstBatch = batch;
 
         setRhi(m_rhi.get(), m_sc);
+
+        m_renderTimer = TzTimer::repeat(std::chrono::milliseconds(16),
+                                        [this]{ renderFrame(); });
     }
 
     void renderFrame()
@@ -262,17 +269,26 @@ public:
 protected:
     void resizeEvent(TzResizeEvent *event) override
     {
-        TzWindow::resizeEvent(event);
+        // Do NOT call TzWindow::resizeEvent — that sets paintDirty and triggers
+        // the software pixel-blit path which would overwrite the GL output.
+        m_w = event->width();
+        m_h = event->height();
         if (m_sc) {
-            // Update swapchain size on the WebGL side.
-            // On OpenGL the context tracks the surface automatically.
+            m_sc->setPixelSize(m_w, m_h);
             m_sc->createOrResize();
         }
+    }
+
+    void closeEvent(TzCloseEvent *event) override
+    {
+        (void)event;
+        TzCoreApplication::instance()->quit();
     }
 
 private:
     void cleanup()
     {
+        if (m_renderTimer) { m_renderTimer->stop(); delete m_renderTimer; m_renderTimer = nullptr; }
         if (!m_rhi) return;
         if (m_ps)      { m_ps->destroy();      delete m_ps;      }
         if (m_srb)     { m_srb->destroy();     delete m_srb;     }
@@ -296,17 +312,22 @@ private:
     TzRhiShaderResourceBindings  *m_srb{nullptr};
     TzRhiGraphicsPipeline        *m_ps{nullptr};
     TzRhiResourceUpdateBatch     *m_firstBatch{nullptr};  // consumed in first frame
+    TzTimer                      *m_renderTimer{nullptr};
     float                         m_angle{0.0f};
+    // Track window pixel dimensions independently — TzWindow::width()/height()
+    // returns the scene size which is only updated when the base resizeEvent is
+    // called, but we skip that to avoid triggering the software blit path.
+    int                           m_w{640};
+    int                           m_h{480};
 };
 
-// ── Entry point ───────────────────────────────────────────────────────────────
 
 int loom_main(int argc, char *argv[])
 {
     auto *app = new TzGuiApplication(argc, argv);
     auto *win = new QuadWindow();
     win->setTitle("loom-rhi textured quad");
-    win->init();
-    win->show();
+    win->show();  // must happen first — NSView must be in a visible window before
+    win->init();  // creating the NSOpenGLContext via setView:
     return app->exec();
 }

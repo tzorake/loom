@@ -25,9 +25,14 @@
   // ── Canvas setup ──────────────────────────────────────────────────────────
 
   const canvas  = document.getElementById('loom-canvas');
-  const ctx     = canvas.getContext('2d');
-  // WebGL 2 context — used by the loom-rhi WebGL backend.
-  // Obtained lazily on first gl_ import call.
+  // Both contexts are obtained lazily so that acquiring one does not
+  // permanently block the other.  A canvas may only have one active
+  // rendering context; the first getContext() call wins.
+  let ctx2d = null;
+  function getCtx2D() {
+    if (!ctx2d) ctx2d = canvas.getContext('2d');
+    return ctx2d;
+  }
   let gl2 = null;
   function getGL2() {
     if (!gl2) gl2 = canvas.getContext('webgl2');
@@ -302,7 +307,7 @@
       // synchronous so the WASM buffer cannot be detached during the call.
       const bytes = new Uint8ClampedArray(memory.buffer, pixels_ptr, w * h * 4);
       const imageData = new ImageData(bytes, w, h);
-      ctx.putImageData(imageData, x, y);
+      getCtx2D().putImageData(imageData, x, y);
     },
 
     js_set_title(ptr, len) {
@@ -327,13 +332,14 @@
   // All GL object handles are 1-based integer indices into JS arrays.
   // Index 0 is reserved as "null handle" (maps to null in all calls).
 
-  const glBufs     = [null];   // TzRhiBuffer handles
-  const glTexs     = [null];   // TzRhiTexture handles
-  const glSamplers = [null];   // TzRhiSampler handles
-  const glShaders  = [null];   // shader objects (transient)
-  const glProgs    = [null];   // program handles
-  const glVAOs     = [null];   // vertex array objects
-  const glFBOs     = [null];   // framebuffer objects
+  const glBufs        = [null];   // TzRhiBuffer handles
+  const glTexs        = [null];   // TzRhiTexture handles
+  const glSamplers    = [null];   // TzRhiSampler handles
+  const glShaders     = [null];   // shader objects (transient)
+  const glProgs       = [null];   // program handles
+  const glVAOs        = [null];   // vertex array objects
+  const glFBOs        = [null];   // framebuffer objects
+  const glUniformLocs = [null];   // WebGLUniformLocation handles
 
   // Helper: read a UTF-8 string of known byte length from WASM memory.
   // (wasmStr is defined earlier but requires memory to be initialised.)
@@ -443,6 +449,35 @@
     },
     gl_uniform_block_binding(program, blockIndex, binding) {
       getGL2().uniformBlockBinding(glProgs[program], blockIndex, binding);
+    },
+    gl_get_active_uniform_block_count(program) {
+      return getGL2().getProgramParameter(glProgs[program], 0x8A36 /*ACTIVE_UNIFORM_BLOCKS*/) | 0;
+    },
+    gl_get_active_uniform_count(program) {
+      return getGL2().getProgramParameter(glProgs[program], 0x8B86 /*ACTIVE_UNIFORMS*/) | 0;
+    },
+    gl_get_active_uniform_type(program, index) {
+      const info = getGL2().getActiveUniform(glProgs[program], index);
+      return info ? info.type : 0;
+    },
+    gl_get_active_uniform_name(program, index, namePtr, maxLen) {
+      const info = getGL2().getActiveUniform(glProgs[program], index);
+      if (!info || maxLen <= 0) return;
+      const encoded = new TextEncoder().encode(info.name);
+      const n = Math.min(encoded.length, maxLen - 1);
+      new Uint8Array(memory.buffer, namePtr, n).set(encoded.subarray(0, n));
+      new Uint8Array(memory.buffer, namePtr + n, 1)[0] = 0;
+    },
+    gl_get_uniform_location(program, namePtr, nameLen) {
+      const gl = getGL2();
+      const loc = gl.getUniformLocation(glProgs[program], wasmStr(namePtr, nameLen));
+      if (loc === null) return -1;
+      glUniformLocs.push(loc);
+      return glUniformLocs.length - 1;
+    },
+    gl_uniform1i(location, value) {
+      if (location < 0) return;
+      getGL2().uniform1i(glUniformLocs[location], value);
     },
 
     // ── VAO ─────────────────────────────────────────────────────────────────

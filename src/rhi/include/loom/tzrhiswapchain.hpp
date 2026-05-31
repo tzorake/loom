@@ -28,6 +28,9 @@ public:
     void setWindow(const TzNativeWindowHandle &handle) { m_nativeHandle = handle; }
     const TzNativeWindowHandle &window() const         { return m_nativeHandle; }
 
+    // Must be called before createOrResize() and after every resize event.
+    void setPixelSize(int w, int h) { m_pixelWidth = w; m_pixelHeight = h; }
+
     void setRenderPassDescriptor(TzRhiRenderPassDescriptor *rpd) { m_rpd = rpd; }
     TzRhiRenderPassDescriptor *renderPassDescriptor() const      { return m_rpd; }
 

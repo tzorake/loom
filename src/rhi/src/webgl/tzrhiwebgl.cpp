@@ -13,6 +13,8 @@
 #include <loom/tzrhisampler.hpp>
 #include <loom/tzrhirenderbuffer.hpp>
 
+#include <algorithm>
+#include <cstring>
 #include <vector>
 #include <string>
 #include <cstdint>
@@ -339,14 +341,38 @@ public:
             return false;
         }
 
-        // Wire UBO block bindings (shader must use layout(binding=N))
+        // Assign UBO binding points: uniform block i → binding point i.
+        {
+            int numBlocks = gl_get_active_uniform_block_count(m_program);
+            for (int i = 0; i < numBlocks; ++i)
+                gl_uniform_block_binding(m_program, i, i);
+        }
+
+        // Point sampler uniforms at the texture units used by the SRB.
         if (m_srb) {
-            for (const auto &b : m_srb->bindings()) {
-                if (b.type() == TzRhiShaderResourceBinding::UniformBuffer) {
-                    // Use binding slot index as block name hint — the shader
-                    // block index is found by the binding attribute in GLSL ES 3.0.
-                    // We call gl_uniform_block_binding for each UBO.
-                    gl_uniform_block_binding(m_program, b.binding(), b.binding());
+            std::vector<int> samplerUnits;
+            for (const auto &b : m_srb->bindings())
+                if (b.type() == TzRhiShaderResourceBinding::SampledTexture)
+                    samplerUnits.push_back(b.binding());
+            std::sort(samplerUnits.begin(), samplerUnits.end());
+
+            if (!samplerUnits.empty()) {
+                gl_use_program(m_program);
+                int numUniforms = gl_get_active_uniform_count(m_program);
+                int si = 0;
+                for (int i = 0; i < numUniforms && si < (int)samplerUnits.size(); ++i) {
+                    int type = gl_get_active_uniform_type(m_program, i);
+                    if (type == WEBGL_SAMPLER_2D     || type == WEBGL_SAMPLER_3D  ||
+                        type == WEBGL_SAMPLER_CUBE   || type == WEBGL_SAMPLER_2D_SHADOW ||
+                        type == WEBGL_SAMPLER_2D_ARRAY) {
+                        char name[128] = {};
+                        gl_get_active_uniform_name(m_program, i, name, sizeof(name));
+                        int loc = gl_get_uniform_location(m_program, name,
+                                                          static_cast<int>(std::strlen(name)));
+                        if (loc >= 0)
+                            gl_uniform1i(loc, samplerUnits[si]);
+                        ++si;
+                    }
                 }
             }
         }

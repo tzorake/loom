@@ -1,15 +1,5 @@
 cmake_minimum_required(VERSION 3.21)
 
-# ── loom-rhi ─────────────────────────────────────────────────────────────────
-#
-# Rendering Hardware Interface — OpenGL 3.3 Core (desktop) and WebGL 2.0 (WASM).
-#
-# Usage:
-#   cmake -DLOOM_BUILD_RHI=ON ...
-#
-# The library exposes its public headers via the loom-rhi target and links
-# against loom-core so callers only need to link loom-rhi.
-
 add_library(loom-rhi
     src/tzrhi.cpp
     src/tzrhiresource.cpp
@@ -23,25 +13,22 @@ target_include_directories(loom-rhi
 
 target_link_libraries(loom-rhi PUBLIC loom-core)
 
-# ── Backend selection ─────────────────────────────────────────────────────────
-
 if(CMAKE_SYSTEM_NAME STREQUAL "WASI" OR LOOM_PLATFORM_WEB)
-    # WebGL 2.0 backend — all GL calls are WASM imports.
     target_sources(loom-rhi PRIVATE
         src/webgl/tzrhiwebgl.cpp
     )
-    target_compile_definitions(loom-rhi PRIVATE LOOM_RHI_WEBGL)
+    target_compile_definitions(loom-rhi PUBLIC LOOM_RHI_WEBGL)
 
 else()
-    # OpenGL 3.3 Core backend.
     target_sources(loom-rhi PRIVATE
         src/opengl/tzrhiopengl.cpp
         src/opengl/tzglcontext.hpp   # header-only for private includes
     )
-    target_compile_definitions(loom-rhi PRIVATE LOOM_RHI_OPENGL)
+    target_compile_definitions(loom-rhi PUBLIC LOOM_RHI_OPENGL)
 
     if(APPLE)
-        target_sources(loom-rhi PRIVATE src/opengl/tzglcontext_cocoa.mm)
+        target_sources(loom-rhi PRIVATE src/opengl/tzglcontext_cocoa.cpp)
+        target_compile_definitions(loom-rhi PRIVATE GL_SILENCE_DEPRECATION)
         target_link_libraries(loom-rhi PUBLIC
             "-framework OpenGL"
             "-framework Cocoa"
@@ -52,7 +39,6 @@ else()
         target_link_libraries(loom-rhi PUBLIC opengl32)
 
     else()
-        # Linux — X11 or Wayland (mirror the detection in loom-core).
         if(LOOM_BACKEND_X11)
             target_sources(loom-rhi PRIVATE src/opengl/tzglcontext_x11.cpp)
             target_link_libraries(loom-rhi PUBLIC GL X11)
@@ -69,8 +55,6 @@ target_include_directories(loom-rhi INTERFACE
     $<INSTALL_INTERFACE:include>
 )
 
-# ── Examples ─────────────────────────────────────────────────────────────────
-option(LOOM_BUILD_RHI_EXAMPLES "Build loom-rhi example programs" ${LOOM_BUILD_RHI})
-if(LOOM_BUILD_RHI_EXAMPLES)
+if(LOOM_BUILD_EXAMPLES)
     add_subdirectory(examples/quad)
 endif()

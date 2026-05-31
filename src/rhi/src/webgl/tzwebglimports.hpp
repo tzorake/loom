@@ -53,10 +53,18 @@ WASM_IMPORT_AS("gl_link_program")             void gl_link_program(int program);
 WASM_IMPORT_AS("gl_get_program_link_status")  int  gl_get_program_link_status(int program);
 WASM_IMPORT_AS("gl_use_program")              void gl_use_program(int program);
 WASM_IMPORT_AS("gl_delete_program")           void gl_delete_program(int program);
-WASM_IMPORT_AS("gl_get_uniform_block_index")  int  gl_get_uniform_block_index(int program,
-                                                                                const char *namePtr, int nameLen);
-WASM_IMPORT_AS("gl_uniform_block_binding")    void gl_uniform_block_binding(int program,
-                                                                              int blockIndex, int binding);
+WASM_IMPORT_AS("gl_get_uniform_block_index")        int  gl_get_uniform_block_index(int program,
+                                                                                        const char *namePtr, int nameLen);
+WASM_IMPORT_AS("gl_uniform_block_binding")          void gl_uniform_block_binding(int program,
+                                                                                    int blockIndex, int binding);
+WASM_IMPORT_AS("gl_get_active_uniform_block_count") int  gl_get_active_uniform_block_count(int program);
+WASM_IMPORT_AS("gl_get_active_uniform_count")       int  gl_get_active_uniform_count(int program);
+WASM_IMPORT_AS("gl_get_active_uniform_type")        int  gl_get_active_uniform_type(int program, int index);
+WASM_IMPORT_AS("gl_get_active_uniform_name")        void gl_get_active_uniform_name(int program, int index,
+                                                                                     char *namePtr, int maxLen);
+WASM_IMPORT_AS("gl_get_uniform_location")           int  gl_get_uniform_location(int program,
+                                                                                   const char *namePtr, int nameLen);
+WASM_IMPORT_AS("gl_uniform1i")                      void gl_uniform1i(int location, int value);
 
 // ── Vertex Array Object ───────────────────────────────────────────────────────
 WASM_IMPORT_AS("gl_create_vertex_array")        int  gl_create_vertex_array();
@@ -185,4 +193,9 @@ enum : int {
     WEBGL_MAX                       = 0x8008,
     WEBGL_FRAMEBUFFER               = 0x8D40,
     WEBGL_COLOR_ATTACHMENT0         = 0x8CE0,
+    WEBGL_SAMPLER_2D                = 0x8B5E,
+    WEBGL_SAMPLER_3D                = 0x8B5F,
+    WEBGL_SAMPLER_CUBE              = 0x8B60,
+    WEBGL_SAMPLER_2D_SHADOW         = 0x8B62,
+    WEBGL_SAMPLER_2D_ARRAY          = 0x8DC1,
 };

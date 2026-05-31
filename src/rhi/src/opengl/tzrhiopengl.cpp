@@ -13,6 +13,7 @@
 #include <loom/tzrhisampler.hpp>
 #include <loom/tzrhirenderbuffer.hpp>
 
+#include <algorithm>
 #include <cstring>
 #include <cassert>
 #include <vector>
@@ -81,6 +82,9 @@ PFNGLBINDFRAMEBUFFERPROC       glBindFramebuffer        = nullptr;
 PFNGLGENFRAMEBUFFERSPROC       glGenFramebuffers        = nullptr;
 PFNGLDELETEFRAMEBUFFERSPROC    glDeleteFramebuffers     = nullptr;
 PFNGLFRAMEBUFFERTEXTURE2DPROC  glFramebufferTexture2D   = nullptr;
+PFNGLGETACTIVEUNIFORMPROC      glGetActiveUniform       = nullptr;
+PFNGLGETUNIFORMLOCATIONPROC    glGetUniformLocation     = nullptr;
+PFNGLUNIFORM1IPROC             glUniform1i              = nullptr;
 
 #define TZ_LOAD(T, name) name = (T)wglGetProcAddress(#name)
 
@@ -144,6 +148,9 @@ void tzgl_load_procs()
     TZ_LOAD(PFNGLGENFRAMEBUFFERSPROC,       glGenFramebuffers);
     TZ_LOAD(PFNGLDELETEFRAMEBUFFERSPROC,    glDeleteFramebuffers);
     TZ_LOAD(PFNGLFRAMEBUFFERTEXTURE2DPROC,  glFramebufferTexture2D);
+    TZ_LOAD(PFNGLGETACTIVEUNIFORMPROC,      glGetActiveUniform);
+    TZ_LOAD(PFNGLGETUNIFORMLOCATIONPROC,    glGetUniformLocation);
+    TZ_LOAD(PFNGLUNIFORM1IPROC,             glUniform1i);
 }
 #endif // _WIN32
 
@@ -513,17 +520,45 @@ public:
         }
         glBindVertexArray(0);
 
-        // Wire UBO bindings
+        // Assign UBO binding points: uniform block i → binding point i.
+        // glUniformBlockBinding(prog, blockIndex, bindingPoint) — the block index
+        // comes from the linked program, not from the SRB.
+        {
+            GLint numBlocks = 0;
+            glGetProgramiv(m_data.program, GL_ACTIVE_UNIFORM_BLOCKS, &numBlocks);
+            for (GLint i = 0; i < numBlocks; ++i)
+                glUniformBlockBinding(m_data.program,
+                                      static_cast<GLuint>(i),
+                                      static_cast<GLuint>(i));
+        }
+
+        // Point sampler uniforms at the texture units used by the SRB.
+        // glUniform1i must be called while the program is in use.
         if (m_srb) {
-            for (const auto &b : m_srb->bindings()) {
-                if (b.type() == TzRhiShaderResourceBinding::UniformBuffer) {
-                    GLuint idx = glGetUniformBlockIndex(m_data.program, "");
-                    // Blocks are bound by binding slot — set the binding point
-                    // (the shader must declare layout(binding=N))
-                    glUniformBlockBinding(m_data.program,
-                                          static_cast<GLuint>(b.binding()),
-                                          static_cast<GLuint>(b.binding()));
-                    (void)idx;
+            // Collect the texture units for each SampledTexture binding, sorted.
+            std::vector<int> samplerUnits;
+            for (const auto &b : m_srb->bindings())
+                if (b.type() == TzRhiShaderResourceBinding::SampledTexture)
+                    samplerUnits.push_back(b.binding());
+            std::sort(samplerUnits.begin(), samplerUnits.end());
+
+            if (!samplerUnits.empty()) {
+                glUseProgram(m_data.program);
+                GLint numUniforms = 0;
+                glGetProgramiv(m_data.program, GL_ACTIVE_UNIFORMS, &numUniforms);
+                int si = 0;
+                for (GLint i = 0; i < numUniforms && si < (int)samplerUnits.size(); ++i) {
+                    GLint sz = 0; GLenum type = 0; GLchar name[128] = {};
+                    glGetActiveUniform(m_data.program, static_cast<GLuint>(i),
+                                       128, nullptr, &sz, &type, name);
+                    if (type == GL_SAMPLER_2D     || type == GL_SAMPLER_3D   ||
+                        type == GL_SAMPLER_CUBE   || type == GL_SAMPLER_2D_SHADOW ||
+                        type == GL_SAMPLER_2D_ARRAY) {
+                        GLint loc = glGetUniformLocation(m_data.program, name);
+                        if (loc >= 0)
+                            glUniform1i(loc, samplerUnits[si]);
+                        ++si;
+                    }
                 }
             }
         }
