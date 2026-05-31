@@ -500,24 +500,13 @@ public:
             return false;
         }
 
-        // Build VAO from vertex input layout
+        // Build VAO — only enable the attribute arrays here.
+        // glVertexAttribPointer is deferred to setVertexInput() where the
+        // ARRAY_BUFFER is bound (required by WebGL; good practice on desktop too).
         glGenVertexArrays(1, &m_data.vao);
         glBindVertexArray(m_data.vao);
-        for (const auto &attr : m_vertexLayout.attributes()) {
+        for (const auto &attr : m_vertexLayout.attributes())
             glEnableVertexAttribArray(static_cast<GLuint>(attr.location()));
-            GLboolean norm = GL_FALSE;
-            GLenum    type = glAttribType(attr.format(), norm);
-            GLint     comp = glAttribComponents(attr.format());
-            // Stride comes from the matching binding
-            GLsizei stride = 0;
-            const auto &bindings = m_vertexLayout.bindings();
-            if (attr.binding() < (int)bindings.size())
-                stride = static_cast<GLsizei>(bindings[attr.binding()].stride());
-            glVertexAttribPointer(static_cast<GLuint>(attr.location()),
-                                  comp, type, norm, stride,
-                                  reinterpret_cast<const void *>(
-                                      static_cast<uintptr_t>(attr.offset())));
-        }
         glBindVertexArray(0);
 
         // Assign UBO binding points: uniform block i → binding point i.

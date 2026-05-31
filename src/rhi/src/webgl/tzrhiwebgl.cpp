@@ -377,22 +377,13 @@ public:
             }
         }
 
-        // Build VAO
+        // Build VAO — only enable the attribute arrays here.
+        // gl_vertex_attrib_pointer is deferred to setVertexInput() where the
+        // ARRAY_BUFFER is bound; WebGL requires a bound buffer when offset != 0.
         m_vao = gl_create_vertex_array();
         gl_bind_vertex_array(m_vao);
-        for (const auto &attr : m_vertexLayout.attributes()) {
+        for (const auto &attr : m_vertexLayout.attributes())
             gl_enable_vertex_attrib_array(attr.location());
-            int    type   = wglAttribType(attr.format());
-            int    comp   = wglAttribComponents(attr.format());
-            int    stride = 0;
-            const auto &binds = m_vertexLayout.bindings();
-            if (attr.binding() < (int)binds.size())
-                stride = static_cast<int>(binds[attr.binding()].stride());
-            int normalized = (attr.format() == TzRhiVertexInputAttribute::UNorm4 ||
-                              attr.format() == TzRhiVertexInputAttribute::UNorm2) ? 1 : 0;
-            gl_vertex_attrib_pointer(attr.location(), comp, type, normalized,
-                                     stride, static_cast<int>(attr.offset()));
-        }
         gl_bind_vertex_array(0);
 
         return true;
