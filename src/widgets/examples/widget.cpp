@@ -331,15 +331,19 @@ protected:
 
 int loom_main(int argc, char *argv[])
 {
-    TzGuiApplication app(argc, argv);
-
-    AppWindow window;
-    window.setTitle("event-loop widget demo");
+    // Heap-allocate for web (WASM) compat: exec() returns immediately on web
+    // so the event loop is driven by requestAnimationFrame after loom_main()
+    // returns.  Stack-allocated objects would be destroyed at that point.
+    // On native, exec() blocks, so heap vs stack makes no difference for
+    // correctness (the small leak at process exit is benign).
+    auto *app    = new TzGuiApplication(argc, argv);
+    auto *window = new AppWindow();
+    window->setTitle("event-loop widget demo");
 
     auto *root = new RootWidget();
-    window.setRootWidget(root);
+    window->setRootWidget(root);
 
-    window.show();
+    window->show();
 
-    return app.exec();
+    return app->exec();
 }

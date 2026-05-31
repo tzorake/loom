@@ -432,17 +432,16 @@ private:
 
 int loom_main(int argc, char *argv[])
 {
-    TzGuiApplication app(argc, argv);
+    auto *app    = new TzGuiApplication(argc, argv);
+    auto *window = new AppWindow(640, 480, *app);
+    window->setTitle("Breadcrumb Browser");
 
-    auto root = buildDemoTree();
-    TzBreadcrumbModel model(root);
+    auto root    = buildDemoTree();
+    auto *model  = new TzBreadcrumbModel(root);
 
-    AppWindow window(640, 480, app);
-    window.setTitle("Breadcrumb Browser");
+    auto *browser = new BreadcrumbBrowserRoot(*app, *model);
+    window->setRootWidget(browser);
+    window->show();
 
-    auto *browser = new BreadcrumbBrowserRoot(app, model);
-    window.setRootWidget(browser);
-    window.show();
-
-    return app.exec();
+    return app->exec();
 }

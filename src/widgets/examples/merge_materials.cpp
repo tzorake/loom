@@ -387,7 +387,7 @@ static TzTreeModel *buildWoodModel()
 // ---------------------------------------------------------------------------
 int loom_main(int argc, char *argv[])
 {
-    TzGuiApplication app(argc, argv);
+    auto *app = new TzGuiApplication(argc, argv);
 
     // Build source models
     auto *metals = buildMetalsModel();
@@ -395,10 +395,10 @@ int loom_main(int argc, char *argv[])
     auto *wood   = buildWoodModel();
 
     // Build merge model
-    TzMergeModel model("home", "materials");
-    model.addSubModel("metals", metals);
-    model.addSubModel("fabric", fabric);
-    model.addSubModel("wood",   wood);
+    auto *model = new TzMergeModel("home", "materials");
+    model->addSubModel("metals", metals);
+    model->addSubModel("fabric", fabric);
+    model->addSubModel("wood",   wood);
 
     // Window
     class AppWindow : public TzWindow {
@@ -410,12 +410,12 @@ int loom_main(int argc, char *argv[])
         TzGuiApplication &m_app;
     };
 
-    AppWindow window(480, 560, app);
-    window.setTitle("Merge Materials Browser");
+    auto *window = new AppWindow(480, 560, *app);
+    window->setTitle("Merge Materials Browser");
 
-    auto *root = new MergeBrowserRoot(app, model);
-    window.setRootWidget(root);
-    window.show();
+    auto *root = new MergeBrowserRoot(*app, *model);
+    window->setRootWidget(root);
+    window->show();
 
-    return app.exec();
+    return app->exec();
 }

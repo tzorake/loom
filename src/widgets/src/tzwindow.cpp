@@ -106,6 +106,12 @@ void TzWindow::show()
 {
     TZ_D(TzWindow);
     d->platformWindow->show();
+    // Re-mark dirty so the paint timer fires a repaint on its first tick after
+    // exec() starts.  platformWindow->show() fires a synchronous resize which
+    // calls doPaint() and clears the dirty flag; marking it again ensures the
+    // scene renders at least once inside the running event loop regardless of
+    // whether the setNeedsDisplay: call inside show() is coalesced away.
+    d->scene->markPaintDirty();
 }
 
 void TzWindow::hide()
@@ -183,7 +189,13 @@ void TzWindow::resizeEvent(TzResizeEvent *event)
 {
     TZ_D(TzWindow);
     d->scene->dispatchResizeEvent(event);
-    d->paintDirty = true;
+    // Only trigger the custom paint path on resize when the scene has no root
+    // widget.  If a root widget is set, the scene already rendered to the
+    // platform surface via doPaint(); setting paintDirty here would cause the
+    // timer to call paintEvent() (often a no-op) and render() with an empty
+    // pixel buffer, clobbering the scene's freshly-rendered pixels.
+    if (!d->scene->root())
+        d->paintDirty = true;
 }
 
 TzSurface::SurfaceType TzWindow::surfaceType() const

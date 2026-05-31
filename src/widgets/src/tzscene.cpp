@@ -220,8 +220,10 @@ void TzScene::doLayout()
 void TzScene::doPaint()
 {
     TZ_D(TzScene);
-    if (!d->root || d->width <= 0 || d->height <= 0)
+    if (!d->root || d->width <= 0 || d->height <= 0) {
+        d->paintDirty = false;
         return;
+    }
     if (d->layoutDirty) {
         doLayout();
         d->layoutDirty = false;

@@ -149,13 +149,94 @@
 
   function sched_yield() { return WASI_ESUCCESS; }
 
+  // ── Remaining WASI snapshot_preview1 stubs ────────────────────────────────
+  //
+  // The WASI SDK libc references many syscalls at link time even when they are
+  // never reached at runtime.  WebAssembly.instantiate() requires every import
+  // to be a callable, so we provide no-op / error stubs for the full set.
+  //
+  // Safe responses:
+  //   ENOSYS  — syscall exists but is not implemented here (generic fallback)
+  //   EBADF   — operation on a file descriptor we don't own
+  //   ESUCCESS — harmless acknowledgement (e.g. flag-setting no-ops)
+
+  // fd group
+  function fd_fdstat_set_flags(_fd, _flags)                 { return WASI_ESUCCESS; }
+  function fd_prestat_dir_name(_fd, _path, _len)            { return WASI_EBADF;    }
+  function fd_allocate(_fd, _off, _len)                     { return WASI_ENOSYS;   }
+  function fd_datasync(_fd)                                 { return WASI_ENOSYS;   }
+  function fd_filestat_get(_fd, _buf)                       { return WASI_ENOSYS;   }
+  function fd_filestat_set_size(_fd, _size)                 { return WASI_ENOSYS;   }
+  function fd_filestat_set_times(_fd, _at, _mt, _flags)     { return WASI_ENOSYS;   }
+  function fd_pread(_fd, _iovs, _len, _off, _nread)         { return WASI_ENOSYS;   }
+  function fd_pwrite(_fd, _iovs, _len, _off, _nwritten)     { return WASI_ENOSYS;   }
+  function fd_readdir(_fd, _buf, _len, _cookie, _bufused)   { return WASI_ENOSYS;   }
+  function fd_renumber(_fd, _to)                            { return WASI_ENOSYS;   }
+  function fd_sync(_fd)                                     { return WASI_ENOSYS;   }
+  function fd_tell(_fd, _offset)                            { return WASI_ENOSYS;   }
+
+  // path group
+  function path_create_directory(_fd, _path, _len)          { return WASI_ENOSYS;   }
+  function path_filestat_get(_fd, _flags, _path, _len, _buf){ return WASI_ENOSYS;   }
+  function path_filestat_set_times(
+    _fd, _flags, _path, _len, _at, _mt, _fflags)            { return WASI_ENOSYS;   }
+  function path_link(
+    _old_fd, _old_flags, _old_path, _old_len,
+    _new_fd, _new_path, _new_len)                            { return WASI_ENOSYS;   }
+  function path_open(
+    _fd, _dir_flags, _path, _path_len, _o_flags,
+    _fs_rights_base, _fs_rights_inheriting,
+    _fd_flags, _opened_fd)                                   { return WASI_ENOSYS;   }
+  function path_readlink(
+    _fd, _path, _path_len, _buf, _buf_len, _bufused)         { return WASI_ENOSYS;   }
+  function path_remove_directory(_fd, _path, _len)          { return WASI_ENOSYS;   }
+  function path_rename(
+    _old_fd, _old_path, _old_len,
+    _new_fd, _new_path, _new_len)                            { return WASI_ENOSYS;   }
+  function path_symlink(_old, _old_len, _fd, _new, _new_len){ return WASI_ENOSYS;   }
+  function path_unlink_file(_fd, _path, _len)               { return WASI_ENOSYS;   }
+
+  // poll / proc / sock
+  function poll_oneoff(_in, _out, _nsubs, _nevents)         { return WASI_ENOSYS;   }
+  function proc_raise(_sig)                                  { return WASI_ENOSYS;   }
+  function sock_accept(_fd, _flags, _conn)                  { return WASI_ENOSYS;   }
+  function sock_recv(_fd, _iovs, _len, _flags, _nrecv, _oflags) { return WASI_ENOSYS; }
+  function sock_send(_fd, _iovs, _len, _flags, _nsent)      { return WASI_ENOSYS;   }
+  function sock_shutdown(_fd, _how)                         { return WASI_ENOSYS;   }
+
   const wasiImports = {
+    // I/O
     fd_write,
     fd_read,
     fd_seek,
     fd_close,
     fd_fdstat_get,
+    fd_fdstat_set_flags,
     fd_prestat_get,
+    fd_prestat_dir_name,
+    fd_allocate,
+    fd_datasync,
+    fd_filestat_get,
+    fd_filestat_set_size,
+    fd_filestat_set_times,
+    fd_pread,
+    fd_pwrite,
+    fd_readdir,
+    fd_renumber,
+    fd_sync,
+    fd_tell,
+    // path
+    path_create_directory,
+    path_filestat_get,
+    path_filestat_set_times,
+    path_link,
+    path_open,
+    path_readlink,
+    path_remove_directory,
+    path_rename,
+    path_symlink,
+    path_unlink_file,
+    // clock / random / env / args
     clock_time_get,
     clock_res_get,
     random_get,
@@ -163,8 +244,15 @@
     environ_get,
     args_sizes_get,
     args_get,
+    // poll / proc / sched / sock
+    poll_oneoff,
     proc_exit,
+    proc_raise,
     sched_yield,
+    sock_accept,
+    sock_recv,
+    sock_send,
+    sock_shutdown,
   };
 
   // ── C++ exception ABI stubs ───────────────────────────────────────────────

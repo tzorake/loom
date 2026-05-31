@@ -219,15 +219,14 @@ private:
 
 int loom_main(int argc, char *argv[])
 {
-    TzGuiApplication app(argc, argv);
+    auto *app        = new TzGuiApplication(argc, argv);
+    auto *mainWindow = new AppWindow(800, 600, *app);
+    mainWindow->setTitle("Nested windows demo");
 
-    AppWindow mainWindow(800, 600, app);
-    mainWindow.setTitle("Nested windows demo");
+    auto *root = new MainRoot(*app, mainWindow);
+    mainWindow->setRootWidget(root);
 
-    auto *root = new MainRoot(app, &mainWindow);
-    mainWindow.setRootWidget(root);
+    mainWindow->show();
 
-    mainWindow.show();
-
-    return app.exec();
+    return app->exec();
 }
