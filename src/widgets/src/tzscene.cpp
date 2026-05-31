@@ -229,6 +229,14 @@ void TzScene::doPaint()
         d->layoutDirty = false;
     }
 
+    if (d->rhi) {
+        // GPU path — not yet implemented for widget rendering.
+        // When a custom render loop is needed, use TzWindow::setRhi() and
+        // drive rendering from outside via TzRhi::beginFrame/endFrame.
+        d->paintDirty = false;
+        return;
+    }
+
     d->pixels.assign((size_t) (d->width * d->height), 0xFF000000u);
 
     TzRect windowRect = {0.0, 0.0, (double) d->width, (double) d->height};
@@ -302,4 +310,23 @@ int TzScene::height() const
 {
     TZ_D(const TzScene);
     return d->height;
+}
+
+void TzScene::setRhi(TzRhi *rhi, TzRhiSwapChain *swapChain)
+{
+    TZ_D(TzScene);
+    d->rhi          = rhi;
+    d->rhiSwapChain = swapChain;
+}
+
+TzRhi *TzScene::rhi() const
+{
+    TZ_D(const TzScene);
+    return d->rhi;
+}
+
+TzRhiSwapChain *TzScene::rhiSwapChain() const
+{
+    TZ_D(const TzScene);
+    return d->rhiSwapChain;
 }

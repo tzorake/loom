@@ -20,6 +20,8 @@ public:
     void hide() override;
     void render(const std::vector<uint32_t> &pixels, int width, int height) override;
 
+    TzNativeWindowHandle nativeWindowHandle() const override;
+
     // Called by TzX11Globals during event dispatch.
     void onConfigure(int width, int height);
     void onExpose();

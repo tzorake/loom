@@ -472,6 +472,14 @@ void TzCocoaWindowPrivate::onDrawRect(ObjcObject self, CGRect /*rect*/)
     CGColorSpaceRelease(colorSpace);
 }
 
+TzNativeWindowHandle TzCocoaWindow::nativeWindowHandle() const
+{
+    TzNativeWindowHandle h;
+    h.nsView   = static_cast<void *>(d_ptr->contentView);
+    h.nsWindow = static_cast<void *>(d_ptr->window);
+    return h;
+}
+
 TzCocoaWindow::TzCocoaWindow(int width, int height)
     : d_ptr(new TzCocoaWindowPrivate(width, height, this))
 {}

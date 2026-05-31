@@ -24,8 +24,15 @@
 
   // ── Canvas setup ──────────────────────────────────────────────────────────
 
-  const canvas = document.getElementById('loom-canvas');
-  const ctx    = canvas.getContext('2d');
+  const canvas  = document.getElementById('loom-canvas');
+  const ctx     = canvas.getContext('2d');
+  // WebGL 2 context — used by the loom-rhi WebGL backend.
+  // Obtained lazily on first gl_ import call.
+  let gl2 = null;
+  function getGL2() {
+    if (!gl2) gl2 = canvas.getContext('webgl2');
+    return gl2;
+  }
 
   // WASM linear memory — set after instantiation.
   let memory;
@@ -315,6 +322,184 @@
     },
   };
 
+  // ── WebGL 2 import object (loom-rhi WebGL backend) ───────────────────────
+  //
+  // All GL object handles are 1-based integer indices into JS arrays.
+  // Index 0 is reserved as "null handle" (maps to null in all calls).
+
+  const glBufs     = [null];   // TzRhiBuffer handles
+  const glTexs     = [null];   // TzRhiTexture handles
+  const glSamplers = [null];   // TzRhiSampler handles
+  const glShaders  = [null];   // shader objects (transient)
+  const glProgs    = [null];   // program handles
+  const glVAOs     = [null];   // vertex array objects
+  const glFBOs     = [null];   // framebuffer objects
+
+  // Helper: read a UTF-8 string of known byte length from WASM memory.
+  // (wasmStr is defined earlier but requires memory to be initialised.)
+  function glStr(ptr, len) { return wasmStr(ptr, len); }
+
+  const webglImports = {
+    // ── Buffer ──────────────────────────────────────────────────────────────
+    gl_create_buffer() {
+      const gl = getGL2(); glBufs.push(gl.createBuffer()); return glBufs.length - 1;
+    },
+    gl_bind_buffer(target, handle) {
+      getGL2().bindBuffer(target, glBufs[handle] ?? null);
+    },
+    gl_buffer_data_static(target, ptr, byteSize) {
+      const gl = getGL2();
+      if (ptr && byteSize > 0)
+        gl.bufferData(target, new Uint8Array(memory.buffer, ptr, byteSize), gl.STATIC_DRAW);
+      else
+        gl.bufferData(target, byteSize, gl.STATIC_DRAW);
+    },
+    gl_buffer_sub_data(target, offset, ptr, byteSize) {
+      getGL2().bufferSubData(target, offset,
+        new Uint8Array(memory.buffer, ptr, byteSize));
+    },
+    gl_delete_buffer(handle) {
+      const gl = getGL2(); gl.deleteBuffer(glBufs[handle]); glBufs[handle] = null;
+    },
+
+    // ── Texture ─────────────────────────────────────────────────────────────
+    gl_create_texture() {
+      const gl = getGL2(); glTexs.push(gl.createTexture()); return glTexs.length - 1;
+    },
+    gl_bind_texture(target, handle) {
+      getGL2().bindTexture(target, glTexs[handle] ?? null);
+    },
+    gl_tex_image_2d(target, level, internalFormat, width, height, border,
+                    format, type, ptr, byteSize) {
+      const gl = getGL2();
+      const data = (ptr && byteSize > 0)
+        ? new Uint8Array(memory.buffer, ptr, byteSize) : null;
+      gl.texImage2D(target, level, internalFormat, width, height, border,
+                    format, type, data);
+    },
+    gl_tex_sub_image_2d(target, level, xoffset, yoffset, width, height,
+                        format, type, ptr, byteSize) {
+      const gl = getGL2();
+      gl.texSubImage2D(target, level, xoffset, yoffset, width, height,
+                       format, type,
+                       new Uint8Array(memory.buffer, ptr, byteSize));
+    },
+    gl_tex_parameteri(target, pname, param) {
+      getGL2().texParameteri(target, pname, param);
+    },
+    gl_active_texture(texture) { getGL2().activeTexture(texture); },
+    gl_delete_texture(handle) {
+      const gl = getGL2(); gl.deleteTexture(glTexs[handle]); glTexs[handle] = null;
+    },
+
+    // ── Sampler ─────────────────────────────────────────────────────────────
+    gl_create_sampler() {
+      const gl = getGL2(); glSamplers.push(gl.createSampler()); return glSamplers.length - 1;
+    },
+    gl_bind_sampler(unit, handle) {
+      getGL2().bindSampler(unit, glSamplers[handle] ?? null);
+    },
+    gl_sampler_parameteri(handle, pname, param) {
+      getGL2().samplerParameteri(glSamplers[handle], pname, param);
+    },
+    gl_delete_sampler(handle) {
+      const gl = getGL2(); gl.deleteSampler(glSamplers[handle]); glSamplers[handle] = null;
+    },
+
+    // ── Shader / Program ────────────────────────────────────────────────────
+    gl_create_shader(type) {
+      const gl = getGL2(); glShaders.push(gl.createShader(type)); return glShaders.length - 1;
+    },
+    gl_shader_source(handle, ptr, len) {
+      getGL2().shaderSource(glShaders[handle], glStr(ptr, len));
+    },
+    gl_compile_shader(handle) { getGL2().compileShader(glShaders[handle]); },
+    gl_get_shader_compile_status(handle) {
+      return getGL2().getShaderParameter(glShaders[handle], 0x8B81 /*COMPILE_STATUS*/) ? 1 : 0;
+    },
+    gl_delete_shader(handle) {
+      const gl = getGL2(); gl.deleteShader(glShaders[handle]); glShaders[handle] = null;
+    },
+    gl_create_program() {
+      const gl = getGL2(); glProgs.push(gl.createProgram()); return glProgs.length - 1;
+    },
+    gl_attach_shader(program, shader) {
+      getGL2().attachShader(glProgs[program], glShaders[shader]);
+    },
+    gl_link_program(program) { getGL2().linkProgram(glProgs[program]); },
+    gl_get_program_link_status(program) {
+      return getGL2().getProgramParameter(glProgs[program], 0x8B82 /*LINK_STATUS*/) ? 1 : 0;
+    },
+    gl_use_program(program) {
+      getGL2().useProgram(program ? glProgs[program] : null);
+    },
+    gl_delete_program(program) {
+      const gl = getGL2(); gl.deleteProgram(glProgs[program]); glProgs[program] = null;
+    },
+    gl_get_uniform_block_index(program, namePtr, nameLen) {
+      const gl = getGL2();
+      const idx = gl.getUniformBlockIndex(glProgs[program], glStr(namePtr, nameLen));
+      return (idx === 0xFFFFFFFF) ? -1 : idx;
+    },
+    gl_uniform_block_binding(program, blockIndex, binding) {
+      getGL2().uniformBlockBinding(glProgs[program], blockIndex, binding);
+    },
+
+    // ── VAO ─────────────────────────────────────────────────────────────────
+    gl_create_vertex_array() {
+      const gl = getGL2(); glVAOs.push(gl.createVertexArray()); return glVAOs.length - 1;
+    },
+    gl_bind_vertex_array(handle) {
+      getGL2().bindVertexArray(handle ? glVAOs[handle] : null);
+    },
+    gl_enable_vertex_attrib_array(index) { getGL2().enableVertexAttribArray(index); },
+    gl_vertex_attrib_pointer(index, size, type, normalized, stride, offset) {
+      getGL2().vertexAttribPointer(index, size, type, !!normalized, stride, offset);
+    },
+    gl_delete_vertex_array(handle) {
+      const gl = getGL2(); gl.deleteVertexArray(glVAOs[handle]); glVAOs[handle] = null;
+    },
+
+    // ── Draw ────────────────────────────────────────────────────────────────
+    gl_draw_arrays(mode, first, count)          { getGL2().drawArrays(mode, first, count); },
+    gl_draw_elements(mode, count, type, offset) { getGL2().drawElements(mode, count, type, offset); },
+
+    // ── State ────────────────────────────────────────────────────────────────
+    gl_enable(cap)                          { getGL2().enable(cap); },
+    gl_disable(cap)                         { getGL2().disable(cap); },
+    gl_blend_func_separate(sRGB, dRGB, sA, dA) { getGL2().blendFuncSeparate(sRGB, dRGB, sA, dA); },
+    gl_blend_equation_separate(mRGB, mA)    { getGL2().blendEquationSeparate(mRGB, mA); },
+    gl_depth_func(func)                     { getGL2().depthFunc(func); },
+    gl_depth_mask(flag)                     { getGL2().depthMask(!!flag); },
+    gl_cull_face(mode)                      { getGL2().cullFace(mode); },
+    gl_front_face(mode)                     { getGL2().frontFace(mode); },
+    gl_viewport(x, y, w, h)                 { getGL2().viewport(x, y, w, h); },
+    gl_clear_color(r, g, b, a)              { getGL2().clearColor(r, g, b, a); },
+    gl_clear(mask)                          { getGL2().clear(mask); },
+    gl_scissor(x, y, w, h)                  { getGL2().scissor(x, y, w, h); },
+    gl_line_width(width)                    { getGL2().lineWidth(width); },
+
+    // ── Framebuffer ──────────────────────────────────────────────────────────
+    gl_create_framebuffer() {
+      const gl = getGL2(); glFBOs.push(gl.createFramebuffer()); return glFBOs.length - 1;
+    },
+    gl_bind_framebuffer(target, handle) {
+      getGL2().bindFramebuffer(target, handle ? glFBOs[handle] : null);
+    },
+    gl_framebuffer_texture_2d(target, attachment, textarget, texture, level) {
+      getGL2().framebufferTexture2D(target, attachment, textarget,
+                                    glTexs[texture] ?? null, level);
+    },
+    gl_delete_framebuffer(handle) {
+      const gl = getGL2(); gl.deleteFramebuffer(glFBOs[handle]); glFBOs[handle] = null;
+    },
+
+    // ── UBO ──────────────────────────────────────────────────────────────────
+    gl_bind_buffer_range(target, index, buffer, offset, size) {
+      getGL2().bindBufferRange(target, index, glBufs[buffer] ?? null, offset, size);
+    },
+  };
+
   // ── DOM event wiring ──────────────────────────────────────────────────────
 
   function encodeUtf8Bytes(str) {
@@ -393,6 +578,7 @@
   const importObject = {
     wasi_snapshot_preview1: wasiImports,
     env: envImports,
+    webgl: webglImports,
   };
 
   WebAssembly.instantiateStreaming(fetch('loom_app.wasm'), importObject)

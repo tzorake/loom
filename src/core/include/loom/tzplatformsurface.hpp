@@ -9,6 +9,36 @@ class TzSurface;
 class TzKeyEvent;
 class TzMouseEvent;
 
+// ── TzNativeWindowHandle ──────────────────────────────────────────────────────
+//
+// Opaque platform-specific data needed by the RHI to attach a GPU context to
+// an existing native window.  Every TzPlatformSurface exposes one via
+// nativeWindowHandle().  Members are void* to avoid pulling platform headers
+// into this public header; callers in the RHI cast them to the appropriate
+// platform type.
+
+struct TzNativeWindowHandle
+{
+#if defined(LOOM_PLATFORM_WEB)
+    // The CSS selector for the <canvas> element used for WebGL.
+    // The canvas is always "#loom-canvas" in Loom's index.html.
+    const char *canvasSelector{"#loom-canvas"};
+#elif defined(__APPLE__)
+    void *nsView{nullptr};    // NSView* — the Cocoa content view
+    void *nsWindow{nullptr};  // NSWindow*
+#elif defined(_WIN32)
+    void *hwnd{nullptr};      // HWND
+    void *hinstance{nullptr}; // HINSTANCE (may be null; use GetModuleHandle(nullptr) if needed)
+#elif defined(LOOM_BACKEND_WAYLAND)
+    void *wlDisplay{nullptr}; // wl_display*
+    void *wlSurface{nullptr}; // wl_surface*
+#else // X11 fallback
+    void *display{nullptr};        // Display*
+    unsigned long window{0};       // Window (XID)
+    int           screen{0};
+#endif
+};
+
 class TzPlatformSurface
 {
 public:
@@ -31,6 +61,9 @@ public:
 
     // Raster rendering
     virtual void render(const std::vector<uint32_t> &pixels, int width, int height) = 0;
+
+    // Native window handle — used by the RHI to attach a GL/WebGL context.
+    virtual TzNativeWindowHandle nativeWindowHandle() const = 0;
 };
 
 #endif // TZPLATFORMSURFACE_HPP

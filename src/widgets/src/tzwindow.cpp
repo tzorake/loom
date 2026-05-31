@@ -164,6 +164,12 @@ void TzWindow::update()
     d->paintDirty = true;
 }
 
+void TzWindow::setRhi(TzRhi *rhi, TzRhiSwapChain *swapChain)
+{
+    TZ_D(TzWindow);
+    d->scene->setRhi(rhi, swapChain);
+}
+
 void TzWindow::paintEvent(TzPaintEvent * /*event*/) {}
 
 void TzWindow::closeEvent(TzCloseEvent *event)

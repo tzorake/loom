@@ -148,6 +148,15 @@ void TzX11Window::render(const std::vector<uint32_t> &pixels, int width, int hei
     d_ptr->render(pixels, width, height);
 }
 
+TzNativeWindowHandle TzX11Window::nativeWindowHandle() const
+{
+    TzNativeWindowHandle h;
+    h.display = static_cast<void *>(d_ptr->display);
+    h.window  = static_cast<unsigned long>(d_ptr->window);
+    h.screen  = d_ptr->display ? DefaultScreen(d_ptr->display) : 0;
+    return h;
+}
+
 void TzX11Window::onConfigure(int width, int height)
 {
     if (width == d_ptr->windowWidth && height == d_ptr->windowHeight)

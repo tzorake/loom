@@ -34,6 +34,8 @@ public:
     void render(const std::vector<uint32_t> &pixels,
                 int width, int height)      override;
 
+    TzNativeWindowHandle nativeWindowHandle() const override;
+
     // Called from the exported loom_resize() to update cached dimensions
     // and post a TzResizeEvent.
     void onResize(int width, int height);

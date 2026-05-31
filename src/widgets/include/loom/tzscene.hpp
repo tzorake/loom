@@ -9,6 +9,8 @@ class TzCloseEvent;
 class TzKeyEvent;
 class TzMouseEvent;
 class TzResizeEvent;
+class TzRhi;
+class TzRhiSwapChain;
 class TzSurface;
 class TzWidget;
 class TzScenePrivate;
@@ -37,6 +39,13 @@ public:
 
     int width() const;
     int height() const;
+
+    // Optional GPU path. When rhi != nullptr, doPaint() will use the GPU
+    // pipeline instead of the software rasterizer. Pass nullptr, nullptr to
+    // revert to the software path.
+    void setRhi(TzRhi *rhi, TzRhiSwapChain *swapChain);
+    TzRhi          *rhi()          const;
+    TzRhiSwapChain *rhiSwapChain() const;
 
     void dispatchCloseEvent(TzCloseEvent *event);
     void dispatchKeyEvent(TzKeyEvent *event);

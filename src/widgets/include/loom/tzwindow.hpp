@@ -12,6 +12,8 @@
 
 #include <string>
 
+class TzRhi;
+class TzRhiSwapChain;
 class TzWidget;
 class TzScene;
 class TzWindowPrivate;
@@ -37,6 +39,11 @@ public:
     int height() const;
 
     void update();
+
+    // Attach a GPU RHI backend to this window.  Once set, the scene's doPaint()
+    // uses the GPU path instead of the software rasterizer.  Pass nullptr, nullptr
+    // to revert to the software path.
+    void setRhi(TzRhi *rhi, TzRhiSwapChain *swapChain);
 
     SurfaceType surfaceType() const override;
     TzPlatformSurface *surfaceHandle() override;

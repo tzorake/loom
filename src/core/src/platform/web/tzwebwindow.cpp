@@ -198,6 +198,13 @@ void TzWebWindow::onResize(int width, int height)
     TzCoreApplication::postEvent(this, new TzResizeEvent(width, height));
 }
 
+TzNativeWindowHandle TzWebWindow::nativeWindowHandle() const
+{
+    TzNativeWindowHandle h;
+    h.canvasSelector = "#loom-canvas";
+    return h;
+}
+
 void TzWebWindow::render(const std::vector<uint32_t> &pixels, int width, int height)
 {
     // The framework stores pixels as 0xAARRGGBB.

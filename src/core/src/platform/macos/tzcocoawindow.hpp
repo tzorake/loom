@@ -19,6 +19,8 @@ public:
 
     virtual void render(const std::vector<uint32_t> &pixels, int width, int height) override;
 
+    virtual TzNativeWindowHandle nativeWindowHandle() const override;
+
 private:
     std::unique_ptr<TzCocoaWindowPrivate> d_ptr;
 };

@@ -416,3 +416,11 @@ void TzWin32Window::render(const std::vector<uint32_t> &pixels, int width, int h
 {
     d_ptr->render(pixels, width, height);
 }
+
+TzNativeWindowHandle TzWin32Window::nativeWindowHandle() const
+{
+    TzNativeWindowHandle h;
+    h.hwnd      = static_cast<void *>(d_ptr->hwnd);
+    h.hinstance = nullptr; // caller can use GetModuleHandle(nullptr) if needed
+    return h;
+}

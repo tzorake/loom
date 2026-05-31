@@ -225,3 +225,11 @@ void TzWaylandWindow::render(const std::vector<uint32_t> &pixels, int width, int
 {
     d_ptr->render(pixels, width, height);
 }
+
+TzNativeWindowHandle TzWaylandWindow::nativeWindowHandle() const
+{
+    TzNativeWindowHandle h;
+    h.wlDisplay = static_cast<void *>(TzWaylandGlobals::instance().display);
+    h.wlSurface = static_cast<void *>(d_ptr->surface);
+    return h;
+}
