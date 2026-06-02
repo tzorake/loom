@@ -1,15 +1,3 @@
-// quad.cpp — Textured quad example for loom-rhi.
-//
-// Renders a UV-mapped quad that spins at ~60 fps using the loom-rhi OpenGL
-// or WebGL backend.  Demonstrates the minimal usage pattern:
-//
-//   TzRhi::create → newSwapChain → newBuffer → newTexture → newSampler
-//   → newShaderResourceBindings → newGraphicsPipeline
-//   → frame loop: beginFrame → beginPass → draw calls → endPass → endFrame
-//
-// Compile with LOOM_BUILD_RHI=ON.  The executable is loom_quad (native) or
-// loom_quad.wasm (web).
-
 #include <loom/tzguiapplication.hpp>
 #include <loom/tzcoreapplication.hpp>
 #include <loom/tzwindow.hpp>

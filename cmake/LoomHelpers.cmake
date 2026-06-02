@@ -1,88 +1,16 @@
-# cmake/LoomHelpers.cmake
-#
-# Provides loom_add_executable(<target> <sources...>) — a single-call helper
-# that creates a Loom application target for any supported platform.
-#
-# ── How it works ─────────────────────────────────────────────────────────────
-#
-# For native builds (macOS / Windows / Linux):
-#   • Creates a regular executable linked against loom-widgets.
-#   • Auto-generates a thin main() trampoline that forwards to loom_main().
-#
-# For WebAssembly (WASI) builds:
-#   • Creates a .wasm module linked against loom-widgets.
-#   • Auto-generates a loom_init() export that forwards to loom_main().
-#   • Copies index.html and loom.js alongside the .wasm so the build output
-#     directory is self-contained and can be served directly:
-#       python3 -m http.server 8080 --directory <build>/path/to/target
-#
-# ── Usage ─────────────────────────────────────────────────────────────────────
-#
-#   # CMakeLists.txt
-#   include(cmake/LoomHelpers.cmake)          # or via find_package(Loom)
-#
-#   loom_add_executable(my_app my_app.cpp)
-#
-#   # Add extra libraries if needed:
-#   target_link_libraries(my_app PRIVATE loom-models)
-#
-# ── Entry point convention ────────────────────────────────────────────────────
-#
-#   Your source file must define:
-#       int loom_main(int argc, char *argv[]);
-#
-#   Do NOT define main() — it is generated automatically by this helper.
-#
-# ── Web compatibility note ────────────────────────────────────────────────────
-#
-#   On WebAssembly, app.exec() returns immediately (the browser's
-#   requestAnimationFrame drives the event loop instead of blocking).
-#   This means any TzGuiApplication or TzWindow objects created inside
-#   loom_main() must be heap-allocated (via new) so they survive loom_main()
-#   returning.  On native, heap- or stack-allocation both work correctly
-#   because exec() blocks until the application exits.
-#
-#   Example pattern that works on both platforms:
-#
-#       int loom_main(int argc, char *argv[])
-#       {
-#           // Heap-allocate for web compat; leaks on native exit (benign).
-#           auto *app    = new TzGuiApplication(argc, argv);
-#           auto *window = new MyWindow();
-#           window->setTitle("My App");
-#           window->show();
-#           return app->exec();
-#       }
-#
-# ── Web assets ────────────────────────────────────────────────────────────────
-#
-#   LOOM_WEB_DIR must point to the directory containing index.html and loom.js.
-#   It defaults to <this_file>/../web, which is correct when building loom
-#   itself.  External projects that consume loom should set LOOM_WEB_DIR to
-#   the installed web/ directory before calling loom_add_executable().
-
 cmake_minimum_required(VERSION 3.25)
 
-# Directory containing this file — used to locate sibling cmake scripts.
 set(_LOOM_CMAKE_DIR "${CMAKE_CURRENT_LIST_DIR}")
 
-# Default web assets directory: lives with the rest of the web platform code.
-# Explicitly unset any stale cache entry so changing this path never requires
-# a manual cache wipe.  Override in your own CMakeLists.txt (before including
-# this file) if your layout differs.
 unset(LOOM_WEB_DIR CACHE)
 if(NOT DEFINED LOOM_WEB_DIR)
     set(LOOM_WEB_DIR "${CMAKE_CURRENT_LIST_DIR}/../src/core/src/platform/web")
 endif()
 
-# ── loom_add_executable ───────────────────────────────────────────────────────
-
 function(loom_add_executable target)
     set(_sources ${ARGN})
 
     if(CMAKE_SYSTEM_NAME STREQUAL "WASI")
-        # ── Web (WASM) ────────────────────────────────────────────────────────
-
         add_executable(${target} ${_sources} "${_LOOM_WEB_INIT_SRC}")
         target_link_libraries(${target} PRIVATE loom-widgets)
         set_target_properties(${target} PROPERTIES
@@ -137,11 +65,62 @@ function(loom_add_executable target)
         )
 
     else()
-        # ── Native (macOS / Windows / Linux) ──────────────────────────────────
-
         add_executable(${target} ${_sources} "${_LOOM_NATIVE_MAIN_SRC}")
         target_link_libraries(${target} PRIVATE loom-widgets)
     endif()
+endfunction()
+
+function(loom_add_gallery gallery_target)
+    cmake_parse_arguments(PARSE_ARGV 1 ARG "" "" "EXAMPLES")
+
+    if(NOT CMAKE_SYSTEM_NAME STREQUAL "WASI")
+        return()
+    endif()
+
+    if(NOT ARG_EXAMPLES)
+        message(FATAL_ERROR "loom_add_gallery: EXAMPLES list is empty")
+    endif()
+
+    set(_gallery_dir "${CMAKE_BINARY_DIR}/gallery")
+
+    # Build the JS array of { id, label, path } descriptors.
+    set(_js_items "")
+    foreach(_ex IN LISTS ARG_EXAMPLES)
+        string(REGEX REPLACE "^loom_" "" _label "${_ex}")
+        string(REPLACE "_" " " _label "${_label}")
+        if(_js_items)
+            string(APPEND _js_items ",\n      ")
+        endif()
+        string(APPEND _js_items
+            "{ id: '${_ex}', label: '${_label}', path: 'examples/${_ex}' }")
+    endforeach()
+
+    # Generate gallery/index.html from the template at configure time.
+    # The only variable substituted is @GALLERY_EXAMPLES@.
+    set(GALLERY_EXAMPLES "${_js_items}")
+    configure_file(
+        "${LOOM_WEB_DIR}/gallery.html"
+        "${_gallery_dir}/index.html"
+        @ONLY
+    )
+
+    # Custom target: depends on all listed examples.
+    add_custom_target(${gallery_target} ALL)
+    add_dependencies(${gallery_target} ${ARG_EXAMPLES})
+
+    # After each example is built, mirror its output directory into
+    # gallery/examples/<name>/.  copy_directory creates the destination if
+    # missing, and is a no-op when all files are already up to date.
+    foreach(_ex IN LISTS ARG_EXAMPLES)
+        add_custom_command(TARGET ${gallery_target} POST_BUILD
+            COMMAND ${CMAKE_COMMAND} -E copy_directory
+                "$<TARGET_FILE_DIR:${_ex}>"
+                "${_gallery_dir}/examples/${_ex}"
+            COMMENT "Gallery: syncing ${_ex}"
+        )
+    endforeach()
+
+    message(STATUS "Loom gallery '${gallery_target}' → ${_gallery_dir}")
 endfunction()
 
 # ── Shared native trampoline (generated once at include time) ─────────────────
