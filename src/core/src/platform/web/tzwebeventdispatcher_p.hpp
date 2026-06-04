@@ -27,6 +27,11 @@ public:
     std::unordered_map<TzAbstractEventDispatcher::TimerHandle,
                        std::unique_ptr<TimerEntry>> timers;
 
+    // ── Quit flag ─────────────────────────────────────────────────────────
+    // Set by interrupt() when app.quit() is called.  tick() checks this and
+    // stops calling js_request_animation_frame() so the RAF loop drains.
+    bool quit{false};
+
     // ── Socket-notifier stub counter ──────────────────────────────────────
     // registerSocketNotifier() returns a unique non-null handle so callers
     // can safely call unregisterSocketNotifier() later without crashing.

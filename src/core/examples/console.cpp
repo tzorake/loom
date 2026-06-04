@@ -8,7 +8,7 @@
 #include <loom/TzLogging>
 #include <memory>
 
-int main(int argc, char *argv[])
+int loom_main(int argc, char *argv[])
 {
     TzCoreApplication app(argc, argv);
 

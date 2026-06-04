@@ -9,20 +9,23 @@ class TzWebEventDispatcherPrivate;
 
 // Web platform event dispatcher.
 //
-// The browser's event loop is driven by requestAnimationFrame (RAF); there is
-// no way to block a WASM thread waiting for OS events the way a POSIX epoll or
-// Windows MsgWaitForMultipleObjects call would.
+// Uses JSPI (JavaScript Promise Integration) to implement a blocking event
+// loop inside a WebAssembly module.  js_yield() is a suspending import: each
+// call suspends WASM until the browser's requestAnimationFrame callback
+// resolves the pending Promise, then execution resumes.
 //
 // Design
 // ──────
-// • processEvents() — called once by TzEventLoop::exec() to start the loop.
-//   It performs one tick (flush posted events, fire timers) and schedules the
-//   next animation frame via js_request_animation_frame().
+// • processEvents() — called once by TzEventLoop::exec().  Loops: yield to JS,
+//   flush posted events, fire due timers, repeat until interrupt() is called.
+//   Returns normally when quit, so loom_main() cleanup and stack destructors
+//   fire without any special rewind machinery.
 //
-// • tick() — the real per-frame work-horse.  The exported loom_tick() symbol
-//   (defined in the .cpp) calls this every RAF.
+// • tick() — per-frame work: flushes the posted-event queue and fires timers.
+//   Called from processEvents() after each js_yield() resumes.
 //
-// • interrupt() / wakeUp() — no-ops; the RAF cycle manages lifetime.
+// • interrupt() — sets the quit flag; processEvents() exits its loop on the
+//   next iteration.
 //
 // • registerSocketNotifier() — stub that returns a dummy handle.
 //   (The only use on web is TzSignalHandler, which routes through an in-memory

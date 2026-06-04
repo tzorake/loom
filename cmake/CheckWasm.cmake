@@ -1,17 +1,3 @@
-# cmake/CheckWasm.cmake
-#
-# Called as a POST_BUILD script by loom_add_executable() to verify that the
-# linker produced a valid, fully-written WebAssembly binary.
-#
-# Checks:
-#   1. File exists and is non-empty.
-#   2. First 4 bytes are the WASM magic word (\0asm).
-#   3. No large run of zero bytes anywhere in the file (catches partial writes
-#      where the linker pre-allocated space but didn't finish flushing).
-#
-# Usage (cmake -P):
-#   cmake -DWASM_FILE=<path> -P cmake/CheckWasm.cmake
-
 if(NOT DEFINED WASM_FILE)
     message(FATAL_ERROR "CheckWasm.cmake: WASM_FILE not set")
 endif()

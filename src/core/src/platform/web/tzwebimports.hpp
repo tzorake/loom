@@ -51,8 +51,14 @@ WASM_IMPORT("env", "js_show_canvas")
 void js_show_canvas(int visible);
 
 // Animation loop ────────────────────────────────────────────────────────
-// Ask the browser to call the exported loom_tick() on the next paint frame.
-WASM_IMPORT("env", "js_request_animation_frame")
-void js_request_animation_frame();
+// Suspend WASM until the next animation frame.
+//
+// This is a JSPI (JavaScript Promise Integration) suspending import.  The JS
+// side wraps it with WebAssembly.Suspending and returns a Promise that
+// resolves when requestAnimationFrame fires.  From C++ it behaves as an
+// ordinary blocking call — processEvents() calls it in a loop and execution
+// resumes once per frame.
+WASM_IMPORT("env", "js_yield")
+void js_yield();
 
 } // extern "C"

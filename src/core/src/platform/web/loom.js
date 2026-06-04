@@ -22,6 +22,49 @@
 (function () {
   'use strict';
 
+  // ── DOM log overlay (captures all WASM stdout/stderr output) ─────────────
+  //
+  // All text written via fd_write is appended here in addition to console.log,
+  // so the full run log is visible on the page itself without needing DevTools.
+  // The overlay is created lazily on first write.
+
+  let _logEl = null;
+  let _logVisible = false;
+  function _logToPage(text) {
+    if (!_logEl) {
+      _logEl = document.createElement('pre');
+      Object.assign(_logEl.style, {
+        position:   'fixed',
+        top:        '8px',
+        left:       '8px',
+        right:      '8px',
+        bottom:     '8px',
+        overflow:   'auto',
+        background: 'rgba(0,0,0,0.5)',
+        color:      '#0f0',
+        fontFamily: 'monospace',
+        fontSize:   '13px',
+        padding:    '8px',
+        zIndex:     '9999',
+        whiteSpace: 'pre-wrap',
+        wordBreak:  'break-all',
+        pointerEvents: 'none',
+        display: 'none',
+      });
+      document.body.appendChild(_logEl);
+    }
+    _logEl.textContent += text;
+    // Auto-scroll to bottom.
+    _logEl.scrollTop = _logEl.scrollHeight;
+  }
+
+  // Toggle the log overlay — called by the F1 hotkey.
+  function _toggleLog() {
+    if (!_logEl) return;
+    _logVisible = !_logVisible;
+    _logEl.style.display = _logVisible ? '' : 'none';
+  }
+
   // ── Canvas setup ──────────────────────────────────────────────────────────
 
   const canvas  = document.getElementById('loom-canvas');
@@ -44,6 +87,35 @@
 
   // Cached exports reference.
   let exports;
+
+  // ── JSPI yield / wakeup ───────────────────────────────────────────────────
+  //
+  // processEvents() calls js_yield() (a WebAssembly.Suspending import) to
+  // suspend WASM each frame.  The rafLoop() below resolves the pending Promise
+  // on every requestAnimationFrame callback, resuming WASM once per frame.
+  //
+  // If rafLoop fires while WASM is still processing (yieldResolve is null) it
+  // is silently skipped — WASM will yield again at the end of its current
+  // iteration and the next RAF will wake it.
+
+  let _yieldResolve = null;
+
+  function _jsYieldImpl() {
+    return new Promise(resolve => { _yieldResolve = resolve; });
+  }
+
+  function _jsWakeup() {
+    if (_yieldResolve) {
+      const r = _yieldResolve;
+      _yieldResolve = null;
+      r();
+    }
+  }
+
+  function rafLoop() {
+    _jsWakeup();
+    requestAnimationFrame(rafLoop);
+  }
 
   // ── Helpers ───────────────────────────────────────────────────────────────
 
@@ -79,6 +151,9 @@
     }
 
     view.setUint32(nwritten_ptr, total, true);
+
+    // Mirror to page overlay (full text including newline).
+    _logToPage(text);
 
     // Strip trailing newline — console already adds one.
     const msg = text.replace(/\n$/, '');
@@ -321,10 +396,10 @@
       canvas.style.display = visible ? 'block' : 'none';
     },
 
-    // Schedule the next animation frame → calls exports.loom_tick().
-    js_request_animation_frame() {
-      requestAnimationFrame(() => { if (exports) exports.loom_tick(); });
-    },
+    // Suspend WASM until the next animation frame.
+    // Wrapped with WebAssembly.Suspending so WASM blocks here and resumes when
+    // rafLoop() resolves the Promise via _jsWakeup().
+    js_yield: new WebAssembly.Suspending(_jsYieldImpl),
   };
 
   // ── WebGL 2 import object (loom-rhi WebGL backend) ───────────────────────
@@ -574,6 +649,8 @@
     // Keyboard — attach to window so focus isn't needed on the canvas.
     window.addEventListener('keydown', e => {
       if (e.repeat) return;
+      // F1 — toggle the log overlay (handled here, not forwarded to WASM).
+      if (e.key === 'F1') { _toggleLog(); e.preventDefault(); return; }
       const [b0, b1, b2, b3] = encodeUtf8Bytes(e.key.length === 1 ? e.key : '');
       exports.loom_key_event(
         e.keyCode, 1,
@@ -617,14 +694,24 @@
   };
 
   WebAssembly.instantiateStreaming(fetch('loom_app.wasm'), importObject)
-    .then(({ instance }) => {
+    .then(async ({ instance }) => {
       exports = instance.exports;
       memory  = instance.exports.memory;
 
       wireEvents();
 
+      // Start the RAF loop before entering WASM so the first js_yield() has
+      // a frame to wake up on.
+      requestAnimationFrame(rafLoop);
+
       // Bootstrap the C++ application.
-      exports.loom_init();
+      // loom_init → loom_main → app.exec() → processEvents() loops calling
+      // js_yield() each frame.  WebAssembly.promising() lets us await the
+      // whole chain: it resolves only when loom_main() returns (after
+      // processEvents exits its loop), at which point cleanup and destructors
+      // have already fired inside C++.
+      const loom_init = WebAssembly.promising(instance.exports.loom_init);
+      await loom_init();
     })
     .catch(err => {
       console.error('[loom] Failed to load loom_app.wasm:', err);

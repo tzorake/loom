@@ -8,19 +8,6 @@
 
 static TzWebEventDispatcher *s_instance = nullptr;
 
-// ── Exported entry point called from JavaScript ───────────────────────────
-//
-// The JavaScript loader calls this on every requestAnimationFrame callback:
-//
-//   requestAnimationFrame(() => instance.exports.loom_tick());
-
-WASM_EXPORT_AS("loom_tick")
-void loom_tick()
-{
-    if (s_instance)
-        s_instance->tick();
-}
-
 // ── TzWebEventDispatcher ──────────────────────────────────────────────────
 
 TzWebEventDispatcher::TzWebEventDispatcher()
@@ -42,15 +29,27 @@ TzWebEventDispatcher *TzWebEventDispatcher::instance()
 }
 
 // processEvents() is called exactly once by TzEventLoop::exec().
-// It performs the first tick and schedules the initial animation frame,
-// effectively "starting" the loop before exec() returns to the caller.
+//
+// Uses JSPI (JavaScript Promise Integration): js_yield() is a suspending
+// import that returns a Promise resolved by the JS requestAnimationFrame loop.
+// Each call to js_yield() suspends WASM until the browser grants the next
+// animation frame, then resumes here.  The loop exits when interrupt() sets
+// the quit flag, after which processEvents() returns normally to exec(), which
+// returns to loom_main(), which runs cleanup and allows stack destructors to
+// fire.
 void TzWebEventDispatcher::processEvents()
 {
-    tick();
+    while (!d_ptr->quit) {
+        js_yield(); // suspend until next animation frame
+        tick();
+    }
 }
 
-void TzWebEventDispatcher::interrupt() {}  // RAF manages the loop's lifetime
-void TzWebEventDispatcher::wakeUp()    {}  // no blocking wait to wake from
+void TzWebEventDispatcher::interrupt()
+{
+    d_ptr->quit = true;
+}
+void TzWebEventDispatcher::wakeUp() {}  // no blocking wait to wake from
 
 void TzWebEventDispatcher::setPreWaitCallback(PreWaitCallback callback)
 {
@@ -94,10 +93,10 @@ void TzWebEventDispatcher::unregisterSocketNotifier(NotifyHandle /*handle*/) {}
 
 // ── tick() ────────────────────────────────────────────────────────────────
 //
-// One animation frame:
-//   1. Flush the posted-event queue (TzCoreApplication::processPostedEvents).
-//   2. Fire all timers whose deadline has passed.
-//   3. Schedule the next animation frame.
+// One animation frame: flush the posted-event queue, then fire all timers
+// whose deadline has passed.  Called from processEvents() after each js_yield()
+// resumes.  The JS rafLoop drives the wakeup cadence; no RAF scheduling is
+// needed here.
 
 void TzWebEventDispatcher::tick()
 {
@@ -137,7 +136,4 @@ void TzWebEventDispatcher::tick()
 
     for (auto handle : toRemove)
         d_ptr->timers.erase(handle);
-
-    // 3. Ask the browser for the next frame.
-    js_request_animation_frame();
 }
