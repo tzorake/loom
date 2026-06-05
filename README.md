@@ -18,9 +18,19 @@ Retained-mode widget toolkit built on top of loom-core.
 
 ## Requirements
 
+### Native
+
 - CMake 3.25+
 - C++23 compiler — Apple Clang 15+, GCC 13+, MSVC 19.38+
 - Platform: macOS, Windows, Linux (Wayland or X11)
+
+### Web (WebAssembly)
+
+- [WASI SDK 25+](https://github.com/WebAssembly/wasi-sdk/releases)
+- Browser with **JSPI** (JavaScript Promise Integration) support:
+  - Chrome 125+
+  - Firefox: enable `javascript.options.wasm_js_promise_integration` in `about:config`
+  - Safari: not yet supported
 
 ## Building
 
@@ -69,7 +79,15 @@ python3 -m http.server 8080 --directory build-wasm/src/widgets/examples/window
 # open http://localhost:8080
 ```
 
-Replace `window` with any other example name (`widget`, `nested_windows`, …).
+Replace `window` with any other example name (`widget`, `nested_windows`, `bouncing_balls`, …).
+
+To run the full example gallery:
+
+```sh
+cmake --build build-wasm --target loom_gallery
+python3 -m http.server 8080 --directory build-wasm/gallery
+# open http://localhost:8080
+```
 
 ### Linking
 
@@ -90,8 +108,8 @@ loom_add_executable(my_app my_app.cpp)
 ```
 
 Define `loom_main` instead of `main`. Heap-allocate application objects so
-they survive `exec()` returning on web (where the event loop is driven by
-`requestAnimationFrame` rather than blocking):
+they survive until `exec()` returns (which happens after the event loop exits
+on both native and web):
 
 ```cpp
 #include <loom/TzGuiApplication>
@@ -101,7 +119,7 @@ class MyWindow : public TzWindow { /* ... */ };
 
 int loom_main(int argc, char *argv[])
 {
-    auto *app    = new TzGuiApplication(argc, argv);
+    auto *app = new TzGuiApplication(argc, argv);
     auto *window = new MyWindow();
     window->setTitle("My App");
     window->show();
