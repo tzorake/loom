@@ -1,0 +1,62 @@
+name: Deploy gallery to GitHub Pages
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages:    write
+  id-token: write
+
+# Only one deployment runs at a time; in-progress runs are not cancelled so a
+# queued run always reflects the latest commit on main.
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Install WASI SDK
+        run: |
+          WASI_VERSION=25.0
+          WASI_TAG=25
+          ARCHIVE="wasi-sdk-${WASI_VERSION}-x86_64-linux.tar.gz"
+          curl -fsSL "https://github.com/WebAssembly/wasi-sdk/releases/download/wasi-sdk-${WASI_TAG}/${ARCHIVE}" \
+            | sudo tar -xz -C /opt
+          sudo ln -s "/opt/wasi-sdk-${WASI_VERSION}-x86_64-linux" /opt/wasi-sdk
+          echo "WASI_SDK_PATH=/opt/wasi-sdk" >> "$GITHUB_ENV"
+
+      - name: Configure
+        run: |
+          cmake -B build-wasm \
+            -DCMAKE_TOOLCHAIN_FILE=cmake/toolchains/wasm32.cmake \
+            -DCMAKE_BUILD_TYPE=Release \
+            -DLOOM_BUILD_TESTS=OFF
+
+      - name: Build gallery
+        run: cmake --build build-wasm --target loom_gallery --parallel
+
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: build-wasm/gallery
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deploy.outputs.page_url }}
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deploy
+        uses: actions/deploy-pages@v4

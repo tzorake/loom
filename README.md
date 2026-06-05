@@ -2,6 +2,8 @@
 
 A lightweight C++ application framework inspired by Qt. Provides an event loop, platform abstraction, a pixel-buffer painter, an anchor-based widget system, and a model/view data layer.
 
+**[Live demo →](https://tzorake.github.io/loom)**
+
 ## Modules
 
 ### loom-core
