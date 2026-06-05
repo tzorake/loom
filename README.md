@@ -10,6 +10,17 @@ A lightweight C++ application framework inspired by Qt. Provides an event loop, 
 
 Event loop, timers, socket notifiers, signal handling, keyboard/mouse input, painter, and platform abstraction.
 
+### loom-rhi
+
+Rendering Hardware Interface — a thin, backend-agnostic GPU abstraction layer inspired by Qt RHI.
+
+- **Backends**: OpenGL (native), WebGL 2 (web/WASM)
+- **Resources**: vertex/uniform buffers, 2D textures, samplers, render buffers, render targets, swap chains
+- **Pipeline**: immutable `TzRhiGraphicsPipeline` with configurable topology, rasterization, depth/stencil, per-target blending, and shader stages
+- **Shader resource bindings**: declare UBO and sampled-texture slots once; re-use or swap per draw
+- **Command buffer**: `beginPass` / `endPass` / `setGraphicsPipeline` / `setVertexInput` / `draw` / `drawIndexed`
+- **Resource uploads**: `TzRhiResourceUpdateBatch` — queue buffer writes and texture uploads; submit with a pass
+
 ### loom-models
 
 Qt-style item models and selection.
@@ -81,7 +92,7 @@ python3 -m http.server 8080 --directory build-wasm/src/widgets/examples/window
 # open http://localhost:8080
 ```
 
-Replace `window` with any other example name (`widget`, `nested_windows`, `bouncing_balls`, …).
+Replace `window` with any other example name (`widget`, `nested_windows`, `bouncing_balls`, ...).
 
 To run the full example gallery:
 
@@ -97,6 +108,7 @@ python3 -m http.server 8080 --directory build-wasm/gallery
 target_link_libraries(myapp PRIVATE loom-core)       # core only
 target_link_libraries(myapp PRIVATE loom-widgets)    # widgets (pulls in core)
 target_link_libraries(myapp PRIVATE loom-models)     # models (pulls in core)
+target_link_libraries(myapp PRIVATE loom-rhi)        # rhi (pulls in core)
 ```
 
 ### Writing cross-platform applications
