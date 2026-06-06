@@ -1,10 +1,12 @@
 #include <gtest/gtest.h>
 #include <cmath>
+#include <stdexcept>
 #include <string>
 #include <cstring>
 
-#define TZBIGINT_IMPLEMENTATION
 #include "../src/tzbigint.h"
+
+#include <loom/tzbigint.hpp>
 
 class BigIntTest : public ::testing::Test
 {
@@ -412,4 +414,275 @@ TEST(BigIntEdgeTest, VeryLargeString)
     EXPECT_STREQ(large, result);
     free(result);
     bigint_destroy(num);
+}
+
+TEST(TzBigInt, DefaultConstructorIsZero)
+{
+    TzBigInt a;
+    EXPECT_TRUE(a.isZero());
+    EXPECT_FALSE(a.isNegative());
+}
+
+TEST(TzBigInt, ConstructFromInt64Positive)
+{
+    TzBigInt a(12345LL);
+    EXPECT_FALSE(a.isZero());
+    EXPECT_FALSE(a.isNegative());
+    EXPECT_DOUBLE_EQ(12345.0, a.toDouble());
+}
+
+TEST(TzBigInt, ConstructFromInt64Negative)
+{
+    TzBigInt a(-9876LL);
+    EXPECT_TRUE(a.isNegative());
+    EXPECT_DOUBLE_EQ(-9876.0, a.toDouble());
+}
+
+TEST(TzBigInt, ConstructFromInt64Zero)
+{
+    TzBigInt a(0LL);
+    EXPECT_TRUE(a.isZero());
+}
+
+TEST(TzBigInt, ConstructFromCString)
+{
+    TzBigInt a("1234567890123456789");
+    EXPECT_EQ("1234567890123456789", a.toString());
+}
+
+TEST(TzBigInt, ConstructFromStdString)
+{
+    std::string s("9876543210987654321");
+    TzBigInt a(s);
+    EXPECT_EQ(s, a.toString());
+}
+
+TEST(TzBigInt, ConstructFromNegativeCString)
+{
+    TzBigInt a("-42");
+    EXPECT_TRUE(a.isNegative());
+    EXPECT_DOUBLE_EQ(-42.0, a.toDouble());
+}
+
+TEST(TzBigInt, CopyConstructor)
+{
+    TzBigInt a(100LL);
+    TzBigInt b(a);
+    EXPECT_DOUBLE_EQ(a.toDouble(), b.toDouble());
+    b += TzBigInt(1LL);
+    EXPECT_DOUBLE_EQ(100.0, a.toDouble());
+    EXPECT_DOUBLE_EQ(101.0, b.toDouble());
+}
+
+TEST(TzBigInt, MoveConstructor)
+{
+    TzBigInt a(999LL);
+    TzBigInt b(std::move(a));
+    EXPECT_DOUBLE_EQ(999.0, b.toDouble());
+}
+
+TEST(TzBigInt, CopyAssignment)
+{
+    TzBigInt a(7LL);
+    TzBigInt b(3LL);
+    b = a;
+    EXPECT_DOUBLE_EQ(7.0, b.toDouble());
+    b += TzBigInt(1LL);
+    EXPECT_DOUBLE_EQ(7.0, a.toDouble());
+}
+
+TEST(TzBigInt, CopyAssignmentSelf)
+{
+    TzBigInt a(42LL);
+    a = a;
+    EXPECT_DOUBLE_EQ(42.0, a.toDouble());
+}
+
+TEST(TzBigInt, MoveAssignment)
+{
+    TzBigInt a(555LL);
+    TzBigInt b;
+    b = std::move(a);
+    EXPECT_DOUBLE_EQ(555.0, b.toDouble());
+}
+
+TEST(TzBigInt, SetNegative)
+{
+    TzBigInt a(50LL);
+    a.setNegative(true);
+    EXPECT_TRUE(a.isNegative());
+    EXPECT_DOUBLE_EQ(-50.0, a.toDouble());
+
+    a.setNegative(false);
+    EXPECT_FALSE(a.isNegative());
+    EXPECT_DOUBLE_EQ(50.0, a.toDouble());
+}
+
+TEST(TzBigInt, ToString)
+{
+    EXPECT_EQ("1234567890", TzBigInt(1234567890LL).toString());
+    EXPECT_EQ("-1234567890", TzBigInt(-1234567890LL).toString());
+    EXPECT_EQ("0", TzBigInt(0LL).toString());
+}
+
+TEST(TzBigInt, AddAssign)
+{
+    TzBigInt a(100LL), b(200LL);
+    a += b;
+    EXPECT_DOUBLE_EQ(300.0, a.toDouble());
+}
+
+TEST(TzBigInt, SubAssign)
+{
+    TzBigInt a(300LL), b(100LL);
+    a -= b;
+    EXPECT_DOUBLE_EQ(200.0, a.toDouble());
+}
+
+TEST(TzBigInt, SubAssignNegativeResult)
+{
+    TzBigInt a(50LL), b(100LL);
+    a -= b;
+    EXPECT_TRUE(a.isNegative());
+    EXPECT_DOUBLE_EQ(-50.0, a.toDouble());
+}
+
+TEST(TzBigInt, MulAssign)
+{
+    TzBigInt a(25LL), b(4LL);
+    a *= b;
+    EXPECT_DOUBLE_EQ(100.0, a.toDouble());
+}
+
+TEST(TzBigInt, DivAssign)
+{
+    TzBigInt a(100LL), b(4LL);
+    a /= b;
+    EXPECT_DOUBLE_EQ(25.0, a.toDouble());
+}
+
+TEST(TzBigInt, DivAssignByZeroThrows)
+{
+    TzBigInt a(100LL), zero;
+    EXPECT_THROW(a /= zero, std::runtime_error);
+}
+
+TEST(TzBigInt, ModAssign)
+{
+    TzBigInt a(17LL), b(5LL);
+    a %= b;
+    EXPECT_DOUBLE_EQ(2.0, a.toDouble());
+}
+
+TEST(TzBigInt, ModAssignByZeroThrows)
+{
+    TzBigInt a(100LL), zero;
+    EXPECT_THROW(a %= zero, std::runtime_error);
+}
+
+TEST(TzBigInt, ShlAssign)
+{
+    TzBigInt a(5LL);
+    a <<= 3;
+    EXPECT_DOUBLE_EQ(40.0, a.toDouble());
+}
+
+TEST(TzBigInt, ShrAssign)
+{
+    TzBigInt a(40LL);
+    a >>= 3;
+    EXPECT_DOUBLE_EQ(5.0, a.toDouble());
+}
+
+TEST(TzBigInt, OperatorAdd)
+{
+    TzBigInt a(10LL), b(3LL);
+    TzBigInt c = a + b;
+    EXPECT_DOUBLE_EQ(13.0, c.toDouble());
+    EXPECT_DOUBLE_EQ(10.0, a.toDouble());
+}
+
+TEST(TzBigInt, OperatorSub)
+{
+    TzBigInt a(10LL), b(3LL);
+    EXPECT_DOUBLE_EQ(7.0, (a - b).toDouble());
+}
+
+TEST(TzBigInt, OperatorMul)
+{
+    TzBigInt a(6LL), b(7LL);
+    EXPECT_DOUBLE_EQ(42.0, (a * b).toDouble());
+}
+
+TEST(TzBigInt, OperatorDiv)
+{
+    TzBigInt a(42LL), b(7LL);
+    EXPECT_DOUBLE_EQ(6.0, (a / b).toDouble());
+}
+
+TEST(TzBigInt, OperatorMod)
+{
+    TzBigInt a(17LL), b(5LL);
+    EXPECT_DOUBLE_EQ(2.0, (a % b).toDouble());
+}
+
+TEST(TzBigInt, OperatorShl)
+{
+    TzBigInt a(1LL);
+    TzBigInt b = a << 10;
+    EXPECT_DOUBLE_EQ(1024.0, b.toDouble());
+    EXPECT_DOUBLE_EQ(1.0, a.toDouble());
+}
+
+TEST(TzBigInt, OperatorShr)
+{
+    EXPECT_DOUBLE_EQ(1.0, (TzBigInt(1024LL) >> 10).toDouble());
+}
+
+TEST(TzBigInt, EqualityOperators)
+{
+    TzBigInt a(42LL), b(42LL), c(43LL);
+    EXPECT_TRUE(a == b);
+    EXPECT_FALSE(a != b);
+    EXPECT_FALSE(a == c);
+    EXPECT_TRUE(a != c);
+}
+
+TEST(TzBigInt, OrderingOperators)
+{
+    TzBigInt small(10LL), large(20LL);
+    EXPECT_TRUE(small < large);
+    EXPECT_TRUE(large > small);
+    EXPECT_TRUE(small <= small);
+    EXPECT_TRUE(small >= small);
+    EXPECT_FALSE(large < small);
+    EXPECT_FALSE(small > large);
+}
+
+TEST(TzBigInt, CompareNegativeWithPositive)
+{
+    TzBigInt neg(-5LL), pos(5LL);
+    EXPECT_TRUE(neg < pos);
+    EXPECT_FALSE(neg > pos);
+}
+
+TEST(TzBigInt, Swap)
+{
+    TzBigInt a(1LL), b(2LL);
+    a.swap(b);
+    EXPECT_DOUBLE_EQ(2.0, a.toDouble());
+    EXPECT_DOUBLE_EQ(1.0, b.toDouble());
+}
+
+TEST(TzBigInt, LargeNumberRoundTrip)
+{
+    const std::string big = "1234567890123456789012345678901234567890";
+    EXPECT_EQ(big, TzBigInt(big).toString());
+}
+
+TEST(TzBigInt, LargeShift)
+{
+    TzBigInt a(1LL);
+    a <<= 64;
+    EXPECT_NEAR(1.8446744e19, a.toDouble(), 1e13);
 }

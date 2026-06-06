@@ -1,11 +1,13 @@
 #include <gtest/gtest.h>
 #include <cmath>
 #include <cstring>
+#include <stdexcept>
+#include <string>
 
-#define TZBIGINT_IMPLEMENTATION
 #include "../src/tzbigint.h"
-#define TZFIXED_IMPLEMENTATION
 #include "../src/tzfixed.h"
+
+#include <loom/tzfixed.hpp>
 
 class FixedTest : public ::testing::Test
 {
@@ -235,7 +237,7 @@ TEST_F(FixedTest, DivisionInPlace)
 TEST_F(FixedTest, DivisionByZero)
 {
     fixed_t* result = fixed_div(pi, zero);
-    EXPECT_EQ(result, nullptr); // should return NULL on error
+    EXPECT_EQ(result, nullptr);
 }
 
 TEST_F(FixedTest, CompareEqual)
@@ -262,7 +264,7 @@ TEST_F(FixedTest, CompareDifferentFracBits)
     fixed_t* a = fixed_from_double(3.14159, 32);
     fixed_t* b = fixed_from_double(3.14159, 16);
 
-    EXPECT_EQ(0, fixed_cmp(a, b)); // equal after rescaling
+    EXPECT_EQ(0, fixed_cmp(a, b));
 
     fixed_destroy(a);
     fixed_destroy(b);
@@ -293,8 +295,267 @@ TEST(FixedEdgeTest, VerySmallNumber)
     fixed_destroy(num);
 }
 
-int main(int argc, char** argv)
+TEST(TzFixed, ConstructFromFracBitsIsZero)
 {
-    ::testing::InitGoogleTest(&argc, argv);
-    return RUN_ALL_TESTS();
+    TzFixed a(16);
+    EXPECT_EQ(16, a.fracBits());
+    EXPECT_NEAR(0.0, a.toDouble(), 1e-9);
+}
+
+TEST(TzFixed, ConstructFromDouble)
+{
+    TzFixed a(3.14, 16);
+    EXPECT_EQ(16, a.fracBits());
+    EXPECT_NEAR(3.14, a.toDouble(), 0.001);
+}
+
+TEST(TzFixed, ConstructFromDoubleNegative)
+{
+    TzFixed a(-2.71828, 16);
+    EXPECT_NEAR(-2.71828, a.toDouble(), 0.001);
+}
+
+TEST(TzFixed, ConstructFromCString)
+{
+    TzFixed a("3.14159", 16);
+    EXPECT_NEAR(3.14159, a.toDouble(), 0.001);
+}
+
+TEST(TzFixed, ConstructFromStdString)
+{
+    TzFixed a(std::string("2.71828"), 16);
+    EXPECT_NEAR(2.71828, a.toDouble(), 0.001);
+}
+
+TEST(TzFixed, ConstructFromNegativeString)
+{
+    TzFixed a("-1.5", 16);
+    EXPECT_NEAR(-1.5, a.toDouble(), 0.001);
+}
+
+TEST(TzFixed, CopyConstructor)
+{
+    TzFixed a(3.14, 16);
+    TzFixed b(a);
+    EXPECT_NEAR(a.toDouble(), b.toDouble(), 1e-9);
+    EXPECT_EQ(a.fracBits(), b.fracBits());
+    b += TzFixed(1.0, 16);
+    EXPECT_NEAR(3.14, a.toDouble(), 0.001);
+}
+
+TEST(TzFixed, MoveConstructor)
+{
+    TzFixed a(2.5, 16);
+    TzFixed b(std::move(a));
+    EXPECT_NEAR(2.5, b.toDouble(), 0.001);
+}
+
+TEST(TzFixed, CopyAssignment)
+{
+    TzFixed a(1.5, 16);
+    TzFixed b(16);
+    b = a;
+    EXPECT_NEAR(1.5, b.toDouble(), 0.001);
+    b += TzFixed(1.0, 16);
+    EXPECT_NEAR(1.5, a.toDouble(), 0.001);
+}
+
+TEST(TzFixed, CopyAssignmentSelf)
+{
+    TzFixed a(3.14, 16);
+    a = a;
+    EXPECT_NEAR(3.14, a.toDouble(), 0.001);
+}
+
+TEST(TzFixed, MoveAssignment)
+{
+    TzFixed a(7.5, 16);
+    TzFixed b(16);
+    b = std::move(a);
+    EXPECT_NEAR(7.5, b.toDouble(), 0.001);
+}
+
+TEST(TzFixed, FracBits)
+{
+    EXPECT_EQ(8,  TzFixed(0.0, 8).fracBits());
+    EXPECT_EQ(32, TzFixed(0.0, 32).fracBits());
+}
+
+TEST(TzFixed, Numerator)
+{
+    TzFixed a(4.0, 8); // numerator = 4 * 2^8 = 1024
+    EXPECT_DOUBLE_EQ(1024.0, a.numerator().toDouble());
+}
+
+TEST(TzFixed, NumeratorIsAClone)
+{
+    TzFixed a(2.0, 8);
+    TzBigInt num = a.numerator();
+    num += TzBigInt(1LL);
+    EXPECT_NEAR(2.0, a.toDouble(), 0.001);
+}
+
+TEST(TzFixed, ToDouble)
+{
+    EXPECT_NEAR(1.25, TzFixed(1.25, 16).toDouble(), 1e-6);
+}
+
+TEST(TzFixed, ToStringNotEmpty)
+{
+    EXPECT_FALSE(TzFixed(3.5, 16).toString().empty());
+}
+
+TEST(TzFixed, RescaleHigher)
+{
+    TzFixed b = TzFixed(3.14159, 16).rescale(32);
+    EXPECT_EQ(32, b.fracBits());
+    EXPECT_NEAR(3.14159, b.toDouble(), 0.001);
+}
+
+TEST(TzFixed, RescaleLower)
+{
+    TzFixed b = TzFixed(3.14159, 16).rescale(8);
+    EXPECT_EQ(8, b.fracBits());
+    EXPECT_NEAR(3.140625, b.toDouble(), 0.01);
+}
+
+TEST(TzFixed, RescaleSame)
+{
+    TzFixed b = TzFixed(3.14159, 16).rescale(16);
+    EXPECT_EQ(16, b.fracBits());
+    EXPECT_NEAR(3.14159, b.toDouble(), 0.001);
+}
+
+TEST(TzFixed, RescaleDoesNotMutateOriginal)
+{
+    TzFixed a(1.5, 16);
+    (void)a.rescale(32);
+    EXPECT_EQ(16, a.fracBits());
+    EXPECT_NEAR(1.5, a.toDouble(), 0.001);
+}
+
+TEST(TzFixed, AddAssign)
+{
+    TzFixed a(1.5, 16), b(2.5, 16);
+    a += b;
+    EXPECT_NEAR(4.0, a.toDouble(), 0.001);
+}
+
+TEST(TzFixed, AddAssignMismatchThrows)
+{
+    TzFixed a(1.0, 16), b(1.0, 8);
+    EXPECT_THROW(a += b, std::invalid_argument);
+}
+
+TEST(TzFixed, SubAssign)
+{
+    TzFixed a(5.0, 16), b(2.0, 16);
+    a -= b;
+    EXPECT_NEAR(3.0, a.toDouble(), 0.001);
+}
+
+TEST(TzFixed, SubAssignMismatchThrows)
+{
+    TzFixed a(1.0, 16), b(1.0, 8);
+    EXPECT_THROW(a -= b, std::invalid_argument);
+}
+
+TEST(TzFixed, SubAssignNegativeResult)
+{
+    TzFixed a(1.0, 16), b(3.0, 16);
+    a -= b;
+    EXPECT_NEAR(-2.0, a.toDouble(), 0.001);
+}
+
+TEST(TzFixed, MulAssign)
+{
+    TzFixed a(3.0, 16), b(2.5, 16);
+    a *= b;
+    EXPECT_NEAR(7.5, a.toDouble(), 0.01);
+}
+
+TEST(TzFixed, DivAssign)
+{
+    TzFixed a(7.5, 16), b(2.5, 16);
+    a /= b;
+    EXPECT_NEAR(3.0, a.toDouble(), 0.01);
+}
+
+TEST(TzFixed, OperatorAdd)
+{
+    TzFixed a(1.0, 16), b(2.0, 16);
+    TzFixed c = a + b;
+    EXPECT_NEAR(3.0, c.toDouble(), 0.001);
+    EXPECT_NEAR(1.0, a.toDouble(), 0.001);
+}
+
+TEST(TzFixed, OperatorSub)
+{
+    TzFixed a(5.0, 16), b(2.0, 16);
+    EXPECT_NEAR(3.0, (a - b).toDouble(), 0.001);
+}
+
+TEST(TzFixed, OperatorMul)
+{
+    TzFixed a(3.0, 16), b(4.0, 16);
+    EXPECT_NEAR(12.0, (a * b).toDouble(), 0.01);
+}
+
+TEST(TzFixed, OperatorDiv)
+{
+    TzFixed a(10.0, 16), b(4.0, 16);
+    EXPECT_NEAR(2.5, (a / b).toDouble(), 0.01);
+}
+
+TEST(TzFixed, EqualityOperators)
+{
+    TzFixed a(3.14, 16), b(3.14, 16), c(2.0, 16);
+    EXPECT_TRUE(a == b);
+    EXPECT_FALSE(a != b);
+    EXPECT_FALSE(a == c);
+    EXPECT_TRUE(a != c);
+}
+
+TEST(TzFixed, OrderingOperators)
+{
+    TzFixed small(1.0, 16), large(2.0, 16);
+    EXPECT_TRUE(small < large);
+    EXPECT_TRUE(large > small);
+    EXPECT_TRUE(small <= small);
+    EXPECT_TRUE(small >= small);
+    EXPECT_FALSE(large < small);
+    EXPECT_FALSE(small > large);
+}
+
+TEST(TzFixed, CompareNegativeWithPositive)
+{
+    TzFixed neg(-1.0, 16), pos(1.0, 16);
+    EXPECT_TRUE(neg < pos);
+    EXPECT_FALSE(neg > pos);
+}
+
+TEST(TzFixed, Swap)
+{
+    TzFixed a(1.0, 16), b(2.0, 16);
+    a.swap(b);
+    EXPECT_NEAR(2.0, a.toDouble(), 0.001);
+    EXPECT_NEAR(1.0, b.toDouble(), 0.001);
+}
+
+TEST(TzFixed, ZeroArithmetic)
+{
+    TzFixed a(3.14, 16), zero(16);
+    EXPECT_NEAR(3.14, (a + zero).toDouble(), 0.001);
+    EXPECT_NEAR(0.0,  (a * zero).toDouble(), 0.001);
+}
+
+TEST(TzFixed, HighPrecision)
+{
+    EXPECT_NEAR(0.123456789, TzFixed(0.123456789, 64).toDouble(), 1e-9);
+}
+
+TEST(TzFixed, NegativeArithmetic)
+{
+    TzFixed a(-3.0, 16), b(1.5, 16);
+    EXPECT_NEAR(-1.5, (a + b).toDouble(), 0.001);
 }

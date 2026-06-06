@@ -1,4 +1,6 @@
 add_library(loom-core
+    src/tzbigint.cpp
+    src/tzfixed.cpp
     src/tzassert.cpp
     src/tzabstractplatformintegration.cpp
     src/tzabstracteventdispatcher.cpp

@@ -36,11 +36,11 @@ fixed_t* fixed_from_string(const char* str, int frac_bits);
 fixed_t* fixed_clone(const fixed_t* f);
 void     fixed_destroy(fixed_t* f);
 
-int      fixed_get_frac_bits(const fixed_t* f);
+int fixed_get_frac_bits(const fixed_t* f);
 bigint_t* fixed_get_numerator(const fixed_t* f); // borrowed reference, do not free
 
 double fixed_to_double(const fixed_t* f);
-char*  fixed_to_string(const fixed_t* f); // decimal representation, caller must free
+char* fixed_to_string(const fixed_t* f); // decimal representation, caller must free
 
 fixed_t* fixed_rescale(const fixed_t* f, int new_frac_bits);
 
@@ -74,6 +74,7 @@ int fixed_cmp(const fixed_t* a, const fixed_t* b);
 
 #include <string.h>
 #include <math.h>
+#include <stdio.h>
 
 struct fixed_t {
     bigint_t* num;
