@@ -10,6 +10,7 @@ option(LOOM_BUILD_TESTS "Build tests" ON)
 include(cmake/LoomHelpers.cmake)
 
 if(LOOM_BUILD_TESTS)
+    enable_testing()
     add_subdirectory(external/googletest EXCLUDE_FROM_ALL)
 endif()
 
