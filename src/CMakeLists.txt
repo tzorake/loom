@@ -7,6 +7,7 @@ if(LOOM_BUILD_EXAMPLES AND CMAKE_SYSTEM_NAME STREQUAL "WASI")
         breadcrumb_browser
         loom_quad
         bouncing_balls
+        double_pendulum
     )
     loom_add_gallery(loom_gallery EXAMPLES ${_gallery_examples})
 endif()

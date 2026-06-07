@@ -179,3 +179,49 @@ void TzFixed::swap(TzFixed &other) noexcept
 {
     std::swap(d_ptr, other.d_ptr);
 }
+
+bool TzFixed::isNegative() const
+{
+    return bigint_is_negative(d_ptr->num);
+}
+
+bool TzFixed::isZero() const
+{
+    return bigint_is_zero(d_ptr->num);
+}
+
+namespace std {
+
+TzFixed sin(TzFixed x)
+{
+    fixed_t *p = fixed_sin(x.d_ptr);
+    if (!p)
+        throw ::std::bad_alloc();
+    return TzFixed(*p);
+}
+
+TzFixed cos(TzFixed x)
+{
+    fixed_t *p = fixed_cos(x.d_ptr);
+    if (!p)
+        throw ::std::bad_alloc();
+    return TzFixed(*p);
+}
+
+TzFixed sqrt(TzFixed x)
+{
+    fixed_t *p = fixed_sqrt(x.d_ptr);
+    if (!p)
+        throw ::std::domain_error("std::sqrt(TzFixed): argument must be non-negative");
+    return TzFixed(*p);
+}
+
+TzFixed atan2(TzFixed y, TzFixed x)
+{
+    fixed_t *p = fixed_atan2(y.d_ptr, x.d_ptr);
+    if (!p)
+        throw ::std::bad_alloc();
+    return TzFixed(*p);
+}
+
+} // namespace std

@@ -3,9 +3,21 @@
 
 #include <loom/tzbigint.hpp>
 
+#include <cmath>
 #include <string>
 
 struct fixed_t;
+
+// Forward-declare TzFixed so the std overloads below can name it as a parameter
+// type before the full class definition.
+class TzFixed;
+
+namespace std {
+    TzFixed sin(TzFixed x);
+    TzFixed cos(TzFixed x);
+    TzFixed sqrt(TzFixed x);
+    TzFixed atan2(TzFixed y, TzFixed x);
+} // namespace std
 
 class TzFixed
 {
@@ -47,8 +59,16 @@ public:
 
     void swap(TzFixed &other) noexcept;
 
+    bool isNegative() const;
+    bool isZero() const;
+
 private:
     explicit TzFixed(fixed_t &dd) noexcept;
+
+    friend TzFixed std::sin(TzFixed);
+    friend TzFixed std::cos(TzFixed);
+    friend TzFixed std::sqrt(TzFixed);
+    friend TzFixed std::atan2(TzFixed, TzFixed);
 
     fixed_t *d_ptr;
 };

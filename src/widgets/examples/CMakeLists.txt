@@ -20,6 +20,8 @@ target_link_libraries(breadcrumb_browser PRIVATE loom-models)
 
 loom_add_executable(bouncing_balls bouncing_balls.cpp)
 
+loom_add_executable(double_pendulum double_pendulum.cpp)
+
 loom_add_executable(merge_materials merge_materials.cpp)
 target_include_directories(merge_materials PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}
